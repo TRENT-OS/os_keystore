@@ -6,6 +6,9 @@ add_library(
     ${PROJECT_NAME} STATIC
 
     "src/seos/SeosKeyStore.c"
+    "src/seos/SeosKeyStoreApi.c"
+    "src/seos/SeosKeyStoreClient.c"
+    "src/seos/SeosKeyStoreRpc.c"
 )
 if (ENABLE_LINT)
         set(CMAKE_C_CPPCHECK "cppcheck;--enable=warning;--inline-suppr")
