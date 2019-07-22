@@ -13,6 +13,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "seos_err.h"
 #include "SeosCryptoKey.h"
+#include "SeosCryptoCipher.h"
 #include "LibIO/FileStream.h"
 #include "LibIO/FileStreamFactory.h"
 

@@ -121,7 +121,7 @@ SeosKeyStoreApi_deleteKey(SeosKeyStoreApi*      self,
 seos_err_t
 SeosKeyStoreApi_copyKey(SeosKeyStoreApi*    self,
                         const char*         name,
-                        SeosKeyStore*       destKeyStore);
+                        SeosKeyStoreApi*    destKeyStore);
 /**
  * @brief Moves the key with a selected name from the current key store to
  * the destination key store (after the operation the key is no longer in the
@@ -137,7 +137,7 @@ SeosKeyStoreApi_copyKey(SeosKeyStoreApi*    self,
 seos_err_t
 SeosKeyStoreApi_moveKey(SeosKeyStoreApi*    self,
                         const char*         name,
-                        SeosKeyStore*       destKeyStore);
+                        SeosKeyStoreApi*    destKeyStore);
 /**
  * @brief Generates a key with a given name using an RNG, stores the key into the key store
  * and returns the key data in the key object.
