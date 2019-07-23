@@ -56,12 +56,12 @@ static size_t cpyBufToInt(const char* buf);
 /* Private variables ---------------------------------------------------------*/
 /* Public functions ----------------------------------------------------------*/
 bool SeosKeyStore_ctor(SeosKeyStore* self, FileStreamFactory* fileStreamFactory,
-                       SeosCryptoApi* cryptoApi, char* name)
+                       SeosCrypto* cryptoCore, char* name)
 {
     Debug_ASSERT_SELF(self);
     self->fsFactory = fileStreamFactory;
     self->name = name;
-    self->cryptoApi = cryptoApi;
+    self->cryptoCore = cryptoCore;
     return true;
 }
 
@@ -141,12 +141,12 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStore* self, const char* name,
         return SEOS_ERROR_GENERIC;
     }
 
-    err = SeosCryptoApi_keyImport(self->cryptoApi,
-                                  (void**)key,
-                                  readKeyAlgorithm,
-                                  readKeyFlags,
-                                  newKeyEntry.keyBytes,
-                                  readKeySize);
+    err = SeosCrypto_keyImport(self->cryptoCore,
+                               key,
+                               readKeyAlgorithm,
+                               readKeyFlags,
+                               newKeyEntry.keyBytes,
+                               readKeySize);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCryptoApi_keyImport failed to construct the key with error code %d!",
@@ -284,11 +284,11 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStore*   self,
     Debug_ASSERT_SELF(self);
     seos_err_t err = SEOS_SUCCESS;
 
-    SeosCryptoApi_keyGenerate(self->cryptoApi,
-                              (void*)key,
-                              algorithm,
-                              flags,
-                              lenBits);
+    SeosCrypto_keyGenerate(self->cryptoCore,
+                           key,
+                           algorithm,
+                           flags,
+                           lenBits);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCryptoKey_init failed to construct the key with error code %d!",

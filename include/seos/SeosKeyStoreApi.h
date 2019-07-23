@@ -64,12 +64,12 @@ SeosKeyStoreApi_deInit(SeosKeyStoreApi* self);
  */
 seos_err_t
 SeosKeyStoreApi_importKey(SeosKeyStoreApi*          self,
-                            SeosCrypto_KeyHandle*   keyHandle,
-                            const char*             name,
-                            void const*             keyBytesBuffer,
-                            unsigned int            algorithm,
-                            unsigned int            flags,
-                            size_t                  lenBits);
+                          SeosCrypto_KeyHandle*   keyHandle,
+                          const char*             name,
+                          void const*             keyBytesBuffer,
+                          unsigned int            algorithm,
+                          unsigned int            flags,
+                          size_t                  lenBits);
 /**
  * @brief Retreives the key with a given name from the keystore
  *
@@ -82,8 +82,8 @@ SeosKeyStoreApi_importKey(SeosKeyStoreApi*          self,
  */
 seos_err_t
 SeosKeyStoreApi_getKey(SeosKeyStoreApi*         self,
-                        SeosCrypto_KeyHandle*   keyHandle,
-                        const char*             name);
+                       SeosCrypto_KeyHandle*   keyHandle,
+                       const char*             name);
 /**
  * @brief Deletes a key with from the keystore
  *
@@ -96,8 +96,8 @@ SeosKeyStoreApi_getKey(SeosKeyStoreApi*         self,
  */
 seos_err_t
 SeosKeyStoreApi_deleteKey(SeosKeyStoreApi*          self,
-                            SeosCrypto_KeyHandle    keyHandle,
-                            const char*             name);
+                          SeosCrypto_KeyHandle    keyHandle,
+                          const char*             name);
 /**
  * @brief Copies the key from the current key store to the destination key store
  *
@@ -149,7 +149,7 @@ SeosKeyStoreApi_moveKey(SeosKeyStoreApi*        self,
 seos_err_t
 SeosKeyStoreApi_generateKey(SeosKeyStoreApi*        self,
                             SeosCrypto_KeyHandle*   keyHandle,
-                            const char*             name, 
+                            const char*             name,
                             unsigned int            algorithm,
                             unsigned int            flags,
                             size_t                  lenBits);

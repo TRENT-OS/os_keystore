@@ -55,32 +55,35 @@ SeosKeyStoreApi_deInit(SeosKeyStoreApi* self)
 
 seos_err_t
 SeosKeyStoreApi_importKey(SeosKeyStoreApi*          self,
-                            SeosCrypto_KeyHandle*   keyHandle,
-                            const char*             name,
-                            void const*             keyBytesBuffer,
-                            unsigned int            algorithm,
-                            unsigned int            flags,
-                            size_t                  lenBits)
+                          SeosCrypto_KeyHandle*   keyHandle,
+                          const char*             name,
+                          void const*             keyBytesBuffer,
+                          unsigned int            algorithm,
+                          unsigned int            flags,
+                          size_t                  lenBits)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
     if (self->isLocalConnection)
     {
-        retval = SeosCryptoApi_keyImport(self->connector.local.keyStore->cryptoApi,
-                                keyHandle,
-                                algorithm,
-                                flags,
-                                keyBytesBuffer,
-                                lenBits);
-        if(retval != SEOS_SUCCESS)
+        retval = SeosCrypto_keyImport(self->connector.local.keyStore->cryptoCore,
+                                      keyHandle,
+                                      algorithm,
+                                      flags,
+                                      keyBytesBuffer,
+                                      lenBits);
+        if (retval != SEOS_SUCCESS)
         {
-            Debug_LOG_ERROR("%s: SeosCryptoApi_keyImport failed with err %d!", __func__, retval);
+            Debug_LOG_ERROR("%s: SeosCryptoApi_keyImport failed with err %d!", __func__,
+                            retval);
         }
-        retval = SeosKeyStore_importKey(self->connector.local.keyStore, name, (SeosCryptoKey*)*keyHandle);
-        if(retval != SEOS_SUCCESS)
+        retval = SeosKeyStore_importKey(self->connector.local.keyStore, name,
+                                        *keyHandle);
+        if (retval != SEOS_SUCCESS)
         {
-            Debug_LOG_ERROR("%s: SeosKeyStore_importKey failed with err %d!", __func__, retval);
+            Debug_LOG_ERROR("%s: SeosKeyStore_importKey failed with err %d!", __func__,
+                            retval);
         }
     }
     else
@@ -91,17 +94,19 @@ SeosKeyStoreApi_importKey(SeosKeyStoreApi*          self,
 }
 
 seos_err_t
-SeosKeyStoreApi_getKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle* keyHandle, const char* name)
+SeosKeyStoreApi_getKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle* keyHandle,
+                       const char* name)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
     if (self->isLocalConnection)
     {
-        retval = SeosKeyStore_getKey(self->connector.local.keyStore, name, (SeosCryptoKey**)keyHandle);
-        if(retval != SEOS_SUCCESS)
+        retval = SeosKeyStore_getKey(self->connector.local.keyStore, name, keyHandle);
+        if (retval != SEOS_SUCCESS)
         {
-            Debug_LOG_ERROR("%s: SeosKeyStore_getKey failed with err %d!", __func__, retval);
+            Debug_LOG_ERROR("%s: SeosKeyStore_getKey failed with err %d!", __func__,
+                            retval);
         }
     }
     else
@@ -112,7 +117,8 @@ SeosKeyStoreApi_getKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle* keyHandle, c
 }
 
 seos_err_t
-SeosKeyStoreApi_deleteKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle, const char* name)
+SeosKeyStoreApi_deleteKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle,
+                          const char* name)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t retval = SEOS_ERROR_GENERIC;
@@ -120,9 +126,10 @@ SeosKeyStoreApi_deleteKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle,
     if (self->isLocalConnection)
     {
         retval = SeosKeyStore_deleteKey(self->connector.local.keyStore, name);
-        if(retval != SEOS_SUCCESS)
+        if (retval != SEOS_SUCCESS)
         {
-            Debug_LOG_ERROR("%s: SeosKeyStore_deleteKey failed with err %d!", __func__, retval);
+            Debug_LOG_ERROR("%s: SeosKeyStore_deleteKey failed with err %d!", __func__,
+                            retval);
         }
     }
     else
@@ -133,17 +140,20 @@ SeosKeyStoreApi_deleteKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle,
 }
 
 seos_err_t
-SeosKeyStoreApi_copyKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle, const char* name, SeosKeyStoreApi* destKeyStore)
+SeosKeyStoreApi_copyKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle,
+                        const char* name, SeosKeyStoreApi* destKeyStore)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
     if (self->isLocalConnection)
     {
-        retval = SeosKeyStore_copyKey(self->connector.local.keyStore, name, destKeyStore->connector.local.keyStore);
-        if(retval != SEOS_SUCCESS)
+        retval = SeosKeyStore_copyKey(self->connector.local.keyStore, name,
+                                      destKeyStore->connector.local.keyStore);
+        if (retval != SEOS_SUCCESS)
         {
-            Debug_LOG_ERROR("%s: SeosKeyStore_copyKey failed with err %d!", __func__, retval);
+            Debug_LOG_ERROR("%s: SeosKeyStore_copyKey failed with err %d!", __func__,
+                            retval);
         }
     }
     else
@@ -154,17 +164,20 @@ SeosKeyStoreApi_copyKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle, c
 }
 
 seos_err_t
-SeosKeyStoreApi_moveKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle, const char* name, SeosKeyStoreApi* destKeyStore)
+SeosKeyStoreApi_moveKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle,
+                        const char* name, SeosKeyStoreApi* destKeyStore)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
     if (self->isLocalConnection)
     {
-        retval = SeosKeyStore_moveKey(self->connector.local.keyStore, name, destKeyStore->connector.local.keyStore);
-        if(retval != SEOS_SUCCESS)
+        retval = SeosKeyStore_moveKey(self->connector.local.keyStore, name,
+                                      destKeyStore->connector.local.keyStore);
+        if (retval != SEOS_SUCCESS)
         {
-            Debug_LOG_ERROR("%s: SeosKeyStore_moveKey failed with err %d!", __func__, retval);
+            Debug_LOG_ERROR("%s: SeosKeyStore_moveKey failed with err %d!", __func__,
+                            retval);
         }
     }
     else
@@ -175,9 +188,9 @@ SeosKeyStoreApi_moveKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle, c
 }
 
 seos_err_t
-SeosKeyStoreApi_generateKey(SeosKeyStoreApi*        self, 
-                            SeosCrypto_KeyHandle*   keyHandle,                         
-                            const char*             name, 
+SeosKeyStoreApi_generateKey(SeosKeyStoreApi*        self,
+                            SeosCrypto_KeyHandle*   keyHandle,
+                            const char*             name,
                             unsigned int            algorithm,
                             unsigned int            flags,
                             size_t                  lenBits)
@@ -187,7 +200,8 @@ SeosKeyStoreApi_generateKey(SeosKeyStoreApi*        self,
 
     if (self->isLocalConnection)
     {
-        retval = SeosKeyStore_generateKey(self->connector.local.keyStore, (SeosCryptoKey**)keyHandle, name, algorithm, flags, lenBits);
+        retval = SeosKeyStore_generateKey(self->connector.local.keyStore, keyHandle,
+                                          name, algorithm, flags, lenBits);
     }
     else
     {

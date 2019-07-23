@@ -26,7 +26,7 @@ typedef struct SeosKeyStore SeosKeyStore;
 struct SeosKeyStore
 {
     FileStreamFactory* fsFactory;
-    SeosCryptoApi* cryptoApi;
+    SeosCrypto* cryptoCore;
     char* name;
 };
 
@@ -46,7 +46,7 @@ struct SeosKeyStore
 bool
 SeosKeyStore_ctor(SeosKeyStore* self,
                   FileStreamFactory* fileStreamFactory,
-                  SeosCryptoApi* cryptoApi,
+                  SeosCrypto* cryptoCore,
                   char* name);
 /**
  * @brief Destructor
