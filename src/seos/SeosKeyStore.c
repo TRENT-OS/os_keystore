@@ -8,6 +8,7 @@
 #include "seos/SeosCryptoCipher.h"
 #include "seos/seos_rng.h"
 #include "mbedtls/base64.h"
+#include "LibMem/BitmapAllocator.h"
 /* Defines -------------------------------------------------------------------*/
 #define MAX_KEY_LEN                         256
 
@@ -15,6 +16,9 @@
 #define KEY_DATA_HASH_LEN                   32
 
 #define NUM_OF_PROPERTIES                   3
+
+/* Memory allocation ---------------------------------------------------------*/
+#define ELEMENT_SIZE                        (MAX_KEY_LEN)
 
 // we round up the MAX_KEY_LEN / B64_KEY_DATA_HASH_LEN to the first
 // value divisible by 3 and multiply it ny 4/3 (overhead for base64)
@@ -54,6 +58,7 @@ static seos_err_t readKeyFromFile(FileStreamFactory* fsFactory,
 static void cpyIntToBuf(uint32_t integer, unsigned char* buf);
 static size_t cpyBufToInt(const char* buf);
 /* Private variables ---------------------------------------------------------*/
+static BitmapAllocator bmAllocator;
 
 /* Public functions ----------------------------------------------------------*/
 bool SeosKeyStore_ctor(SeosKeyStore* self, FileStreamFactory* fileStreamFactory,
@@ -62,6 +67,8 @@ bool SeosKeyStore_ctor(SeosKeyStore* self, FileStreamFactory* fileStreamFactory,
     Debug_ASSERT_SELF(self);
     self->fsFactory = fileStreamFactory;
     self->name = name;
+
+    BitmapAllocator_ctor(&bmAllocator, ELEMENT_SIZE, SeosKeyStore_MAX_NUM_FILES);
     return true;
 }
 
@@ -106,7 +113,7 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStore* self, const char* name,
 }
 
 seos_err_t SeosKeyStore_getKey(SeosKeyStore* self, const char* name,
-                               SeosCryptoKey* key, char* keyBytes)
+                               SeosCryptoKey* key)
 {
     KeyEntry newKeyEntry;
     seos_err_t err = SEOS_SUCCESS;
@@ -141,6 +148,8 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStore* self, const char* name,
         return SEOS_ERROR_GENERIC;
     }
 
+    char* keyBytes = Allocator_alloc(BitmapAllocator_TO_ALLOCATOR(&bmAllocator),
+                                     ELEMENT_SIZE);
     memcpy(keyBytes, newKeyEntry.keyBytes, LEN_BITS_TO_BYTES(readKeySize));
     err = SeosCryptoKey_init(key,
                              NULL,
@@ -197,7 +206,8 @@ seos_err_t SeosKeyStore_getKeySizeBytes(SeosKeyStore* self, const char* name,
     return err;
 }
 
-seos_err_t SeosKeyStore_deleteKey(SeosKeyStore* self, const char* name)
+seos_err_t SeosKeyStore_deleteKey(SeosKeyStore* self, SeosCryptoKey* key,
+                                  const char* name)
 {
     Debug_ASSERT_SELF(self);
     BitMap16 flags = 0;
@@ -215,6 +225,16 @@ seos_err_t SeosKeyStore_deleteKey(SeosKeyStore* self, const char* name)
     BitMap_SET_BIT(flags, FileStream_DeleteFlags_DELETE);
     FileStreamFactory_destroy(self->fsFactory, file, flags);
 
+    Allocator_free(BitmapAllocator_TO_ALLOCATOR(&bmAllocator), key->bytes);
+
+    return SEOS_SUCCESS;
+}
+
+seos_err_t SeosKeyStore_closeKey(SeosKeyStore* self, SeosCryptoKey* key)
+{
+    Debug_ASSERT_SELF(self);
+    Allocator_free(BitmapAllocator_TO_ALLOCATOR(&bmAllocator), key->bytes);
+
     return SEOS_SUCCESS;
 }
 
@@ -223,11 +243,10 @@ seos_err_t SeosKeyStore_copyKey(SeosKeyStore* self, const char* name,
 {
     Debug_ASSERT_SELF(self);
     Debug_ASSERT_SELF(destKeyStore);
-    char keyBytes[MAX_KEY_LEN] = {0};
     SeosCryptoKey key;
     seos_err_t err = SEOS_SUCCESS;
 
-    err = SeosKeyStore_getKey(self, name, &key, keyBytes);
+    err = SeosKeyStore_getKey(self, name, &key);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: getKey failed with err %d!", __func__, err);
@@ -244,7 +263,9 @@ seos_err_t SeosKeyStore_copyKey(SeosKeyStore* self, const char* name,
     return err;
 }
 
-seos_err_t SeosKeyStore_moveKey(SeosKeyStore* self, const char* name,
+seos_err_t SeosKeyStore_moveKey(SeosKeyStore* self,
+                                const char* name,
+                                SeosCryptoKey* key,
                                 SeosKeyStore* destKeyStore)
 {
     Debug_ASSERT_SELF(self);
@@ -258,7 +279,7 @@ seos_err_t SeosKeyStore_moveKey(SeosKeyStore* self, const char* name,
         return err;
     }
 
-    err = SeosKeyStore_deleteKey(self, name);
+    err = SeosKeyStore_deleteKey(self, key, name);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: deleteKey failed with err %d!", __func__, err);
@@ -273,8 +294,7 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStore*   self,
                                     const char*     name,
                                     unsigned int    algorithm,
                                     unsigned int    flags,
-                                    size_t          lenBits,
-                                    char*           keyBytes)
+                                    size_t          lenBits)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t err = SEOS_SUCCESS;
@@ -286,6 +306,9 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStore*   self,
         Debug_LOG_ERROR("%s: seos_rng_init failed with error code %d!", __func__, err);
         return err;
     }
+
+    char* keyBytes = Allocator_alloc(BitmapAllocator_TO_ALLOCATOR(&bmAllocator),
+                                     ELEMENT_SIZE);
     err = seos_rng_get_prng_bytes(&seosRng, keyBytes, MAX_KEY_LEN);
     if (err != SEOS_SUCCESS)
     {
