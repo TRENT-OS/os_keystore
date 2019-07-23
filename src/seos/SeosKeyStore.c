@@ -11,20 +11,20 @@
 /* Defines -------------------------------------------------------------------*/
 #define MAX_KEY_LEN                         256
 
-#define KEY_SIZE_LEN                        4
+#define KEY_INT_PROPERTY_LEN                4
 #define KEY_DATA_HASH_LEN                   32
+
+#define NUM_OF_PROPERTIES                   3
 
 // we round up the MAX_KEY_LEN / B64_KEY_DATA_HASH_LEN to the first
 // value divisible by 3 and multiply it ny 4/3 (overhead for base64)
 #define MAX_B64_KEY_LEN                     ((MAX_KEY_LEN + 2) / 3 * 4)
 #define B64_KEY_DATA_HASH_LEN               ((KEY_DATA_HASH_LEN + 2) / 3 * 4)
-#define B64_KEY_SIZE_LEN                    ((KEY_SIZE_LEN + 2) / 3 * 4)
+#define B64_KEY_INT_PROPERTY_LEN            ((KEY_INT_PROPERTY_LEN + 2) / 3 * 4)
 
-#define MAX_KEY_DATA_LEN                    (MAX_B64_KEY_LEN + B64_KEY_SIZE_LEN + B64_KEY_DATA_HASH_LEN + 2)
+#define MAX_KEY_DATA_LEN                    (MAX_B64_KEY_LEN + NUM_OF_PROPERTIES*B64_KEY_INT_PROPERTY_LEN + B64_KEY_DATA_HASH_LEN + 4)
 
-#define KEY_SIZE_INDEX                      0
-#define FIRST_DELIM_INDEX                   (B64_KEY_SIZE_LEN)
-#define KEY_BYTES_INDEX                     (B64_KEY_SIZE_LEN + 1)
+#define KEY_BYTES_INDEX                     (NUM_OF_PROPERTIES*B64_KEY_INT_PROPERTY_LEN + 3)
 
 #define DELIMITER_STRING                    ","
 
@@ -33,14 +33,14 @@
 /* Macros -------------------------------------------------------------------*/
 #define LEN_BITS_TO_BYTES(lenBits)          (lenBits/8)
 
-#define SECOND_DELIM_INDEX(keyLen)          (KEY_BYTES_INDEX + keyLen)
-#define HASH_INDEX(keyLen)                  (SECOND_DELIM_INDEX(keyLen) + 1)
-#define KEY_DATA_TOTAL_LEN(keyLen)          (B64_KEY_SIZE_LEN + keyLen + 2 + B64_KEY_DATA_HASH_LEN)
+#define FOURTH_DELIM_INDEX(keyLen)          (KEY_BYTES_INDEX + keyLen)
+#define HASH_INDEX(keyLen)                  (FOURTH_DELIM_INDEX(keyLen) + 1)
+#define KEY_DATA_TOTAL_LEN(keyLen)          (B64_KEY_INT_PROPERTY_LEN*3 + keyLen + 4 + B64_KEY_DATA_HASH_LEN)
 
 /* Private types ---------------------------------------------------------*/
 typedef struct KeyEntry
 {
-    unsigned char keySize[KEY_SIZE_LEN];
+    unsigned char keyProperties[NUM_OF_PROPERTIES][KEY_INT_PROPERTY_LEN];
     unsigned char keyBytes[MAX_KEY_LEN];
     unsigned char hash[KEY_DATA_HASH_LEN];
 } KeyEntry;
@@ -56,23 +56,6 @@ static size_t cpyBufToInt(const char* buf);
 /* Private variables ---------------------------------------------------------*/
 
 /* Public functions ----------------------------------------------------------*/
-bool SeosKeyStore_KeyTypeCtor(SeosKeyStore_KeyType* self, void* algKeyCtx,
-                              unsigned algorithm, BitMap16 flags, size_t lenBits)
-{
-    Debug_ASSERT_SELF(self);
-    self->algKeyCtx = algKeyCtx;
-    self->algorithm = algorithm;
-    self->flags = flags;
-    self->lenBits = lenBits;
-
-    return true;
-}
-
-void SeosKeyStore_KeyTypeDtor(SeosKeyStore_KeyType* self)
-{
-    Debug_ASSERT_SELF(self);
-}
-
 bool SeosKeyStore_ctor(SeosKeyStore* self, FileStreamFactory* fileStreamFactory,
                        char* name)
 {
@@ -96,9 +79,12 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStore* self, const char* name,
     seos_err_t err = SEOS_SUCCESS;
 
     memcpy(newKeyEntry.keyBytes, key->bytes, LEN_BITS_TO_BYTES(key->lenBits));
-    cpyIntToBuf(key->lenBits, newKeyEntry.keySize);
+    cpyIntToBuf(key->lenBits, newKeyEntry.keyProperties[0]);
+    cpyIntToBuf(key->algorithm, newKeyEntry.keyProperties[1]);
+    cpyIntToBuf(key->flags, newKeyEntry.keyProperties[2]);    
+
     err = createKeyHash(&newKeyEntry,
-                        KEY_SIZE_LEN + LEN_BITS_TO_BYTES(key->lenBits),
+                        (KEY_INT_PROPERTY_LEN * NUM_OF_PROPERTIES) + LEN_BITS_TO_BYTES(key->lenBits),
                         newKeyEntry.hash);
 
     if (err != SEOS_SUCCESS)
@@ -119,8 +105,7 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStore* self, const char* name,
     return err;
 }
 
-seos_err_t SeosKeyStore_getKey(SeosKeyStore* self, const char* name,
-                               SeosCryptoKey* key, char* keyBytes, SeosKeyStore_KeyType* keyType)
+seos_err_t SeosKeyStore_getKey(SeosKeyStore* self, const char* name, SeosCryptoKey* key, char* keyBytes)
 {
     KeyEntry newKeyEntry;
     seos_err_t err = SEOS_SUCCESS;
@@ -134,10 +119,12 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStore* self, const char* name,
         return err;
     }
 
-    size_t readKeySize = cpyBufToInt((char*)newKeyEntry.keySize);
+    size_t readKeySize      = cpyBufToInt((char*)newKeyEntry.keyProperties[0]);
+    size_t readKeyAlgorithm = cpyBufToInt((char*)newKeyEntry.keyProperties[1]);
+    size_t readKeyFlags     = cpyBufToInt((char*)newKeyEntry.keyProperties[2]);
 
     err = createKeyHash(&newKeyEntry,
-                        KEY_SIZE_LEN + LEN_BITS_TO_BYTES(readKeySize),
+                        (KEY_INT_PROPERTY_LEN * NUM_OF_PROPERTIES) + LEN_BITS_TO_BYTES(readKeySize),
                         calculatedHash);
     if (err != SEOS_SUCCESS)
     {
@@ -155,9 +142,9 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStore* self, const char* name,
 
     memcpy(keyBytes, newKeyEntry.keyBytes, LEN_BITS_TO_BYTES(readKeySize));
     err = SeosCryptoKey_init(key,
-                             keyType->algKeyCtx,
-                             keyType->algorithm,
-                             keyType->flags,
+                             NULL,
+                             readKeyAlgorithm,
+                             readKeyFlags,
                              keyBytes,
                              readKeySize);
     if (err != SEOS_SUCCESS)
@@ -185,10 +172,10 @@ seos_err_t SeosKeyStore_getKeySizeBytes(SeosKeyStore* self, const char* name,
         return err;
     }
 
-    size_t readKeySize = cpyBufToInt((char*)newKeyEntry.keySize);
+    size_t readKeySize = cpyBufToInt((char*)newKeyEntry.keyProperties[0]);
 
     err = createKeyHash(&newKeyEntry,
-                        KEY_SIZE_LEN + LEN_BITS_TO_BYTES(readKeySize),
+                        (KEY_INT_PROPERTY_LEN * NUM_OF_PROPERTIES) + LEN_BITS_TO_BYTES(readKeySize),
                         calculatedHash);
     if (err != SEOS_SUCCESS)
     {
@@ -239,11 +226,7 @@ seos_err_t SeosKeyStore_copyKey(SeosKeyStore* self, const char* name,
     SeosCryptoKey key;
     seos_err_t err = SEOS_SUCCESS;
 
-    //key type is not important for copying since that data is not written to the nvm
-    SeosKeyStore_KeyType keyType;
-    SeosKeyStore_KeyTypeCtor(&keyType, NULL, 0, 0, 0);
-
-    err = SeosKeyStore_getKey(self, name, &key, keyBytes, &keyType);
+    err = SeosKeyStore_getKey(self, name, &key, keyBytes);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: getKey failed with err %d!", __func__, err);
@@ -284,8 +267,13 @@ seos_err_t SeosKeyStore_moveKey(SeosKeyStore* self, const char* name,
     return err;
 }
 
-seos_err_t SeosKeyStore_generateKey(SeosKeyStore* self, SeosCryptoKey* key,
-                                    const char* name, char* keyBytes, SeosKeyStore_KeyType* keyType)
+seos_err_t SeosKeyStore_generateKey(SeosKeyStore*   self,
+                                    SeosCryptoKey*  key,
+                                    const char*     name,
+                                    unsigned int    algorithm,
+                                    unsigned int    flags,
+                                    size_t          lenBits,
+                                    char*           keyBytes)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t err = SEOS_SUCCESS;
@@ -306,11 +294,11 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStore* self, SeosCryptoKey* key,
     }
 
     err = SeosCryptoKey_init(key,
-                             keyType->algKeyCtx,
-                             keyType->algorithm,
-                             keyType->flags,
+                             NULL,
+                             algorithm,
+                             flags,
                              keyBytes,
-                             keyType->lenBits);
+                             lenBits);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCryptoKey_init failed to construct the key with error code %d!",
@@ -381,24 +369,27 @@ static seos_err_t writeKeyToFile(FileStreamFactory* fsFactory,
     size_t encodedKeySize = 0;
     seos_err_t err = SEOS_SUCCESS;
 
-    // encode the key size to base64 and write it to the buffer
-    // + 1 is added to B64_KEY_SIZE_LEN because the function adds the '\0' char at the end
-    err = mbedtls_base64_encode(&keyData[KEY_SIZE_INDEX],
-                                B64_KEY_SIZE_LEN + 1,
-                                &encodedBytes,
-                                keyEntry->keySize,
-                                KEY_SIZE_LEN);
-    if (err != SEOS_SUCCESS || encodedBytes != B64_KEY_SIZE_LEN)
+    for (size_t i = 0; i < NUM_OF_PROPERTIES; i++)
     {
-        Debug_LOG_ERROR("%s: Could not base64 encode the key size, err %d, encoded bytes = %d, expected size = %d!",
-                        __func__, err, encodedBytes, B64_KEY_SIZE_LEN);
-        err = err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL ?
-              SEOS_ERROR_INSUFFICIENT_SPACE : SEOS_ERROR_INVALID_PARAMETER;
-        return err;
-    }
+        // encode the key size to base64 and write it to the buffer
+        // + 1 is added to B64_KEY_INT_PROPERTY_LEN because the function adds the '\0' char at the end
+        err = mbedtls_base64_encode(&keyData[i*(B64_KEY_INT_PROPERTY_LEN + 1)],
+                                    B64_KEY_INT_PROPERTY_LEN + 1,
+                                    &encodedBytes,
+                                    keyEntry->keyProperties[i],
+                                    KEY_INT_PROPERTY_LEN);
+        if (err != SEOS_SUCCESS || encodedBytes != B64_KEY_INT_PROPERTY_LEN)
+        {
+            Debug_LOG_ERROR("%s: Could not base64 encode the key property %d, err %d, encoded bytes = %d, expected size = %d!",
+                            __func__, i, err, encodedBytes, B64_KEY_INT_PROPERTY_LEN);
+            err = err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL ?
+                SEOS_ERROR_INSUFFICIENT_SPACE : SEOS_ERROR_INVALID_PARAMETER;
+            return err;
+        }
 
-    // add a delimiter between the key size and the key bytes
-    keyData[FIRST_DELIM_INDEX] = DELIMITER_STRING[0];
+        // add a delimiter between the key size and the key bytes
+        keyData[(i+1) * B64_KEY_INT_PROPERTY_LEN + i*1] = DELIMITER_STRING[0];
+    }
 
     // get the length of the base64 encoded key
     err = mbedtls_base64_encode(NULL,
@@ -424,7 +415,7 @@ static seos_err_t writeKeyToFile(FileStreamFactory* fsFactory,
     }
 
     // add a delimiter between the key bytes and the hash
-    keyData[SECOND_DELIM_INDEX(encodedKeySize)] = DELIMITER_STRING[0];
+    keyData[FOURTH_DELIM_INDEX(encodedKeySize)] = DELIMITER_STRING[0];
 
     // get the length of the base64 encoded hash
     err = mbedtls_base64_encode(NULL,
@@ -456,6 +447,7 @@ static seos_err_t writeKeyToFile(FileStreamFactory* fsFactory,
                         __func__, name);
         return SEOS_ERROR_OPERATION_DENIED;
     }
+
     // write the prepared buffer to the file
     if (Stream_write(FileStream_TO_STREAM(file), (char*)keyData,
                      KEY_DATA_TOTAL_LEN(encodedKeySize)) != KEY_DATA_TOTAL_LEN(
@@ -493,33 +485,38 @@ static seos_err_t readKeyFromFile(FileStreamFactory* fsFactory,
                         __func__, name);
         return SEOS_ERROR_NOT_FOUND;
     }
-    // read and decode the key length and store it into the keyEntry object
-    // + 1 is added to B64_KEY_SIZE_LEN to read past the first delimiter
-    readBytes = Stream_get(FileStream_TO_STREAM(file),
-                           (char*)buffer, B64_KEY_SIZE_LEN + 1, DELIMITER_STRING, 0);
-    if (readBytes <= 0)
+
+    for (size_t i = 0; i < NUM_OF_PROPERTIES; i++)
     {
-        Debug_LOG_ERROR("%s: Stream_get failed! Return value = %d", __func__,
-                        readBytes);
-        err = SEOS_ERROR_OPERATION_DENIED;
-        goto ERROR;
-    }
-    err = mbedtls_base64_decode(keyEntry->keySize,
-                                KEY_SIZE_LEN,
-                                &decodedBytes,
-                                buffer,
-                                readBytes);
-    if (err != SEOS_SUCCESS || decodedBytes != KEY_SIZE_LEN)
-    {
-        Debug_LOG_ERROR("%s: Could not base64 decode the key length, err = %d, decoded bytes = %d, expected size = %d!",
-                        __func__, err, decodedBytes, KEY_SIZE_LEN);
-        err = err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL ?
-              SEOS_ERROR_INSUFFICIENT_SPACE : SEOS_ERROR_INVALID_PARAMETER;
-        goto ERROR;
+        // read and decode the key length and store it into the keyEntry object
+        // + 1 is added to B64_KEY_INT_PROPERTY_LEN to read past the first delimiter
+        readBytes = Stream_get(FileStream_TO_STREAM(file),
+                            (char*)buffer, B64_KEY_INT_PROPERTY_LEN + 1, DELIMITER_STRING, 0);
+        if (readBytes <= 0)
+        {
+            Debug_LOG_ERROR("%s: Stream_get failed, for property %d! Return value = %d", __func__, i,
+                            readBytes);
+            err = SEOS_ERROR_OPERATION_DENIED;
+            goto ERROR;
+        }
+
+        err = mbedtls_base64_decode(keyEntry->keyProperties[i],
+                                    KEY_INT_PROPERTY_LEN,
+                                    &decodedBytes,
+                                    buffer,
+                                    readBytes);
+        if (err != SEOS_SUCCESS || decodedBytes != KEY_INT_PROPERTY_LEN)
+        {
+            Debug_LOG_ERROR("%s: Could not base64 decode the key property %d, err = %d, decoded bytes = %d, expected size = %d!",
+                            __func__, i, err, decodedBytes, KEY_INT_PROPERTY_LEN);
+            err = err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL ?
+                SEOS_ERROR_INSUFFICIENT_SPACE : SEOS_ERROR_INVALID_PARAMETER;
+            goto ERROR;
+        }
     }
 
     // read and decode the key bytes and store it into the keyEntry object
-    // + 1 is added to B64_KEY_SIZE_LEN to read past the first delimiter
+    // + 1 is added to B64_KEY_INT_PROPERTY_LEN to read past the first delimiter
     readBytes = Stream_get(FileStream_TO_STREAM(file),
                            (char*)buffer, MAX_B64_KEY_LEN + 1, DELIMITER_STRING, 0);
     if (readBytes <= 0)

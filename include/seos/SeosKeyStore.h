@@ -28,36 +28,8 @@ struct SeosKeyStore
     char* name;
 };
 
-typedef struct SeosKeyStore_KeyType SeosKeyStore_KeyType;
-
-struct SeosKeyStore_KeyType
-{
-    void* algKeyCtx;
-    unsigned algorithm;
-    BitMap16 flags;
-    size_t lenBits;
-};
-
 /* Exported constants --------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-/**
- * @brief SeosKeyStore_KeyType constructor
- *
- * @return true if success
- *
- */
-bool
-SeosKeyStore_KeyTypeCtor(SeosKeyStore_KeyType* self, void* algKeyCtx,
-                         unsigned algorithm, BitMap16 flags, size_t lenBits);
-
-/**
- * @brief SeosKeyStore_KeyType destructor
- *
- * @return true if success
- *
- */
-void
-SeosKeyStore_KeyTypeDtor(SeosKeyStore_KeyType* self);
 /**
  * @brief Constructor
  *
@@ -97,22 +69,19 @@ SeosKeyStore_importKey(SeosKeyStore* self, const char* name,
  *
  * @param self          pointer to self
  * @param name          name of the key to get
- * @param keyBytes      pointer to the allocated chunk of memory for the keyBytes
- * @param keyBytes      pointer to the key type
  * @param key[out]      the returned key
  *
  * @return seos_err
  *
  */
 seos_err_t
-SeosKeyStore_getKey(SeosKeyStore* self, const char* name,
-                    SeosCryptoKey* key, char* keyBytes, SeosKeyStore_KeyType* keyType);
+SeosKeyStore_getKey(SeosKeyStore* self, const char* name, SeosCryptoKey* key, char* keyBytes);
 /**
  * @brief Reads the key data from the key specified by the passed name and
  * stores the key size in the output parameter keySize
  *
  * @param self          pointer to self
- * @param name          name of the key we want to get
+ * @param name          name of the key we want to get the size of
  * @param keySize[out]  the size of the key in bytes
  *
  * @return seos_err
@@ -137,7 +106,7 @@ SeosKeyStore_deleteKey(SeosKeyStore* self, const char* name);
  * the destination key store
  *
  * @param self          pointer to self
- * @param name          name of the key we want to delete
+ * @param name          name of the key we want to copy
  * @param destKeyStore  pointer to the destination key store
  *
  * @return seos_err
@@ -152,7 +121,7 @@ SeosKeyStore_copyKey(SeosKeyStore* self, const char* name,
  * current key store)
  *
  * @param self          pointer to self
- * @param name          name of the key we want to delete
+ * @param name          name of the key we want to move
  * @param destKeyStore  pointer to the destination key store
  *
  * @return seos_err
@@ -166,15 +135,21 @@ SeosKeyStore_moveKey(SeosKeyStore* self, const char* name,
  * and returns the key data in the key object.
  *
  * @param self          pointer to self
- * @param name          name of the key we want to delete
- * @param keyBytes      pointer to the allocated chunk of memory for the keyBytes
- * @param keyBytes      pointer to the key type
  * @param key[out]      the returned key
- *
+ * @param name          name of the key we want to generate
+ * @param algorithm     algorithm that uses the key
+ * @param flags         flags
+ * @param lenBits       length of the key in bits
+ * 
  * @return seos_err
  *
  */
 seos_err_t
-SeosKeyStore_generateKey(SeosKeyStore* self, SeosCryptoKey* key,
-                         const char* name, char* keyBytes, SeosKeyStore_KeyType* keyType);
+SeosKeyStore_generateKey(SeosKeyStore*      self,
+                            SeosCryptoKey*  key,
+                            const char*     name,
+                            unsigned int    algorithm,
+                            unsigned int    flags,
+                            size_t          lenBits,
+                            char*           keyBytes);
 ///@}
