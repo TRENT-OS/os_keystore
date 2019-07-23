@@ -81,7 +81,7 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStore* self, const char* name,
     memcpy(newKeyEntry.keyBytes, key->bytes, LEN_BITS_TO_BYTES(key->lenBits));
     cpyIntToBuf(key->lenBits, newKeyEntry.keyProperties[0]);
     cpyIntToBuf(key->algorithm, newKeyEntry.keyProperties[1]);
-    cpyIntToBuf(key->flags, newKeyEntry.keyProperties[2]);    
+    cpyIntToBuf(key->flags, newKeyEntry.keyProperties[2]);
 
     err = createKeyHash(&newKeyEntry,
                         (KEY_INT_PROPERTY_LEN * NUM_OF_PROPERTIES) + LEN_BITS_TO_BYTES(key->lenBits),
@@ -105,7 +105,8 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStore* self, const char* name,
     return err;
 }
 
-seos_err_t SeosKeyStore_getKey(SeosKeyStore* self, const char* name, SeosCryptoKey* key, char* keyBytes)
+seos_err_t SeosKeyStore_getKey(SeosKeyStore* self, const char* name,
+                               SeosCryptoKey* key, char* keyBytes)
 {
     KeyEntry newKeyEntry;
     seos_err_t err = SEOS_SUCCESS;
@@ -373,7 +374,7 @@ static seos_err_t writeKeyToFile(FileStreamFactory* fsFactory,
     {
         // encode the key size to base64 and write it to the buffer
         // + 1 is added to B64_KEY_INT_PROPERTY_LEN because the function adds the '\0' char at the end
-        err = mbedtls_base64_encode(&keyData[i*(B64_KEY_INT_PROPERTY_LEN + 1)],
+        err = mbedtls_base64_encode(&keyData[i * (B64_KEY_INT_PROPERTY_LEN + 1)],
                                     B64_KEY_INT_PROPERTY_LEN + 1,
                                     &encodedBytes,
                                     keyEntry->keyProperties[i],
@@ -383,12 +384,12 @@ static seos_err_t writeKeyToFile(FileStreamFactory* fsFactory,
             Debug_LOG_ERROR("%s: Could not base64 encode the key property %d, err %d, encoded bytes = %d, expected size = %d!",
                             __func__, i, err, encodedBytes, B64_KEY_INT_PROPERTY_LEN);
             err = err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL ?
-                SEOS_ERROR_INSUFFICIENT_SPACE : SEOS_ERROR_INVALID_PARAMETER;
+                  SEOS_ERROR_INSUFFICIENT_SPACE : SEOS_ERROR_INVALID_PARAMETER;
             return err;
         }
 
         // add a delimiter between the key size and the key bytes
-        keyData[(i+1) * B64_KEY_INT_PROPERTY_LEN + i*1] = DELIMITER_STRING[0];
+        keyData[(i + 1) * B64_KEY_INT_PROPERTY_LEN + i * 1] = DELIMITER_STRING[0];
     }
 
     // get the length of the base64 encoded key
@@ -491,10 +492,11 @@ static seos_err_t readKeyFromFile(FileStreamFactory* fsFactory,
         // read and decode the key length and store it into the keyEntry object
         // + 1 is added to B64_KEY_INT_PROPERTY_LEN to read past the first delimiter
         readBytes = Stream_get(FileStream_TO_STREAM(file),
-                            (char*)buffer, B64_KEY_INT_PROPERTY_LEN + 1, DELIMITER_STRING, 0);
+                               (char*)buffer, B64_KEY_INT_PROPERTY_LEN + 1, DELIMITER_STRING, 0);
         if (readBytes <= 0)
         {
-            Debug_LOG_ERROR("%s: Stream_get failed, for property %d! Return value = %d", __func__, i,
+            Debug_LOG_ERROR("%s: Stream_get failed, for property %d! Return value = %d",
+                            __func__, i,
                             readBytes);
             err = SEOS_ERROR_OPERATION_DENIED;
             goto ERROR;
@@ -510,7 +512,7 @@ static seos_err_t readKeyFromFile(FileStreamFactory* fsFactory,
             Debug_LOG_ERROR("%s: Could not base64 decode the key property %d, err = %d, decoded bytes = %d, expected size = %d!",
                             __func__, i, err, decodedBytes, KEY_INT_PROPERTY_LEN);
             err = err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL ?
-                SEOS_ERROR_INSUFFICIENT_SPACE : SEOS_ERROR_INVALID_PARAMETER;
+                  SEOS_ERROR_INSUFFICIENT_SPACE : SEOS_ERROR_INVALID_PARAMETER;
             goto ERROR;
         }
     }

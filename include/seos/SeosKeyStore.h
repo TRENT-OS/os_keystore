@@ -75,7 +75,8 @@ SeosKeyStore_importKey(SeosKeyStore* self, const char* name,
  *
  */
 seos_err_t
-SeosKeyStore_getKey(SeosKeyStore* self, const char* name, SeosCryptoKey* key, char* keyBytes);
+SeosKeyStore_getKey(SeosKeyStore* self, const char* name, SeosCryptoKey* key,
+                    char* keyBytes);
 /**
  * @brief Reads the key data from the key specified by the passed name and
  * stores the key size in the output parameter keySize
@@ -140,16 +141,16 @@ SeosKeyStore_moveKey(SeosKeyStore* self, const char* name,
  * @param algorithm     algorithm that uses the key
  * @param flags         flags
  * @param lenBits       length of the key in bits
- * 
+ *
  * @return seos_err
  *
  */
 seos_err_t
 SeosKeyStore_generateKey(SeosKeyStore*      self,
-                            SeosCryptoKey*  key,
-                            const char*     name,
-                            unsigned int    algorithm,
-                            unsigned int    flags,
-                            size_t          lenBits,
-                            char*           keyBytes);
+                         SeosCryptoKey*  key,
+                         const char*     name,
+                         unsigned int    algorithm,
+                         unsigned int    flags,
+                         size_t          lenBits,
+                         char*           keyBytes);
 ///@}
