@@ -14,6 +14,7 @@
 #include "seos_err.h"
 #include "SeosCryptoKey.h"
 #include "SeosCryptoCipher.h"
+#include "SeosCryptoApi.h"
 #include "LibIO/FileStream.h"
 #include "LibIO/FileStreamFactory.h"
 
@@ -25,12 +26,11 @@ typedef struct SeosKeyStore SeosKeyStore;
 struct SeosKeyStore
 {
     FileStreamFactory* fsFactory;
+    SeosCryptoApi* cryptoApi;
     char* name;
 };
 
 /* Exported constants --------------------------------------------------------*/
-#define SeosKeyStore_MAX_NUM_FILES ((sizeof(BitMapInt) * CHAR_BIT))
-
 /* Exported functions ------------------------------------------------------- */
 /**
  * @brief Constructor
@@ -46,6 +46,7 @@ struct SeosKeyStore
 bool
 SeosKeyStore_ctor(SeosKeyStore* self,
                   FileStreamFactory* fileStreamFactory,
+                  SeosCryptoApi* cryptoApi,
                   char* name);
 /**
  * @brief Destructor
@@ -77,7 +78,7 @@ SeosKeyStore_importKey(SeosKeyStore* self, const char* name,
  *
  */
 seos_err_t
-SeosKeyStore_getKey(SeosKeyStore* self, const char* name, SeosCryptoKey* key);
+SeosKeyStore_getKey(SeosKeyStore* self, const char* name, SeosCryptoKey** key);
 /**
  * @brief Reads the key data from the key specified by the passed name and
  * stores the key size in the output parameter keySize
@@ -96,15 +97,13 @@ SeosKeyStore_getKeySizeBytes(SeosKeyStore* self, const char* name,
  * @brief Deletes a key with a given name from the keystore
  *
  * @param self          pointer to self
- * @param key           key handle
  * @param name          key name
  *
  * @return seos_err
  *
  */
 seos_err_t
-SeosKeyStore_deleteKey(SeosKeyStore* self, SeosCryptoKey* key,
-                       const char* name);
+SeosKeyStore_deleteKey(SeosKeyStore* self, const char* name);
 /**
  * @brief Frees the resources of the passed key (dtor) but the key remains
  * in the non volatile storage
@@ -144,7 +143,7 @@ SeosKeyStore_copyKey(SeosKeyStore* self, const char* name,
  *
  */
 seos_err_t
-SeosKeyStore_moveKey(SeosKeyStore* self, const char* name, SeosCryptoKey* key,
+SeosKeyStore_moveKey(SeosKeyStore* self, const char* name,
                      SeosKeyStore* destKeyStore);
 /**
  * @brief Generates a key with a given name using an RNG, stores the key into the key store
@@ -162,7 +161,7 @@ SeosKeyStore_moveKey(SeosKeyStore* self, const char* name, SeosCryptoKey* key,
  */
 seos_err_t
 SeosKeyStore_generateKey(SeosKeyStore*   self,
-                         SeosCryptoKey*  key,
+                         SeosCryptoKey** key,
                          const char*     name,
                          unsigned int    algorithm,
                          unsigned int    flags,
