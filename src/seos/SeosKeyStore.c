@@ -4,9 +4,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "SeosKeyStore.h"
-#include "seos/SeosCryptoDigest.h"
-#include "seos/SeosCryptoCipher.h"
-#include "seos/seos_rng.h"
+#include "SeosCryptoDigest.h"
+#include "SeosCryptoCipher.h"
+#include "seos_rng.h"
 #include "mbedtls/base64.h"
 /* Defines -------------------------------------------------------------------*/
 #define MAX_KEY_LEN                         256
