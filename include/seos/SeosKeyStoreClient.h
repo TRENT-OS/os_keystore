@@ -46,9 +46,9 @@ SeosKeyStoreClient;
  *
  */
 seos_err_t
-SeosKeyStoreClient_init(SeosKeyStoreClient* self,
-                        SeosKeyStoreRpc_Handle rpcHandle,
-                        void* dataport);
+SeosKeyStoreClient_init(SeosKeyStoreClient*     self,
+                        SeosKeyStoreRpc_Handle  rpcHandle,
+                        void*                   dataport);
 /**
  * @brief destructor of a seos KeyStore client
  *
@@ -75,13 +75,13 @@ SeosKeyStoreClient_deInit(SeosKeyStoreApi* api);
  *
  */
 seos_err_t
-SeosKeyStoreClient_importKey(SeosKeyStoreApi*           api,
-                             SeosCrypto_KeyHandle*      keyHandle,
-                             const char*                name,
-                             void const*                keyBytesBuffer,
-                             unsigned int               algorithm,
-                             unsigned int               flags,
-                             size_t                     lenBits);
+SeosKeyStoreClient_importKey(SeosKeyStoreApi*       api,
+                             SeosCrypto_KeyHandle*  keyHandle,
+                             const char*            name,
+                             void const*            keyBytesBuffer,
+                             unsigned int           algorithm,
+                             unsigned int           flags,
+                             size_t                 lenBits);
 /**
  * @brief Retreives the key with a given name from the keystore
  *
@@ -93,9 +93,9 @@ SeosKeyStoreClient_importKey(SeosKeyStoreApi*           api,
  *
  */
 seos_err_t
-SeosKeyStoreClient_getKey(SeosKeyStoreApi*          api,
-                          SeosCrypto_KeyHandle*     keyHandle,
-                          const char*               name);
+SeosKeyStoreClient_getKey(SeosKeyStoreApi*      api,
+                          SeosCrypto_KeyHandle* keyHandle,
+                          const char*           name);
 /**
  * @brief Deletes a key with from the keystore
  *
@@ -107,9 +107,9 @@ SeosKeyStoreClient_getKey(SeosKeyStoreApi*          api,
  *
  */
 seos_err_t
-SeosKeyStoreClient_deleteKey(SeosKeyStoreApi*               api,
-                                SeosCrypto_KeyHandle        keyHandle,
-                                const char*                 name);
+SeosKeyStoreClient_deleteKey(SeosKeyStoreApi*       api,
+                             SeosCrypto_KeyHandle   keyHandle,
+                             const char*            name);
 /**
  * @brief Copies the key from the current key store to the destination key store
  *
@@ -122,10 +122,10 @@ SeosKeyStoreClient_deleteKey(SeosKeyStoreApi*               api,
  *
  */
 seos_err_t
-SeosKeyStoreClient_copyKey(SeosKeyStoreApi*             api,
-                            SeosCrypto_KeyHandle        keyHandle,
-                            const char*                 name,
-                            SeosKeyStoreApi*            destKeyStore);
+SeosKeyStoreClient_copyKey(SeosKeyStoreApi*     api,
+                           SeosCrypto_KeyHandle keyHandle,
+                           const char*          name,
+                           SeosKeyStoreApi*     destKeyStore);
 /**
  * @brief Moves the key from the current key store to
  * the destination key store (after the operation the key is no longer in the
@@ -140,10 +140,10 @@ SeosKeyStoreClient_copyKey(SeosKeyStoreApi*             api,
  *
  */
 seos_err_t
-SeosKeyStoreClient_moveKey(SeosKeyStoreApi*             api,
-                            SeosCrypto_KeyHandle        keyHandle,
-                            const char*                 name,
-                            SeosKeyStoreApi*            destKeyStore);
+SeosKeyStoreClient_moveKey(SeosKeyStoreApi*     api,
+                           SeosCrypto_KeyHandle keyHandle,
+                           const char*          name,
+                           SeosKeyStoreApi*     destKeyStore);
 /**
  * @brief Generates a key with a given name using an RNG, stores the key into the key store
  * and returns the key data in the key object.
@@ -159,11 +159,11 @@ SeosKeyStoreClient_moveKey(SeosKeyStoreApi*             api,
  *
  */
 seos_err_t
-SeosKeyStoreClient_generateKey(SeosKeyStoreApi*             api,
-                                SeosCrypto_KeyHandle*       keyHandle,
-                                const char*                 name,
-                                unsigned int                algorithm,
-                                unsigned int                flags,
-                                size_t                      lenBits);
+SeosKeyStoreClient_generateKey(SeosKeyStoreApi*         api,
+                               SeosCrypto_KeyHandle*    keyHandle,
+                               const char*              name,
+                               unsigned int             algorithm,
+                               unsigned int             flags,
+                               size_t                   lenBits);
 
 /** @} */

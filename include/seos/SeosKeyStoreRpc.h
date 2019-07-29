@@ -43,9 +43,9 @@ typedef SeosKeyStoreRpc* SeosKeyStoreRpc_Handle;
  *
  */
 seos_err_t
-SeosKeyStoreRpc_init(SeosKeyStoreRpc* self,
-                     SeosKeyStoreApi* SeosKeyStoreRpcCtx,
-                     void* serverDataport);
+SeosKeyStoreRpc_init(SeosKeyStoreRpc*   self,
+                     SeosKeyStoreApi*   SeosKeyStoreRpcCtx,
+                     void*              serverDataport);
 /**
  * @brief destructor of a seos KeyStore RPC object
  *
@@ -70,11 +70,11 @@ SeosKeyStoreRpc_deInit(SeosKeyStoreRpc* self);
  *
  */
 seos_err_t
-SeosKeyStoreRpc_importKey(SeosKeyStoreRpc*          self,
-                          SeosCrypto_KeyHandle*     keyHandle,
-                          unsigned int              algorithm,
-                          unsigned int              flags,
-                          size_t                    lenBits);
+SeosKeyStoreRpc_importKey(SeosKeyStoreRpc*      self,
+                          SeosCrypto_KeyHandle* keyHandle,
+                          unsigned int          algorithm,
+                          unsigned int          flags,
+                          size_t                lenBits);
 /**
  * @brief Retreives the key with a given name from the keystore
  *
@@ -86,7 +86,7 @@ SeosKeyStoreRpc_importKey(SeosKeyStoreRpc*          self,
  */
 seos_err_t
 SeosKeyStoreRpc_getKey(SeosKeyStoreRpc*         self,
-                        SeosCrypto_KeyHandle*   keyHandle);
+                       SeosCrypto_KeyHandle*    keyHandle);
 /**
  * @brief Deletes a key with a given name from the keystore
  *
@@ -97,8 +97,8 @@ SeosKeyStoreRpc_getKey(SeosKeyStoreRpc*         self,
  *
  */
 seos_err_t
-SeosKeyStoreRpc_deleteKey(SeosKeyStoreRpc*          self,
-                            SeosCrypto_KeyHandle    keyHandle);
+SeosKeyStoreRpc_deleteKey(SeosKeyStoreRpc*      self,
+                          SeosCrypto_KeyHandle  keyHandle);
 /**
  * @brief Copies the key with a selected name from the current key store to
  * the destination key store
@@ -144,10 +144,10 @@ SeosKeyStoreRpc_moveKey(SeosKeyStoreRpc*        self,
  *
  */
 seos_err_t
-SeosKeyStoreRpc_generateKey(SeosKeyStoreRpc*            self,
-                            SeosCrypto_KeyHandle*       keyHandle,
-                            unsigned int                algorithm,
-                            unsigned int                flags,
-                            size_t                      lenBits);
+SeosKeyStoreRpc_generateKey(SeosKeyStoreRpc*        self,
+                            SeosCrypto_KeyHandle*   keyHandle,
+                            unsigned int            algorithm,
+                            unsigned int            flags,
+                            size_t                  lenBits);
 
 /** @} */
