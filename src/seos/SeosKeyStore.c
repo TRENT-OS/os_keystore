@@ -31,7 +31,7 @@
 #define RNG_SEED                            "9f19a9b95fea4d3419f39697ed54fd32"
 
 /* Macros -------------------------------------------------------------------*/
-#define LEN_BITS_TO_BYTES(lenBits)          (lenBits/8)
+#define LEN_BITS_TO_BYTES(lenBits)          (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
 
 #define FOURTH_DELIM_INDEX(keyLen)          (KEY_BYTES_INDEX + keyLen)
 #define HASH_INDEX(keyLen)                  (FOURTH_DELIM_INDEX(keyLen) + 1)
@@ -54,37 +54,70 @@ static seos_err_t readKeyFromFile(FileStreamFactory* fsFactory,
 static void cpyIntToBuf(uint32_t integer, unsigned char* buf);
 static size_t cpyBufToInt(const char* buf);
 /* Private variables ---------------------------------------------------------*/
+/* Private variables ----------------------------------------------------------*/
+static const SeosKeyStoreApi_Vtable SeosKeyStore_vtable =
+{
+    .importKey      = SeosKeyStore_importKey,
+    .getKey         = SeosKeyStore_getKey,
+    .deleteKey      = SeosKeyStore_deleteKey,
+    .copyKey        = SeosKeyStore_copyKey,
+    .moveKey        = SeosKeyStore_moveKey,
+    .generateKey    = SeosKeyStore_generateKey,
+    .deInit         = SeosKeyStore_deInit,
+};
 /* Public functions ----------------------------------------------------------*/
-bool SeosKeyStore_ctor(SeosKeyStore* self, FileStreamFactory* fileStreamFactory,
-                       SeosCrypto* cryptoCore, char* name)
+seos_err_t SeosKeyStore_init(SeosKeyStore*      self,
+                             FileStreamFactory* fileStreamFactory,
+                             SeosCrypto*        cryptoCore,
+                             char*              name)
 {
     Debug_ASSERT_SELF(self);
-    self->fsFactory = fileStreamFactory;
-    self->name = name;
-    self->cryptoCore = cryptoCore;
-    return true;
+
+    if (NULL == fileStreamFactory
+        || NULL == cryptoCore
+        || NULL == name)
+    {
+        return SEOS_ERROR_INVALID_PARAMETER;
+    }
+
+    self->fsFactory     = fileStreamFactory;
+    self->name          = name;
+    self->cryptoCore    = cryptoCore;
+    self->parent.vtable = &SeosKeyStore_vtable;
+
+    return SEOS_SUCCESS;
 }
 
-void SeosKeyStore_dtor(SeosKeyStore* self)
+void SeosKeyStore_deInit(SeosKeyStoreApi* api)
 {
+    SeosKeyStore* self = (SeosKeyStore*)api;
     Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
     FileStreamFactory_dtor(self->fsFactory);
 }
 
-seos_err_t SeosKeyStore_importKey(SeosKeyStore* self, const char* name,
-                                  SeosCryptoKey* key)
+seos_err_t SeosKeyStore_importKey(SeosKeyStoreApi*          api,
+                                  SeosCryptoApi_KeyHandle*  keyHandle,
+                                  const char*               name,
+                                  void const*               keyBytesBuffer,
+                                  unsigned int              algorithm,
+                                  unsigned int              flags,
+                                  size_t                    lenBits)
 {
+    SeosKeyStore* self = (SeosKeyStore*)api;
     Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
+
     KeyEntry newKeyEntry;
     seos_err_t err = SEOS_SUCCESS;
 
-    memcpy(newKeyEntry.keyBytes, key->bytes, LEN_BITS_TO_BYTES(key->lenBits));
-    cpyIntToBuf(key->lenBits, newKeyEntry.keyProperties[0]);
-    cpyIntToBuf(key->algorithm, newKeyEntry.keyProperties[1]);
-    cpyIntToBuf(key->flags, newKeyEntry.keyProperties[2]);
+    memcpy(newKeyEntry.keyBytes, keyBytesBuffer, LEN_BITS_TO_BYTES(lenBits));
+    cpyIntToBuf(lenBits, newKeyEntry.keyProperties[0]);
+    cpyIntToBuf(algorithm, newKeyEntry.keyProperties[1]);
+    cpyIntToBuf(flags, newKeyEntry.keyProperties[2]);
 
     err = createKeyHash(&newKeyEntry,
-                        (KEY_INT_PROPERTY_LEN * NUM_OF_PROPERTIES) + LEN_BITS_TO_BYTES(key->lenBits),
+                        (KEY_INT_PROPERTY_LEN * NUM_OF_PROPERTIES) + LEN_BITS_TO_BYTES(lenBits),
                         newKeyEntry.hash);
 
     if (err != SEOS_SUCCESS)
@@ -94,7 +127,7 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStore* self, const char* name,
     }
 
     err = writeKeyToFile(self->fsFactory, &newKeyEntry,
-                         LEN_BITS_TO_BYTES(key->lenBits), name);
+                         LEN_BITS_TO_BYTES(lenBits), name);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not write the key data to the file, err %d!",
@@ -105,9 +138,13 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStore* self, const char* name,
     return err;
 }
 
-seos_err_t SeosKeyStore_getKey(SeosKeyStore* self, const char* name,
-                               SeosCryptoKey** key)
+seos_err_t SeosKeyStore_getKey(SeosKeyStoreApi*         api,
+                               SeosCryptoApi_KeyHandle* key,
+                               const char*              name)
 {
+    SeosKeyStore* self = (SeosKeyStore*)api;
+    Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
     KeyEntry newKeyEntry;
     seos_err_t err = SEOS_SUCCESS;
     unsigned char calculatedHash[KEY_DATA_HASH_LEN];
@@ -157,8 +194,9 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStore* self, const char* name,
     return err;
 }
 
-seos_err_t SeosKeyStore_getKeySizeBytes(SeosKeyStore* self, const char* name,
-                                        size_t* keySize)
+seos_err_t SeosKeyStore_getKeySizeBytes(SeosKeyStore*   self,
+                                        const char*     name,
+                                        size_t*         keySize)
 {
     KeyEntry newKeyEntry;
     seos_err_t err = SEOS_SUCCESS;
@@ -196,9 +234,13 @@ seos_err_t SeosKeyStore_getKeySizeBytes(SeosKeyStore* self, const char* name,
     return err;
 }
 
-seos_err_t SeosKeyStore_deleteKey(SeosKeyStore* self, const char* name)
+seos_err_t SeosKeyStore_deleteKey(SeosKeyStoreApi*          api,
+                                  SeosCryptoApi_KeyHandle   keyHandle,
+                                  const char*               name)
 {
+    SeosKeyStore* self = (SeosKeyStore*)api;
     Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
     BitMap16 flags = 0;
 
     FileStream* file = FileStreamFactory_create(self->fsFactory, name,
@@ -217,29 +259,36 @@ seos_err_t SeosKeyStore_deleteKey(SeosKeyStore* self, const char* name)
     return SEOS_SUCCESS;
 }
 
-seos_err_t SeosKeyStore_closeKey(SeosKeyStore* self, SeosCryptoKey* key)
+seos_err_t SeosKeyStore_closeKey(SeosKeyStoreApi* api,
+                                 SeosCryptoApi_KeyHandle key)
 {
+    SeosKeyStore* self = (SeosKeyStore*)api;
     Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
     // todo SeosCryptoKeyClose call
     return SEOS_SUCCESS;
 }
 
-seos_err_t SeosKeyStore_copyKey(SeosKeyStore* self, const char* name,
-                                SeosKeyStore* destKeyStore)
+seos_err_t SeosKeyStore_copyKey(SeosKeyStoreApi*        api,
+                                SeosCryptoApi_KeyHandle key,
+                                const char*             name,
+                                SeosKeyStoreApi*        destKeyStore)
 {
+    SeosKeyStore* self = (SeosKeyStore*)api;
     Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
     Debug_ASSERT_SELF(destKeyStore);
-    SeosCryptoKey* key;
     seos_err_t err = SEOS_SUCCESS;
 
-    err = SeosKeyStore_getKey(self, name, &key);
+    err = SeosKeyStore_getKey(api, &key, name);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: getKey failed with err %d!", __func__, err);
         return err;
     }
 
-    err = SeosKeyStore_importKey(destKeyStore, name, key);
+    err = SeosKeyStore_importKey(destKeyStore, &key, name, key->bytes,
+                                 key->algorithm, key->flags, key->lenBits);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: importKey failed with err %d!", __func__, err);
@@ -249,22 +298,25 @@ seos_err_t SeosKeyStore_copyKey(SeosKeyStore* self, const char* name,
     return err;
 }
 
-seos_err_t SeosKeyStore_moveKey(SeosKeyStore* self,
-                                const char* name,
-                                SeosKeyStore* destKeyStore)
+seos_err_t SeosKeyStore_moveKey(SeosKeyStoreApi*        api,
+                                SeosCryptoApi_KeyHandle key,
+                                const char*             name,
+                                SeosKeyStoreApi*        destKeyStore)
 {
+    SeosKeyStore* self = (SeosKeyStore*)api;
     Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
     Debug_ASSERT_SELF(destKeyStore);
     seos_err_t err = SEOS_SUCCESS;
 
-    err = SeosKeyStore_copyKey(self, name, destKeyStore);
+    err = SeosKeyStore_copyKey(api, key, name, destKeyStore);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: copyKey failed with err %d!", __func__, err);
         return err;
     }
 
-    err = SeosKeyStore_deleteKey(self, name);
+    err = SeosKeyStore_deleteKey(api, key, name);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: deleteKey failed with err %d!", __func__, err);
@@ -274,14 +326,16 @@ seos_err_t SeosKeyStore_moveKey(SeosKeyStore* self,
     return err;
 }
 
-seos_err_t SeosKeyStore_generateKey(SeosKeyStore*   self,
-                                    SeosCryptoKey** key,
-                                    const char*     name,
-                                    unsigned int    algorithm,
-                                    unsigned int    flags,
-                                    size_t          lenBits)
+seos_err_t SeosKeyStore_generateKey(SeosKeyStoreApi*            api,
+                                    SeosCryptoApi_KeyHandle*    key,
+                                    const char*                 name,
+                                    unsigned int                algorithm,
+                                    unsigned int                flags,
+                                    size_t                      lenBits)
 {
+    SeosKeyStore* self = (SeosKeyStore*)api;
     Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
     seos_err_t err = SEOS_SUCCESS;
 
     SeosCrypto_keyGenerate(&(self->cryptoCore->parent),
@@ -296,7 +350,8 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStore*   self,
         return err;
     }
 
-    err = SeosKeyStore_importKey(self, name, *key);
+    err = SeosKeyStore_importKey(api, key, name, (*key)->bytes, (*key)->algorithm,
+                                 (*key)->flags, (*key)->lenBits);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: importKey failed with err %d!", __func__, err);

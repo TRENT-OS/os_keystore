@@ -11,41 +11,70 @@
  */
 #pragma once
 
-#include "SeosKeyStore.h"
-#include "SeosKeyStoreClient.h"
+#include "seos_err.h"
+#include "SeosCrypto.h"
+
+typedef struct SeosKeyStoreApi SeosKeyStoreApi;
+
+typedef seos_err_t
+(*SeosKeyStoreApi_importKeyT)(SeosKeyStoreApi*          self,
+                              SeosCryptoApi_KeyHandle*  keyHandle,
+                              const char*               name,
+                              void const*               keyBytesBuffer,
+                              unsigned int              algorithm,
+                              unsigned int              flags,
+                              size_t                    lenBits);
+
+typedef seos_err_t
+(*SeosKeyStoreApi_getKeyT)(SeosKeyStoreApi*         self,
+                           SeosCryptoApi_KeyHandle* keyHandle,
+                           const char*              name);
+
+typedef seos_err_t
+(*SeosKeyStoreApi_deleteKeyT)(SeosKeyStoreApi*            self,
+                              SeosCryptoApi_KeyHandle   keyHandle,
+                              const char*               name);
+
+typedef seos_err_t
+(*SeosKeyStoreApi_copyKeyT)(SeosKeyStoreApi*        self,
+                            SeosCryptoApi_KeyHandle keyHandle,
+                            const char*             name,
+                            SeosKeyStoreApi*        destKeyStore);
+
+typedef seos_err_t
+(*SeosKeyStoreApi_moveKeyT)(SeosKeyStoreApi*        self,
+                            SeosCryptoApi_KeyHandle keyHandle,
+                            const char*             name,
+                            SeosKeyStoreApi*        destKeyStore);
+
+typedef seos_err_t
+(*SeosKeyStoreApi_generateKeyT)(SeosKeyStoreApi*            self,
+                                SeosCryptoApi_KeyHandle*    keyHandle,
+                                const char*                 name,
+                                unsigned int                algorithm,
+                                unsigned int                flags,
+                                size_t                      lenBits);
+
+typedef void
+(*SeosKeyStoreApi_deInitT)(SeosKeyStoreApi* self);
 
 typedef struct
 {
-    SeosKeyStore* keyStore;
-}
-SeosKeyStoreApi_LocalConnector;
+    SeosKeyStoreApi_importKeyT      importKey;
+    SeosKeyStoreApi_getKeyT         getKey;
+    SeosKeyStoreApi_deleteKeyT      deleteKey;
+    SeosKeyStoreApi_copyKeyT        copyKey;
+    SeosKeyStoreApi_moveKeyT        moveKey;
+    SeosKeyStoreApi_generateKeyT    generateKey;
 
-typedef struct
+    SeosKeyStoreApi_deInitT         deInit;
+}
+SeosKeyStoreApi_Vtable;
+
+struct SeosKeyStoreApi
 {
-    SeosKeyStoreClient* client;
-}
-SeosKeyStoreApi_RpcConnector;
-
-typedef struct
-{
-    union
-    {
-        SeosKeyStoreApi_LocalConnector  local;
-        SeosKeyStoreApi_RpcConnector    rpc;
-    }
-    connector;
-    bool isLocalConnection;
-}
-SeosKeyStoreApi;
-
-seos_err_t
-SeosKeyStoreApi_initAsLocal(SeosKeyStoreApi* self, SeosKeyStore* keyStore);
-
-seos_err_t
-SeosKeyStoreApi_initAsRpc(SeosKeyStoreApi* self, SeosKeyStoreClient* client);
-
-void
-SeosKeyStoreApi_deInit(SeosKeyStoreApi* self);
+    const SeosKeyStoreApi_Vtable* vtable;
+};
 
 /***************************** KeyStore functions *******************************/
 /**

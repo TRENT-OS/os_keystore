@@ -16,16 +16,19 @@
 #include "SeosCryptoCipher.h"
 #include "SeosCrypto.h"
 #include "SeosCryptoApi.h"
+#include "SeosKeyStoreApi.h"
 #include "LibIO/FileStream.h"
 #include "LibIO/FileStreamFactory.h"
 
 /* Exported macro ------------------------------------------------------------*/
+#define SeosKeyStore_TO_SEOS_KEY_STORE_API(self) ((&(self))->parent)
 
 /* Exported types ------------------------------------------------------------*/
 typedef struct SeosKeyStore SeosKeyStore;
 
 struct SeosKeyStore
 {
+    SeosKeyStoreApi parent;
     FileStreamFactory* fsFactory;
     SeosCrypto* cryptoCore;
     char* name;
@@ -41,33 +44,41 @@ struct SeosKeyStore
  *                              of the filestream creation/destruction
  * @param name                  name of the keystore
  *
- * @return true if success
+ * @return seos_err_t
  *
  */
-bool
-SeosKeyStore_ctor(SeosKeyStore* self,
-                  FileStreamFactory* fileStreamFactory,
-                  SeosCrypto* cryptoCore,
-                  char* name);
+seos_err_t
+SeosKeyStore_init(SeosKeyStore*         self,
+                  FileStreamFactory*    fileStreamFactory,
+                  SeosCrypto*           cryptoCore,
+                  char*                 name);
 /**
  * @brief Destructor
  *
  */
 void
-SeosKeyStore_dtor(SeosKeyStore* self);
+SeosKeyStore_deInit(SeosKeyStoreApi* api);
 /**
  * @brief Imports a SeosCrypto_Key object into the keystore
  *
- * @param self          pointer to self
- * @param name          name of the key to import
- * @param key           key object to import
+ * @param self              pointer to self
+ * @param keyHandle         key handle
+ * @param name              name of the key to import
+ * @param keyBytesBuffer    buffer containing the key bytes
+ * @param algorithm         algorithm that uses the key
+ * @param flags             flags
+ * @param lenBits           length of the key in bits
  *
  * @return seos_err
  *
  */
-seos_err_t
-SeosKeyStore_importKey(SeosKeyStore* self, const char* name,
-                       SeosCryptoKey* key);
+seos_err_t SeosKeyStore_importKey(SeosKeyStoreApi*          api,
+                                  SeosCryptoApi_KeyHandle*  keyHandle,
+                                  const char*               name,
+                                  void const*               keyBytesBuffer,
+                                  unsigned int              algorithm,
+                                  unsigned int              flags,
+                                  size_t                    lenBits);
 /**
  * @brief Retreives the key with a given name from the keystore
  *
@@ -79,7 +90,9 @@ SeosKeyStore_importKey(SeosKeyStore* self, const char* name,
  *
  */
 seos_err_t
-SeosKeyStore_getKey(SeosKeyStore* self, const char* name, SeosCryptoKey** key);
+SeosKeyStore_getKey(SeosKeyStoreApi*            api,
+                    SeosCryptoApi_KeyHandle*    key,
+                    const char*                 name);
 /**
  * @brief Reads the key data from the key specified by the passed name and
  * stores the key size in the output parameter keySize
@@ -92,8 +105,9 @@ SeosKeyStore_getKey(SeosKeyStore* self, const char* name, SeosCryptoKey** key);
  *
  */
 seos_err_t
-SeosKeyStore_getKeySizeBytes(SeosKeyStore* self, const char* name,
-                             size_t* keySize);
+SeosKeyStore_getKeySizeBytes(SeosKeyStore*  self,
+                             const char*    name,
+                             size_t*        keySize);
 /**
  * @brief Deletes a key with a given name from the keystore
  *
@@ -104,7 +118,9 @@ SeosKeyStore_getKeySizeBytes(SeosKeyStore* self, const char* name,
  *
  */
 seos_err_t
-SeosKeyStore_deleteKey(SeosKeyStore* self, const char* name);
+SeosKeyStore_deleteKey(SeosKeyStoreApi*         api,
+                       SeosCryptoApi_KeyHandle  keyHandle,
+                       const char*              name);
 /**
  * @brief Frees the resources of the passed key (dtor) but the key remains
  * in the non volatile storage
@@ -116,7 +132,8 @@ SeosKeyStore_deleteKey(SeosKeyStore* self, const char* name);
  *
  */
 seos_err_t
-SeosKeyStore_closeKey(SeosKeyStore* self, SeosCryptoKey* key);
+SeosKeyStore_closeKey(SeosKeyStoreApi*          api,
+                      SeosCryptoApi_KeyHandle   key);
 /**
  * @brief Copies the key with a selected name from the current key store to
  * the destination key store
@@ -129,8 +146,10 @@ SeosKeyStore_closeKey(SeosKeyStore* self, SeosCryptoKey* key);
  *
  */
 seos_err_t
-SeosKeyStore_copyKey(SeosKeyStore* self, const char* name,
-                     SeosKeyStore* destKeyStore);
+SeosKeyStore_copyKey(SeosKeyStoreApi*           api,
+                     SeosCryptoApi_KeyHandle    keyHandle,
+                     const char*                name,
+                     SeosKeyStoreApi*           destKeyStore);
 /**
  * @brief Moves the key with a selected name from the current key store to
  * the destination key store (after the operation the key is no longer in the
@@ -144,8 +163,10 @@ SeosKeyStore_copyKey(SeosKeyStore* self, const char* name,
  *
  */
 seos_err_t
-SeosKeyStore_moveKey(SeosKeyStore* self, const char* name,
-                     SeosKeyStore* destKeyStore);
+SeosKeyStore_moveKey(SeosKeyStoreApi*           api,
+                     SeosCryptoApi_KeyHandle    keyHandle,
+                     const char*                name,
+                     SeosKeyStoreApi*           destKeyStore);
 /**
  * @brief Generates a key with a given name using an RNG, stores the key into the key store
  * and returns the key data in the key object.
@@ -161,10 +182,10 @@ SeosKeyStore_moveKey(SeosKeyStore* self, const char* name,
  *
  */
 seos_err_t
-SeosKeyStore_generateKey(SeosKeyStore*   self,
-                         SeosCryptoKey** key,
-                         const char*     name,
-                         unsigned int    algorithm,
-                         unsigned int    flags,
-                         size_t          lenBits);
+SeosKeyStore_generateKey(SeosKeyStoreApi*           self,
+                         SeosCryptoApi_KeyHandle*   key,
+                         const char*                name,
+                         unsigned int               algorithm,
+                         unsigned int               flags,
+                         size_t                     lenBits);
 ///@}
