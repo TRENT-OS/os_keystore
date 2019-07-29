@@ -71,7 +71,7 @@ SeosKeyStoreRpc_importKey(SeosKeyStoreRpc* self)
 }
 
 seos_err_t
-SeosKeyStoreRpc_getKey(SeosKeyStoreRpc* self, SeosCrypto_KeyHandle* key)
+SeosKeyStoreRpc_getKey(SeosKeyStoreRpc* self, SeosCryptoApi_KeyHandle* key)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t retval = SEOS_ERROR_GENERIC;
@@ -175,7 +175,7 @@ SeosKeyStoreRpc_generateKey(SeosKeyStoreRpc*            self,
                             SeosCryptoCipher_Algorithm  algorithm,
                             unsigned int                flags,
                             size_t                      lenBits,
-                            SeosCrypto_KeyHandle*       key)
+                            SeosCryptoApi_KeyHandle*       key)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t retval = SEOS_ERROR_GENERIC;

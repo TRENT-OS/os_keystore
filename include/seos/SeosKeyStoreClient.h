@@ -84,8 +84,7 @@ seos_err_t
 SeosKeyStoreClient_getKey(SeosKeyStoreClient*   self,
                         const char*             name,
                         SeosCryptoKey*          key,
-                        char*                   keyBytes,
-                        SeosKeyStore_KeyType*   keyType);
+                        char*                   keyBytes);
 /**
  * @brief Reads the key data from the key specified by the passed name and
  * stores the key size in the output parameter keySize
@@ -161,7 +160,6 @@ seos_err_t
 SeosKeyStoreClient_generateKey(SeosKeyStoreClient*  self,
                             SeosCryptoKey*          key,
                             const char*             name, 
-                            char*                   keyBytes, 
-                            SeosKeyStore_KeyType*   keyType);
+                            char*                   keyBytes);
 
 /** @} */

@@ -4,8 +4,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "SeosKeyStore.h"
-#include "seos/SeosCryptoDigest.h"
-#include "seos/SeosCryptoCipher.h"
+#include "SeosCryptoDigest.h"
+#include "SeosCryptoCipher.h"
 #include "mbedtls/base64.h"
 #include "LibMem/BitmapAllocator.h"
 /* Defines -------------------------------------------------------------------*/
@@ -141,7 +141,7 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStore* self, const char* name,
         return SEOS_ERROR_GENERIC;
     }
 
-    err = SeosCrypto_keyImport(self->cryptoCore,
+    err = SeosCrypto_keyImport(&(self->cryptoCore->parent),
                                key,
                                readKeyAlgorithm,
                                readKeyFlags,
@@ -284,7 +284,7 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStore*   self,
     Debug_ASSERT_SELF(self);
     seos_err_t err = SEOS_SUCCESS;
 
-    SeosCrypto_keyGenerate(self->cryptoCore,
+    SeosCrypto_keyGenerate(&(self->cryptoCore->parent),
                            key,
                            algorithm,
                            flags,

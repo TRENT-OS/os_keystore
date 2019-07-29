@@ -55,7 +55,7 @@ SeosKeyStoreApi_deInit(SeosKeyStoreApi* self)
 
 seos_err_t
 SeosKeyStoreApi_importKey(SeosKeyStoreApi*          self,
-                          SeosCrypto_KeyHandle*   keyHandle,
+                          SeosCryptoApi_KeyHandle*   keyHandle,
                           const char*             name,
                           void const*             keyBytesBuffer,
                           unsigned int            algorithm,
@@ -67,7 +67,8 @@ SeosKeyStoreApi_importKey(SeosKeyStoreApi*          self,
 
     if (self->isLocalConnection)
     {
-        retval = SeosCrypto_keyImport(self->connector.local.keyStore->cryptoCore,
+        retval = SeosCrypto_keyImport(&
+                                      (self->connector.local.keyStore->cryptoCore->parent),
                                       keyHandle,
                                       algorithm,
                                       flags,
@@ -94,7 +95,8 @@ SeosKeyStoreApi_importKey(SeosKeyStoreApi*          self,
 }
 
 seos_err_t
-SeosKeyStoreApi_getKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle* keyHandle,
+SeosKeyStoreApi_getKey(SeosKeyStoreApi* self,
+                       SeosCryptoApi_KeyHandle* keyHandle,
                        const char* name)
 {
     Debug_ASSERT_SELF(self);
@@ -117,7 +119,8 @@ SeosKeyStoreApi_getKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle* keyHandle,
 }
 
 seos_err_t
-SeosKeyStoreApi_deleteKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle,
+SeosKeyStoreApi_deleteKey(SeosKeyStoreApi* self,
+                          SeosCryptoApi_KeyHandle keyHandle,
                           const char* name)
 {
     Debug_ASSERT_SELF(self);
@@ -140,7 +143,8 @@ SeosKeyStoreApi_deleteKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle,
 }
 
 seos_err_t
-SeosKeyStoreApi_copyKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle,
+SeosKeyStoreApi_copyKey(SeosKeyStoreApi* self,
+                        SeosCryptoApi_KeyHandle keyHandle,
                         const char* name, SeosKeyStoreApi* destKeyStore)
 {
     Debug_ASSERT_SELF(self);
@@ -164,7 +168,8 @@ SeosKeyStoreApi_copyKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle,
 }
 
 seos_err_t
-SeosKeyStoreApi_moveKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle,
+SeosKeyStoreApi_moveKey(SeosKeyStoreApi* self,
+                        SeosCryptoApi_KeyHandle keyHandle,
                         const char* name, SeosKeyStoreApi* destKeyStore)
 {
     Debug_ASSERT_SELF(self);
@@ -189,7 +194,7 @@ SeosKeyStoreApi_moveKey(SeosKeyStoreApi* self, SeosCrypto_KeyHandle keyHandle,
 
 seos_err_t
 SeosKeyStoreApi_generateKey(SeosKeyStoreApi*        self,
-                            SeosCrypto_KeyHandle*   keyHandle,
+                            SeosCryptoApi_KeyHandle*   keyHandle,
                             const char*             name,
                             unsigned int            algorithm,
                             unsigned int            flags,
