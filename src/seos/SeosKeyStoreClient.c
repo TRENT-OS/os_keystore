@@ -5,6 +5,21 @@
 #include "SeosKeyStoreClient.h"
 #include "LibDebug/Debug.h"
 
+/* Macros --------------------------------------------------------------------*/
+#define LEN_BITS_TO_BYTES(lenBits)  (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
+
+/* Private variables ----------------------------------------------------------*/
+static const SeosKeyStoreApi_Vtable SeosKeyStoreClient_vtable =
+{
+    .importKey      = SeosKeyStoreClient_importKey,
+    .getKey         = SeosKeyStoreClient_getKey,
+    .deleteKey      = SeosKeyStoreClient_deleteKey,
+    .copyKey        = SeosKeyStoreClient_copyKey,
+    .moveKey        = SeosKeyStoreClient_moveKey,
+    .generateKey    = SeosKeyStoreClient_generateKey,
+    .deInit         = SeosKeyStoreClient_deInit,
+};
+
 /* Public functions ----------------------------------------------------------*/
 seos_err_t
 SeosKeyStoreClient_init(SeosKeyStoreClient* self, SeosKeyStoreRpc_Handle rpcHandle, void* dataport)
@@ -22,6 +37,7 @@ SeosKeyStoreClient_init(SeosKeyStoreClient* self, SeosKeyStoreRpc_Handle rpcHand
 
     self->clientDataport    = dataport;
     self->rpcHandle         = rpcHandle;
+    self->parent.vtable     = &SeosKeyStoreClient_vtable;
     retval                  = SEOS_SUCCESS;
 
 exit:
@@ -29,35 +45,54 @@ exit:
 }
 
 void
-SeosKeyStoreClient_deInit(SeosKeyStoreClient* self)
+SeosKeyStoreClient_deInit(SeosKeyStoreApi* api)
 {
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)api;
     Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
 }
 
 seos_err_t
-SeosKeyStoreClient_importKey(SeosKeyStoreClient* self, const char* name, SeosCryptoKey*  key)
+SeosKeyStoreClient_importKey(SeosKeyStoreApi*           api,
+                            SeosCrypto_KeyHandle*       keyHandle,
+                            const char*                 name,
+                            void const*                 keyBytesBuffer,
+                            unsigned int                algorithm,
+                            unsigned int                flags,
+                            size_t                      lenBits)
 {
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)api;
     Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
-    if (NULL == name || strlen(name) > PAGE_SIZE)
+    if (NULL == name || (strlen(name) + LEN_BITS_TO_BYTES(lenBits)) > PAGE_SIZE)
     {
         retval = SEOS_ERROR_INVALID_PARAMETER;
     }
     else
     {
-        // load data from the dataport
-        // calculation
-        // store data to the dataport
+        memcpy(self->clientDataport, keyBytesBuffer, LEN_BITS_TO_BYTES(lenBits));
+        memcpy(self->clientDataport + LEN_BITS_TO_BYTES(lenBits), name, strlen(name));
+
+        retval = SeosKeyStoreRpc_importKey(self->rpcHandle, keyHandle, algorithm, flags, lenBits);
+        if (retval != SEOS_SUCCESS)
+        {
+            Debug_LOG_ERROR("%s: SeosKeyStoreRpc_importKey failed, err %d!", __func__, retval);
+        }
     }
     
     return retval;
 }
 
 seos_err_t
-SeosKeyStoreClient_getKey(SeosKeyStoreClient* self, const char* name, SeosCryptoKey* key, char* keyBytes, SeosKeyStore_KeyType* keyType)
+SeosKeyStoreClient_getKey(SeosKeyStoreApi*              api,
+                            SeosCrypto_KeyHandle*       keyHandle,
+                            const char*                 name)
 {
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)api;
     Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
     if (NULL == name || strlen(name) > PAGE_SIZE)
@@ -66,18 +101,25 @@ SeosKeyStoreClient_getKey(SeosKeyStoreClient* self, const char* name, SeosCrypto
     }
     else
     {
-        // load data from the dataport
-        // calculation
-        // store data to the dataport
+        memcpy(self->clientDataport, name, strlen(name));
+        retval = SeosKeyStoreRpc_getKey(self->rpcHandle, keyHandle);
+        if (retval != SEOS_SUCCESS)
+        {
+            Debug_LOG_ERROR("%s: SeosKeyStoreRpc_importKey failed, err %d!", __func__, retval);
+        }
     }
     
     return retval;
 }
 
 seos_err_t
-SeosKeyStoreClient_getKeySizeBytes(SeosKeyStoreClient* self, const char* name, size_t* keySize)
+SeosKeyStoreClient_deleteKey(SeosKeyStoreApi*           api,
+                                SeosCrypto_KeyHandle    keyHandle,
+                                const char*             name)
 {
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)api;
     Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
     if (NULL == name || strlen(name) > PAGE_SIZE)
@@ -86,18 +128,28 @@ SeosKeyStoreClient_getKeySizeBytes(SeosKeyStoreClient* self, const char* name, s
     }
     else
     {
-        // load data from the dataport
-        // calculation
-        // store data to the dataport
+        memcpy(self->clientDataport, name, strlen(name));
+        retval = SeosKeyStoreRpc_deleteKey(self->rpcHandle, keyHandle);
+        if (retval != SEOS_SUCCESS)
+        {
+            Debug_LOG_ERROR("%s: SeosKeyStoreRpc_deleteKey failed, err %d!", __func__, retval);
+        }
     }
     
     return retval;
 }
 
 seos_err_t
-SeosKeyStoreClient_deleteKey(SeosKeyStoreClient* self, const char* name)
+SeosKeyStoreClient_copyKey(SeosKeyStoreApi*         api,
+                            SeosCrypto_KeyHandle    keyHandle,
+                            const char*             name,
+                            SeosKeyStoreApi*        destKeyStore)
 {
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)api;
+    SeosKeyStoreClient* destKeyStoreRpc = (SeosKeyStoreClient*)api;
     Debug_ASSERT_SELF(self);
+    Debug_ASSERT_SELF(destKeyStoreRpc);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
     if (NULL == name || strlen(name) > PAGE_SIZE)
@@ -106,18 +158,28 @@ SeosKeyStoreClient_deleteKey(SeosKeyStoreClient* self, const char* name)
     }
     else
     {
-        // load data from the dataport
-        // calculation
-        // store data to the dataport
+        memcpy(self->clientDataport, name, strlen(name));
+        retval = SeosKeyStoreRpc_copyKey(self->rpcHandle, keyHandle, destKeyStoreRpc->rpcHandle);
+        if (retval != SEOS_SUCCESS)
+        {
+            Debug_LOG_ERROR("%s: SeosKeyStoreRpc_copyKey failed, err %d!", __func__, retval);
+        }
     }
     
     return retval;
 }
 
 seos_err_t
-SeosKeyStoreClient_copyKey(SeosKeyStoreClient* self, const char* name, SeosKeyStoreClient* destKeyStore)
+SeosKeyStoreClient_moveKey(SeosKeyStoreApi*         api,
+                            SeosCrypto_KeyHandle    keyHandle,
+                            const char*             name,
+                            SeosKeyStoreApi*        destKeyStore)
 {
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)api;
+    SeosKeyStoreClient* destKeyStoreRpc = (SeosKeyStoreClient*)api;
     Debug_ASSERT_SELF(self);
+    Debug_ASSERT_SELF(destKeyStoreRpc);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
     if (NULL == name || strlen(name) > PAGE_SIZE)
@@ -126,18 +188,28 @@ SeosKeyStoreClient_copyKey(SeosKeyStoreClient* self, const char* name, SeosKeySt
     }
     else
     {
-        // load data from the dataport
-        // calculation
-        // store data to the dataport
+        memcpy(self->clientDataport, name, strlen(name));
+        retval = SeosKeyStoreRpc_moveKey(self->rpcHandle, keyHandle, destKeyStoreRpc->rpcHandle);
+        if (retval != SEOS_SUCCESS)
+        {
+            Debug_LOG_ERROR("%s: SeosKeyStoreRpc_moveKey failed, err %d!", __func__, retval);
+        }
     }
     
     return retval;
 }
 
 seos_err_t
-SeosKeyStoreClient_moveKey(SeosKeyStoreClient* self, const char* name, SeosKeyStoreClient* destKeyStore)
+SeosKeyStoreClient_generateKey(SeosKeyStoreApi*             api,
+                                SeosCrypto_KeyHandle*       keyHandle,
+                                const char*                 name,
+                                unsigned int                algorithm,
+                                unsigned int                flags,
+                                size_t                      lenBits)
 {
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)api;
     Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
     if (NULL == name || strlen(name) > PAGE_SIZE)
@@ -146,29 +218,12 @@ SeosKeyStoreClient_moveKey(SeosKeyStoreClient* self, const char* name, SeosKeySt
     }
     else
     {
-        // load data from the dataport
-        // calculation
-        // store data to the dataport
-    }
-    
-    return retval;
-}
-
-seos_err_t
-SeosKeyStoreClient_generateKey(SeosKeyStoreClient* self, SeosCryptoKey* key, const char* name, char* keyBytes, SeosKeyStore_KeyType* keyType)
-{
-    Debug_ASSERT_SELF(self);
-    seos_err_t retval = SEOS_ERROR_GENERIC;
-
-    if (NULL == name || strlen(name) > PAGE_SIZE)
-    {
-        retval = SEOS_ERROR_INVALID_PARAMETER;
-    }
-    else
-    {
-        // load data from the dataport
-        // calculation
-        // store data to the dataport
+        memcpy(self->clientDataport, name, strlen(name));
+        retval = SeosKeyStoreRpc_generateKey(self->rpcHandle, keyHandle, algorithm, flags, lenBits);
+        if (retval != SEOS_SUCCESS)
+        {
+            Debug_LOG_ERROR("%s: SeosKeyStoreRpc_generateKey failed, err %d!", __func__, retval);
+        }
     }
     
     return retval;
