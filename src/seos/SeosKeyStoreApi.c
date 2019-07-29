@@ -10,7 +10,7 @@
 /* Public functions ----------------------------------------------------------*/
 seos_err_t
 SeosKeyStoreApi_importKey(SeosKeyStoreApi*          self,
-                          SeosCryptoApi_KeyHandle*  keyHandle,
+                          SeosCrypto_KeyHandle*     keyHandle,
                           const char*               name,
                           void const*               keyBytesBuffer,
                           unsigned int              algorithm,
@@ -29,7 +29,7 @@ SeosKeyStoreApi_importKey(SeosKeyStoreApi*          self,
 
 seos_err_t
 SeosKeyStoreApi_getKey(SeosKeyStoreApi*         self,
-                       SeosCryptoApi_KeyHandle* keyHandle,
+                       SeosCrypto_KeyHandle*    keyHandle,
                        const char*              name)
 {
     Debug_ASSERT_SELF(self);
@@ -40,7 +40,7 @@ SeosKeyStoreApi_getKey(SeosKeyStoreApi*         self,
 
 seos_err_t
 SeosKeyStoreApi_deleteKey(SeosKeyStoreApi*          self,
-                          SeosCryptoApi_KeyHandle   keyHandle,
+                          SeosCrypto_KeyHandle      keyHandle,
                           const char*               name)
 {
     Debug_ASSERT_SELF(self);
@@ -51,7 +51,7 @@ SeosKeyStoreApi_deleteKey(SeosKeyStoreApi*          self,
 
 seos_err_t
 SeosKeyStoreApi_copyKey(SeosKeyStoreApi*        self,
-                        SeosCryptoApi_KeyHandle keyHandle,
+                        SeosCrypto_KeyHandle    keyHandle,
                         const char*             name,
                         SeosKeyStoreApi*        destKeyStore)
 {
@@ -64,7 +64,7 @@ SeosKeyStoreApi_copyKey(SeosKeyStoreApi*        self,
 
 seos_err_t
 SeosKeyStoreApi_moveKey(SeosKeyStoreApi*        self,
-                        SeosCryptoApi_KeyHandle keyHandle,
+                        SeosCrypto_KeyHandle    keyHandle,
                         const char*             name,
                         SeosKeyStoreApi*        destKeyStore)
 {
@@ -77,7 +77,7 @@ SeosKeyStoreApi_moveKey(SeosKeyStoreApi*        self,
 
 seos_err_t
 SeosKeyStoreApi_generateKey(SeosKeyStoreApi*            self,
-                            SeosCryptoApi_KeyHandle*    keyHandle,
+                            SeosCrypto_KeyHandle*       keyHandle,
                             const char*                 name,
                             unsigned int                algorithm,
                             unsigned int                flags,

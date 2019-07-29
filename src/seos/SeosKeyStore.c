@@ -97,7 +97,7 @@ void SeosKeyStore_deInit(SeosKeyStoreApi* api)
 }
 
 seos_err_t SeosKeyStore_importKey(SeosKeyStoreApi*          api,
-                                  SeosCryptoApi_KeyHandle*  keyHandle,
+                                  SeosCrypto_KeyHandle*     keyHandle,
                                   const char*               name,
                                   void const*               keyBytesBuffer,
                                   unsigned int              algorithm,
@@ -139,7 +139,7 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStoreApi*          api,
 }
 
 seos_err_t SeosKeyStore_getKey(SeosKeyStoreApi*         api,
-                               SeosCryptoApi_KeyHandle* key,
+                               SeosCrypto_KeyHandle*    keyHandle,
                                const char*              name)
 {
     SeosKeyStore* self = (SeosKeyStore*)api;
@@ -179,7 +179,7 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStoreApi*         api,
     }
 
     err = SeosCrypto_keyImport(&(self->cryptoCore->parent),
-                               key,
+                               keyHandle,
                                readKeyAlgorithm,
                                readKeyFlags,
                                newKeyEntry.keyBytes,
@@ -235,7 +235,7 @@ seos_err_t SeosKeyStore_getKeySizeBytes(SeosKeyStore*   self,
 }
 
 seos_err_t SeosKeyStore_deleteKey(SeosKeyStoreApi*          api,
-                                  SeosCryptoApi_KeyHandle   keyHandle,
+                                  SeosCrypto_KeyHandle      keyHandle,
                                   const char*               name)
 {
     SeosKeyStore* self = (SeosKeyStore*)api;
@@ -260,7 +260,7 @@ seos_err_t SeosKeyStore_deleteKey(SeosKeyStoreApi*          api,
 }
 
 seos_err_t SeosKeyStore_closeKey(SeosKeyStoreApi* api,
-                                 SeosCryptoApi_KeyHandle key)
+                                 SeosCrypto_KeyHandle keyHandle)
 {
     SeosKeyStore* self = (SeosKeyStore*)api;
     Debug_ASSERT_SELF(self);
@@ -270,7 +270,7 @@ seos_err_t SeosKeyStore_closeKey(SeosKeyStoreApi* api,
 }
 
 seos_err_t SeosKeyStore_copyKey(SeosKeyStoreApi*        api,
-                                SeosCryptoApi_KeyHandle key,
+                                SeosCrypto_KeyHandle    keyHandle,
                                 const char*             name,
                                 SeosKeyStoreApi*        destKeyStore)
 {
@@ -280,15 +280,15 @@ seos_err_t SeosKeyStore_copyKey(SeosKeyStoreApi*        api,
     Debug_ASSERT_SELF(destKeyStore);
     seos_err_t err = SEOS_SUCCESS;
 
-    err = SeosKeyStore_getKey(api, &key, name);
+    err = SeosKeyStore_getKey(api, &keyHandle, name);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: getKey failed with err %d!", __func__, err);
         return err;
     }
 
-    err = SeosKeyStore_importKey(destKeyStore, &key, name, key->bytes,
-                                 key->algorithm, key->flags, key->lenBits);
+    err = SeosKeyStore_importKey(destKeyStore, &keyHandle, name, keyHandle->bytes,
+                                 keyHandle->algorithm, keyHandle->flags, keyHandle->lenBits);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: importKey failed with err %d!", __func__, err);
@@ -299,7 +299,7 @@ seos_err_t SeosKeyStore_copyKey(SeosKeyStoreApi*        api,
 }
 
 seos_err_t SeosKeyStore_moveKey(SeosKeyStoreApi*        api,
-                                SeosCryptoApi_KeyHandle key,
+                                SeosCrypto_KeyHandle    keyHandle,
                                 const char*             name,
                                 SeosKeyStoreApi*        destKeyStore)
 {
@@ -309,14 +309,14 @@ seos_err_t SeosKeyStore_moveKey(SeosKeyStoreApi*        api,
     Debug_ASSERT_SELF(destKeyStore);
     seos_err_t err = SEOS_SUCCESS;
 
-    err = SeosKeyStore_copyKey(api, key, name, destKeyStore);
+    err = SeosKeyStore_copyKey(api, keyHandle, name, destKeyStore);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: copyKey failed with err %d!", __func__, err);
         return err;
     }
 
-    err = SeosKeyStore_deleteKey(api, key, name);
+    err = SeosKeyStore_deleteKey(api, keyHandle, name);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: deleteKey failed with err %d!", __func__, err);
@@ -327,7 +327,7 @@ seos_err_t SeosKeyStore_moveKey(SeosKeyStoreApi*        api,
 }
 
 seos_err_t SeosKeyStore_generateKey(SeosKeyStoreApi*            api,
-                                    SeosCryptoApi_KeyHandle*    key,
+                                    SeosCrypto_KeyHandle*       keyHandle,
                                     const char*                 name,
                                     unsigned int                algorithm,
                                     unsigned int                flags,
@@ -339,7 +339,7 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStoreApi*            api,
     seos_err_t err = SEOS_SUCCESS;
 
     SeosCrypto_keyGenerate(&(self->cryptoCore->parent),
-                           key,
+                           keyHandle,
                            algorithm,
                            flags,
                            lenBits);
@@ -350,8 +350,8 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStoreApi*            api,
         return err;
     }
 
-    err = SeosKeyStore_importKey(api, key, name, (*key)->bytes, (*key)->algorithm,
-                                 (*key)->flags, (*key)->lenBits);
+    err = SeosKeyStore_importKey(api, keyHandle, name, (*keyHandle)->bytes, (*keyHandle)->algorithm,
+                                 (*keyHandle)->flags, (*keyHandle)->lenBits);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: importKey failed with err %d!", __func__, err);
