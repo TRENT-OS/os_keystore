@@ -14,17 +14,17 @@
  */
 #pragma once
 /* Defines ------------------------------------------------------------------*/
-#include "seos/seos_err.h"
-#include "SeosKeyStoreApi.h"
+#include "seos_err.h"
 #include "SeosKeyStoreRpc.h"
+#include "SeosKeyStoreCtx.h"
 
 /* Exported macro ------------------------------------------------------------*/
-#define SeosKeyStoreClient_TO_SEOS_KEY_STORE_API(self) ((&(self))->parent)
+#define SeosKeyStoreClient_TO_SEOS_KEY_STORE_CTX(self) ((&(self))->parent)
 
 /* Exported types ------------------------------------------------------------*/
 typedef struct
 {
-    SeosKeyStoreApi   parent;
+    SeosKeyStoreCtx   parent;
     SeosKeyStoreRpc_Handle
     rpcHandle;      ///< pointer to be used in the rpc call, this pointer is not valid in our address space but will be used as a handle to tell the server which is the correct object in his address space
     void*
@@ -52,18 +52,18 @@ SeosKeyStoreClient_init(SeosKeyStoreClient*     self,
 /**
  * @brief destructor of a seos KeyStore client
  *
- * @param api (required) pointer to the seos KeyStore client object to be
+ * @param keyStoreCtx (required) pointer to the seos KeyStore client object to be
  *  destructed
  *
  */
 void
-SeosKeyStoreClient_deInit(SeosKeyStoreApi* api);
+SeosKeyStoreClient_deInit(SeosKeyStoreCtx* keyStoreCtx);
 
 /***************************** KeyStore functions *******************************/
 /**
  * @brief Imports a SeosCrypto_Key object into the keystore
  *
- * @param api              pointer to api
+ * @param keyStoreCtx       pointer to keyStoreCtx
  * @param keyHandle         key handle
  * @param name              name of the key to import
  * @param keyBytesBuffer    buffer containing the key bytes
@@ -75,7 +75,7 @@ SeosKeyStoreClient_deInit(SeosKeyStoreApi* api);
  *
  */
 seos_err_t
-SeosKeyStoreClient_importKey(SeosKeyStoreApi*       api,
+SeosKeyStoreClient_importKey(SeosKeyStoreCtx*       keyStoreCtx,
                              SeosCrypto_KeyHandle*  keyHandle,
                              const char*            name,
                              void const*            keyBytesBuffer,
@@ -85,7 +85,7 @@ SeosKeyStoreClient_importKey(SeosKeyStoreApi*       api,
 /**
  * @brief Retreives the key with a given name from the keystore
  *
- * @param api          pointer to api
+ * @param keyStoreCtx   pointer to keyStoreCtx
  * @param keyHandle     key handle
  * @param name          name of the key to get
  *
@@ -93,13 +93,13 @@ SeosKeyStoreClient_importKey(SeosKeyStoreApi*       api,
  *
  */
 seos_err_t
-SeosKeyStoreClient_getKey(SeosKeyStoreApi*      api,
+SeosKeyStoreClient_getKey(SeosKeyStoreCtx*      keyStoreCtx,
                           SeosCrypto_KeyHandle* keyHandle,
                           const char*           name);
 /**
  * @brief Deletes a key with from the keystore
  *
- * @param api          pointer to api
+ * @param keyStoreCtx   pointer to keyStoreCtx
  * @param keyHandle     key handle
  * @param name          name of the keyHandle we want to delete
  *
@@ -107,13 +107,13 @@ SeosKeyStoreClient_getKey(SeosKeyStoreApi*      api,
  *
  */
 seos_err_t
-SeosKeyStoreClient_deleteKey(SeosKeyStoreApi*       api,
+SeosKeyStoreClient_deleteKey(SeosKeyStoreCtx*       keyStoreCtx,
                              SeosCrypto_KeyHandle   keyHandle,
                              const char*            name);
 /**
  * @brief Copies the key from the current key store to the destination key store
  *
- * @param api          pointer to api
+ * @param keyStoreCtx   pointer to keyStoreCtx
  * @param keyHandle     key handle
  * @param name          name of the key to be copied
  * @param destKeyStore  pointer to the destination key store
@@ -122,16 +122,16 @@ SeosKeyStoreClient_deleteKey(SeosKeyStoreApi*       api,
  *
  */
 seos_err_t
-SeosKeyStoreClient_copyKey(SeosKeyStoreApi*     api,
+SeosKeyStoreClient_copyKey(SeosKeyStoreCtx*     keyStoreCtx,
                            SeosCrypto_KeyHandle keyHandle,
                            const char*          name,
-                           SeosKeyStoreApi*     destKeyStore);
+                           SeosKeyStoreCtx*     destKeyStore);
 /**
  * @brief Moves the key from the current key store to
  * the destination key store (after the operation the key is no longer in the
  * current key store)
  *
- * @param api          pointer to api
+ * @param keyStoreCtx   pointer to keyStoreCtx
  * @param keyHandle     key handle
  * @param name          name of the key to be moved
  * @param destKeyStore  pointer to the destination key store
@@ -140,15 +140,15 @@ SeosKeyStoreClient_copyKey(SeosKeyStoreApi*     api,
  *
  */
 seos_err_t
-SeosKeyStoreClient_moveKey(SeosKeyStoreApi*     api,
+SeosKeyStoreClient_moveKey(SeosKeyStoreCtx*     keyStoreCtx,
                            SeosCrypto_KeyHandle keyHandle,
                            const char*          name,
-                           SeosKeyStoreApi*     destKeyStore);
+                           SeosKeyStoreCtx*     destKeyStore);
 /**
  * @brief Generates a key with a given name using an RNG, stores the key into the key store
  * and returns the key data in the key object.
  *
- * @param api          pointer to api
+ * @param keyStoreCtx   pointer to keyStoreCtx
  * @param keyHandle     key handle
  * @param name          name of the key to get
  * @param algorithm     algorithm that uses the key
@@ -159,7 +159,7 @@ SeosKeyStoreClient_moveKey(SeosKeyStoreApi*     api,
  *
  */
 seos_err_t
-SeosKeyStoreClient_generateKey(SeosKeyStoreApi*         api,
+SeosKeyStoreClient_generateKey(SeosKeyStoreCtx*         keyStoreCtx,
                                SeosCrypto_KeyHandle*    keyHandle,
                                const char*              name,
                                unsigned int             algorithm,

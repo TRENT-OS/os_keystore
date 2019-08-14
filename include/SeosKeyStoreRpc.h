@@ -12,14 +12,14 @@
  */
 #pragma once
 /* Defines -------------------------------------------------------------------*/
-#include "SeosKeyStore.h"
 #include "SeosCrypto_Handles.h"
+#include "SeosKeyStoreCtx.h"
 
 /* Exported types ------------------------------------------------------------*/
 typedef struct
 {
-    SeosKeyStoreApi*
-    seosKeyStoreApi;  ///< KeyStore context to be used by the RPC object
+    SeosKeyStoreCtx*
+    seosKeyStoreCtx;  ///< KeyStore context to be used by the RPC object
     void*
     serverDataport;     ///< the server's address of the dataport shared with the client
 }
@@ -44,7 +44,7 @@ typedef SeosKeyStoreRpc* SeosKeyStoreRpc_Handle;
  */
 seos_err_t
 SeosKeyStoreRpc_init(SeosKeyStoreRpc*   self,
-                     SeosKeyStoreApi*   SeosKeyStoreRpcCtx,
+                     SeosKeyStoreCtx*   SeosKeyStoreRpcCtx,
                      void*              serverDataport);
 /**
  * @brief destructor of a seos KeyStore RPC object

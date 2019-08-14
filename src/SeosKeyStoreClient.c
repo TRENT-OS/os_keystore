@@ -9,7 +9,7 @@
 #define LEN_BITS_TO_BYTES(lenBits)  (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
 
 /* Private variables ----------------------------------------------------------*/
-static const SeosKeyStoreApi_Vtable SeosKeyStoreClient_vtable =
+static const SeosKeyStoreCtx_Vtable SeosKeyStoreClient_vtable =
 {
     .importKey      = SeosKeyStoreClient_importKey,
     .getKey         = SeosKeyStoreClient_getKey,
@@ -46,15 +46,15 @@ exit:
 }
 
 void
-SeosKeyStoreClient_deInit(SeosKeyStoreApi* api)
+SeosKeyStoreClient_deInit(SeosKeyStoreCtx* keyStoreCtx)
 {
-    SeosKeyStoreClient* self = (SeosKeyStoreClient*)api;
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
 }
 
 seos_err_t
-SeosKeyStoreClient_importKey(SeosKeyStoreApi*           api,
+SeosKeyStoreClient_importKey(SeosKeyStoreCtx*            keyStoreCtx,
                              SeosCrypto_KeyHandle*       keyHandle,
                              const char*                 name,
                              void const*                 keyBytesBuffer,
@@ -62,7 +62,7 @@ SeosKeyStoreClient_importKey(SeosKeyStoreApi*           api,
                              unsigned int                flags,
                              size_t                      lenBits)
 {
-    SeosKeyStoreClient* self = (SeosKeyStoreClient*)api;
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
@@ -89,11 +89,11 @@ SeosKeyStoreClient_importKey(SeosKeyStoreApi*           api,
 }
 
 seos_err_t
-SeosKeyStoreClient_getKey(SeosKeyStoreApi*              api,
+SeosKeyStoreClient_getKey(SeosKeyStoreCtx*            keyStoreCtx,
                           SeosCrypto_KeyHandle*       keyHandle,
                           const char*                 name)
 {
-    SeosKeyStoreClient* self = (SeosKeyStoreClient*)api;
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
@@ -118,11 +118,11 @@ SeosKeyStoreClient_getKey(SeosKeyStoreApi*              api,
 }
 
 seos_err_t
-SeosKeyStoreClient_deleteKey(SeosKeyStoreApi*           api,
+SeosKeyStoreClient_deleteKey(SeosKeyStoreCtx*        keyStoreCtx,
                              SeosCrypto_KeyHandle    keyHandle,
                              const char*             name)
 {
-    SeosKeyStoreClient* self = (SeosKeyStoreClient*)api;
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
@@ -147,13 +147,13 @@ SeosKeyStoreClient_deleteKey(SeosKeyStoreApi*           api,
 }
 
 seos_err_t
-SeosKeyStoreClient_copyKey(SeosKeyStoreApi*         api,
+SeosKeyStoreClient_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
                            SeosCrypto_KeyHandle    keyHandle,
                            const char*             name,
-                           SeosKeyStoreApi*        destKeyStore)
+                           SeosKeyStoreCtx*        destKeyStore)
 {
-    SeosKeyStoreClient* self = (SeosKeyStoreClient*)api;
-    SeosKeyStoreClient* destKeyStoreRpc = (SeosKeyStoreClient*)api;
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)keyStoreCtx;
+    SeosKeyStoreClient* destKeyStoreRpc = (SeosKeyStoreClient*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
     Debug_ASSERT_SELF(destKeyStoreRpc);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
@@ -181,13 +181,13 @@ SeosKeyStoreClient_copyKey(SeosKeyStoreApi*         api,
 }
 
 seos_err_t
-SeosKeyStoreClient_moveKey(SeosKeyStoreApi*         api,
+SeosKeyStoreClient_moveKey(SeosKeyStoreCtx*        keyStoreCtx,
                            SeosCrypto_KeyHandle    keyHandle,
                            const char*             name,
-                           SeosKeyStoreApi*        destKeyStore)
+                           SeosKeyStoreCtx*        destKeyStore)
 {
-    SeosKeyStoreClient* self = (SeosKeyStoreClient*)api;
-    SeosKeyStoreClient* destKeyStoreRpc = (SeosKeyStoreClient*)api;
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)keyStoreCtx;
+    SeosKeyStoreClient* destKeyStoreRpc = (SeosKeyStoreClient*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
     Debug_ASSERT_SELF(destKeyStoreRpc);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
@@ -215,14 +215,14 @@ SeosKeyStoreClient_moveKey(SeosKeyStoreApi*         api,
 }
 
 seos_err_t
-SeosKeyStoreClient_generateKey(SeosKeyStoreApi*             api,
+SeosKeyStoreClient_generateKey(SeosKeyStoreCtx*            keyStoreCtx,
                                SeosCrypto_KeyHandle*       keyHandle,
                                const char*                 name,
                                unsigned int                algorithm,
                                unsigned int                flags,
                                size_t                      lenBits)
 {
-    SeosKeyStoreClient* self = (SeosKeyStoreClient*)api;
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
