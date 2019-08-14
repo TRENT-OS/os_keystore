@@ -5,10 +5,10 @@ project(seos_keystore C)
 add_library(
     ${PROJECT_NAME} STATIC
 
-    "src/seos/SeosKeyStore.c"
-    "src/seos/SeosKeyStoreApi.c"
-    "src/seos/SeosKeyStoreClient.c"
-    "src/seos/SeosKeyStoreRpc.c"
+    "src/SeosKeyStore.c"
+    "src/SeosKeyStoreApi.c"
+    "src/SeosKeyStoreClient.c"
+    "src/SeosKeyStoreRpc.c"
 )
 if (ENABLE_LINT)
         set(CMAKE_C_CPPCHECK "cppcheck;--enable=warning;--inline-suppr")
@@ -55,7 +55,6 @@ target_compile_definitions(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         "include"
-        "include/seos"
 )
 
 target_link_libraries(${PROJECT_NAME}
