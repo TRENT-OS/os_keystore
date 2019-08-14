@@ -104,6 +104,7 @@ SeosKeyStoreClient_getKey(SeosKeyStoreApi*              api,
     }
     else
     {
+        memset(self->clientDataport, 0, PAGE_SIZE);
         memcpy(self->clientDataport, name, strlen(name));
         retval = SeosKeyStoreRpc_getKey(self->rpcHandle, keyHandle);
         if (retval != SEOS_SUCCESS)
@@ -132,6 +133,7 @@ SeosKeyStoreClient_deleteKey(SeosKeyStoreApi*           api,
     }
     else
     {
+        memset(self->clientDataport, 0, PAGE_SIZE);
         memcpy(self->clientDataport, name, strlen(name));
         retval = SeosKeyStoreRpc_deleteKey(self->rpcHandle, keyHandle);
         if (retval != SEOS_SUCCESS)
@@ -163,7 +165,9 @@ SeosKeyStoreClient_copyKey(SeosKeyStoreApi*         api,
     }
     else
     {
+        memset(self->clientDataport, 0, PAGE_SIZE);
         memcpy(self->clientDataport, name, strlen(name));
+
         retval = SeosKeyStoreRpc_copyKey(self->rpcHandle, keyHandle,
                                          destKeyStoreRpc->rpcHandle);
         if (retval != SEOS_SUCCESS)
@@ -195,7 +199,9 @@ SeosKeyStoreClient_moveKey(SeosKeyStoreApi*         api,
     }
     else
     {
+        memset(self->clientDataport, 0, PAGE_SIZE);
         memcpy(self->clientDataport, name, strlen(name));
+
         retval = SeosKeyStoreRpc_moveKey(self->rpcHandle, keyHandle,
                                          destKeyStoreRpc->rpcHandle);
         if (retval != SEOS_SUCCESS)
@@ -227,7 +233,9 @@ SeosKeyStoreClient_generateKey(SeosKeyStoreApi*             api,
     }
     else
     {
+        memset(self->clientDataport, 0, PAGE_SIZE);
         memcpy(self->clientDataport, name, strlen(name));
+
         retval = SeosKeyStoreRpc_generateKey(self->rpcHandle, keyHandle, algorithm,
                                              flags, lenBits);
         if (retval != SEOS_SUCCESS)

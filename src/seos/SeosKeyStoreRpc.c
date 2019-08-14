@@ -14,7 +14,7 @@ static bool registerHandle(SeosKeyStoreRpc* self);
 static bool isValidHandle(SeosKeyStoreRpc* self);
 
 /* Private variables ---------------------------------------------------------*/
-SeosKeyStoreRpc* handle = NULL;
+static SeosKeyStoreRpc* handle = NULL;
 
 /* Public functions ----------------------------------------------------------*/
 seos_err_t
