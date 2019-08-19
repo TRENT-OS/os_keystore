@@ -59,6 +59,7 @@ static const SeosKeyStoreCtx_Vtable SeosKeyStore_vtable =
 {
     .importKey      = SeosKeyStore_importKey,
     .getKey         = SeosKeyStore_getKey,
+    .closeKey       = SeosKeyStore_closeKey,
     .deleteKey      = SeosKeyStore_deleteKey,
     .copyKey        = SeosKeyStore_copyKey,
     .moveKey        = SeosKeyStore_moveKey,
@@ -256,17 +257,34 @@ seos_err_t SeosKeyStore_deleteKey(SeosKeyStoreCtx*          keyStoreCtx,
     BitMap_SET_BIT(flags, FileStream_DeleteFlags_DELETE);
     FileStreamFactory_destroy(self->fsFactory, file, flags);
 
-    return SEOS_SUCCESS;
+    seos_err_t err = SeosKeyStore_closeKey(keyStoreCtx, keyHandle);
+    if (err != SEOS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: SeosKeyStore_closeKey failed with error code %d!",
+                        __func__, err);
+        return err;
+    }
+
+    return err;
 }
 
 seos_err_t SeosKeyStore_closeKey(SeosKeyStoreCtx* keyStoreCtx,
-                                 SeosCrypto_KeyHandle keyHandle)
+                                 SeosCrypto_KeyHandle  keyHandle)
 {
     SeosKeyStore* self = (SeosKeyStore*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
-    // todo SeosCryptoKeyClose call
-    return SEOS_SUCCESS;
+
+    seos_err_t err = SeosCrypto_keyClose(&(self->cryptoCore->parent), keyHandle);
+
+    if (err != SEOS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: SeosCrypto_keyClose failed with error code %d!",
+                        __func__, err);
+        return err;
+    }
+
+    return err;
 }
 
 seos_err_t SeosKeyStore_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
@@ -345,7 +363,7 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStoreCtx*            keyStoreCtx,
                            lenBits);
     if (err != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: SeosCryptoKey_init failed to construct the key with error code %d!",
+        Debug_LOG_ERROR("%s: SeosCrypto_keyGenerate failed to construct the key with error code %d!",
                         __func__, err);
         return err;
     }

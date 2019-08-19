@@ -136,6 +136,30 @@ SeosKeyStoreRpc_deleteKey(SeosKeyStoreRpc*          self,
 }
 
 seos_err_t
+SeosKeyStoreRpc_closeKey(SeosKeyStoreRpc*       self,
+                         SeosCrypto_KeyHandle   keyHandle)
+{
+    Debug_ASSERT_SELF(self);
+    seos_err_t retval = SEOS_ERROR_GENERIC;
+
+    if (!isValidHandle(self))
+    {
+        retval = SEOS_ERROR_INVALID_PARAMETER;
+    }
+    else
+    {
+        retval = SeosKeyStore_closeKey(self->seosKeyStoreCtx,
+                                       keyHandle);
+        if (retval != SEOS_SUCCESS)
+        {
+            Debug_LOG_ERROR("%s: SeosKeyStore_closeKey failed, err %d!", __func__, retval);
+        }
+    }
+
+    return retval;
+}
+
+seos_err_t
 SeosKeyStoreRpc_copyKey(SeosKeyStoreRpc*        self,
                         SeosCrypto_KeyHandle    keyHandle,
                         SeosKeyStoreRpc*        destKeyStore)

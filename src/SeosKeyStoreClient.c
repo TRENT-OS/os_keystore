@@ -14,6 +14,7 @@ static const SeosKeyStoreCtx_Vtable SeosKeyStoreClient_vtable =
     .importKey      = SeosKeyStoreClient_importKey,
     .getKey         = SeosKeyStoreClient_getKey,
     .deleteKey      = SeosKeyStoreClient_deleteKey,
+    .closeKey       = SeosKeyStoreClient_closeKey,
     .copyKey        = SeosKeyStoreClient_copyKey,
     .moveKey        = SeosKeyStoreClient_moveKey,
     .generateKey    = SeosKeyStoreClient_generateKey,
@@ -109,7 +110,7 @@ SeosKeyStoreClient_getKey(SeosKeyStoreCtx*            keyStoreCtx,
         retval = SeosKeyStoreRpc_getKey(self->rpcHandle, keyHandle);
         if (retval != SEOS_SUCCESS)
         {
-            Debug_LOG_ERROR("%s: SeosKeyStoreRpc_importKey failed, err %d!", __func__,
+            Debug_LOG_ERROR("%s: SeosKeyStoreRpc_getKey failed, err %d!", __func__,
                             retval);
         }
     }
@@ -141,6 +142,25 @@ SeosKeyStoreClient_deleteKey(SeosKeyStoreCtx*        keyStoreCtx,
             Debug_LOG_ERROR("%s: SeosKeyStoreRpc_deleteKey failed, err %d!", __func__,
                             retval);
         }
+    }
+
+    return retval;
+}
+
+seos_err_t
+SeosKeyStoreClient_closeKey(SeosKeyStoreCtx*        keyStoreCtx,
+                            SeosCrypto_KeyHandle    keyHandle)
+{
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)keyStoreCtx;
+    Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
+    seos_err_t retval = SEOS_ERROR_GENERIC;
+
+    retval = SeosKeyStoreRpc_closeKey(self->rpcHandle, keyHandle);
+    if (retval != SEOS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: SeosKeyStoreRpc_closeKey failed, err %d!", __func__,
+                        retval);
     }
 
     return retval;

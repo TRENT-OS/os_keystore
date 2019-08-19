@@ -97,7 +97,7 @@ SeosKeyStoreClient_getKey(SeosKeyStoreCtx*      keyStoreCtx,
                           SeosCrypto_KeyHandle* keyHandle,
                           const char*           name);
 /**
- * @brief Deletes a key with from the keystore
+ * @brief Deletes a key with a given name from the keystore
  *
  * @param keyStoreCtx   pointer to keyStoreCtx
  * @param keyHandle     key handle
@@ -110,6 +110,18 @@ seos_err_t
 SeosKeyStoreClient_deleteKey(SeosKeyStoreCtx*       keyStoreCtx,
                              SeosCrypto_KeyHandle   keyHandle,
                              const char*            name);
+/**
+ * @brief Closes a key with a given handle
+ *
+ * @param keyStoreCtx   pointer to keyStoreCtx
+ * @param keyHandle     key handle
+ *
+ * @return seos_err
+ *
+ */
+seos_err_t
+SeosKeyStoreClient_closeKey(SeosKeyStoreCtx*        keyStoreCtx,
+                            SeosCrypto_KeyHandle    keyHandle);
 /**
  * @brief Copies the key from the current key store to the destination key store
  *

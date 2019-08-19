@@ -48,6 +48,14 @@ SeosKeyStoreApi_deleteKey(SeosKeyStoreCtx*          keyStoreCtx,
                                           name);
 }
 
+seos_err_t SeosKeyStoreApi_closeKey(SeosKeyStoreCtx*       keyStoreCtx,
+                                    SeosCrypto_KeyHandle   keyHandle)
+{
+    Debug_ASSERT_SELF(keyStoreCtx);
+    return keyStoreCtx->vtable->closeKey(keyStoreCtx,
+                                         keyHandle);
+}
+
 seos_err_t
 SeosKeyStoreApi_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
                         SeosCrypto_KeyHandle    keyHandle,

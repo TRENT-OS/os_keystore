@@ -100,6 +100,18 @@ seos_err_t
 SeosKeyStoreRpc_deleteKey(SeosKeyStoreRpc*      self,
                           SeosCrypto_KeyHandle  keyHandle);
 /**
+ * @brief Closes a key with a given handle
+ *
+ * @param self          pointer to self
+ * @param keyHandle     key handle
+ *
+ * @return seos_err
+ *
+ */
+seos_err_t
+SeosKeyStoreRpc_closeKey(SeosKeyStoreRpc*       self,
+                         SeosCrypto_KeyHandle   keyHandle);
+/**
  * @brief Copies the key with a selected name from the current key store to
  * the destination key store
  *
