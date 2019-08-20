@@ -136,6 +136,19 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStoreCtx*          keyStoreCtx,
         return err;
     }
 
+    SeosCrypto_keyImport(&(self->cryptoCore->parent),
+                         keyHandle,
+                         algorithm,
+                         flags,
+                         keyBytesBuffer,
+                         lenBits);
+    if (err != SEOS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: SeosCrypto_keyImport failed with error code %d!",
+                        __func__, err);
+        return err;
+    }
+
     return err;
 }
 
@@ -355,6 +368,7 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStoreCtx*            keyStoreCtx,
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
     seos_err_t err = SEOS_SUCCESS;
+    KeyEntry newKeyEntry;
 
     SeosCrypto_keyGenerate(&(self->cryptoCore->parent),
                            keyHandle,
@@ -368,12 +382,27 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStoreCtx*            keyStoreCtx,
         return err;
     }
 
-    err = SeosKeyStore_importKey(keyStoreCtx, keyHandle, name, (*keyHandle)->bytes,
-                                 (*keyHandle)->algorithm,
-                                 (*keyHandle)->flags, (*keyHandle)->lenBits);
+    memcpy(newKeyEntry.keyBytes, (*keyHandle)->bytes, LEN_BITS_TO_BYTES(lenBits));
+    cpyIntToBuf(lenBits, newKeyEntry.keyProperties[0]);
+    cpyIntToBuf(algorithm, newKeyEntry.keyProperties[1]);
+    cpyIntToBuf(flags, newKeyEntry.keyProperties[2]);
+
+    err = createKeyHash(&newKeyEntry,
+                        (KEY_INT_PROPERTY_LEN * NUM_OF_PROPERTIES) + LEN_BITS_TO_BYTES(lenBits),
+                        newKeyEntry.hash);
+
     if (err != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: importKey failed with err %d!", __func__, err);
+        Debug_LOG_ERROR("%s: Could not hash the key data, err %d!", __func__, err);
+        return err;
+    }
+
+    err = writeKeyToFile(self->fsFactory, &newKeyEntry,
+                         LEN_BITS_TO_BYTES(lenBits), name);
+    if (err != SEOS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: Could not write the key data to the file, err %d!",
+                        __func__, err);
         return err;
     }
 
