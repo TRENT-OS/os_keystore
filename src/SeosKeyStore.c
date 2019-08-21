@@ -4,10 +4,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "SeosKeyStore.h"
-#include "SeosCryptoDigest.h"
-#include "SeosCryptoCipher.h"
+#include "SeosCryptoApi.h"
 #include "mbedtls/base64.h"
-#include "LibMem/BitmapAllocator.h"
 /* Defines -------------------------------------------------------------------*/
 #define MAX_KEY_LEN                         256
 
@@ -136,15 +134,15 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStoreCtx*          keyStoreCtx,
         return err;
     }
 
-    SeosCrypto_keyImport(&(self->cryptoCore->parent),
-                         keyHandle,
-                         algorithm,
-                         flags,
-                         keyBytesBuffer,
-                         lenBits);
+    SeosCryptoApi_keyImport(&(self->cryptoCore->parent),
+                            keyHandle,
+                            algorithm,
+                            flags,
+                            keyBytesBuffer,
+                            lenBits);
     if (err != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: SeosCrypto_keyImport failed with error code %d!",
+        Debug_LOG_ERROR("%s: SeosCryptoApi_keyImport failed with error code %d!",
                         __func__, err);
         return err;
     }
@@ -192,12 +190,12 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
         return SEOS_ERROR_GENERIC;
     }
 
-    err = SeosCrypto_keyImport(&(self->cryptoCore->parent),
-                               keyHandle,
-                               readKeyAlgorithm,
-                               readKeyFlags,
-                               newKeyEntry.keyBytes,
-                               readKeySize);
+    err = SeosCryptoApi_keyImport(&(self->cryptoCore->parent),
+                                  keyHandle,
+                                  readKeyAlgorithm,
+                                  readKeyFlags,
+                                  newKeyEntry.keyBytes,
+                                  readKeySize);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCryptoApi_keyImport failed to construct the key with error code %d!",
@@ -288,11 +286,11 @@ seos_err_t SeosKeyStore_closeKey(SeosKeyStoreCtx* keyStoreCtx,
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
 
-    seos_err_t err = SeosCrypto_keyClose(&(self->cryptoCore->parent), keyHandle);
+    seos_err_t err = SeosCryptoApi_keyClose(&(self->cryptoCore->parent), keyHandle);
 
     if (err != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: SeosCrypto_keyClose failed with error code %d!",
+        Debug_LOG_ERROR("%s: SeosCryptoApi_keyClose failed with error code %d!",
                         __func__, err);
         return err;
     }
@@ -370,14 +368,14 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStoreCtx*            keyStoreCtx,
     seos_err_t err = SEOS_SUCCESS;
     KeyEntry newKeyEntry;
 
-    SeosCrypto_keyGenerate(&(self->cryptoCore->parent),
-                           keyHandle,
-                           algorithm,
-                           flags,
-                           lenBits);
+    SeosCryptoApi_keyGenerate(&(self->cryptoCore->parent),
+                              keyHandle,
+                              algorithm,
+                              flags,
+                              lenBits);
     if (err != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: SeosCrypto_keyGenerate failed to construct the key with error code %d!",
+        Debug_LOG_ERROR("%s: SeosCryptoApi_keyGenerate failed to construct the key with error code %d!",
                         __func__, err);
         return err;
     }
