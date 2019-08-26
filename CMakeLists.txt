@@ -74,8 +74,8 @@ find_package(Doxygen
              OPTIONAL_COMPONENTS mscgen dia)
 if (DOXYGEN_FOUND)
     # note the option ALL which allows to build the docs together with the application
-    add_custom_target( seos_key_store_doc
-        COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile && ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/html ${CMAKE_CURRENT_BINARY_DIR}/seos_key_store_doc
+    add_custom_target( seos_keystore_doc
+        COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile && ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/html ${CMAKE_CURRENT_BINARY_DIR}/seos_keystore_doc
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM )
