@@ -65,9 +65,6 @@ target_link_libraries(${PROJECT_NAME}
 
 get_target_property(SEOS_CORE_API_INCLUDES seos_core_api INTERFACE_INCLUDE_DIRECTORIES)
 find_file(SEOS_KEY_STORE_API_HEADER SeosKeyStoreApi.h PATHS ${SEOS_CORE_API_INCLUDES} CMAKE_FIND_ROOT_PATH_BOTH)
-if (SEOS_KEY_STORE_API_HEADER)
-    execute_process(COMMAND ln -sf ${SEOS_KEY_STORE_API_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include)
-endif(SEOS_KEY_STORE_API_HEADER)
 
 find_package(Doxygen
              REQUIRED dot
@@ -75,7 +72,10 @@ find_package(Doxygen
 if (DOXYGEN_FOUND)
     # note the option ALL which allows to build the docs together with the application
     add_custom_target( seos_keystore_doc
-        COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile && ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/html ${CMAKE_CURRENT_BINARY_DIR}/seos_keystore_doc
+        COMMAND ln -sf ${SEOS_KEY_STORE_API_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include
+            && ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile
+            && ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/html ${CMAKE_CURRENT_BINARY_DIR}/seos_keystore_doc
+            && rm -f ${CMAKE_CURRENT_SOURCE_DIR}/include/SeosKeyStoreApi.h
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM )
