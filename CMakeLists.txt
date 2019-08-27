@@ -70,14 +70,18 @@ find_package(Doxygen
              REQUIRED dot
              OPTIONAL_COMPONENTS mscgen dia)
 if (DOXYGEN_FOUND)
-    # note the option ALL which allows to build the docs together with the application
     add_custom_target( seos_keystore_doc
-        COMMAND ln -sf ${SEOS_KEY_STORE_API_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include
+        COMMAND
+            # link the API file SeosCryptoApi.h from seos_core_api in order to produce a complete doxygen documentation
+            ln -sf ${SEOS_CRYPTO_API_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include
+            # run doxygen
             && ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile
-            && ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/html ${CMAKE_CURRENT_BINARY_DIR}/seos_keystore_doc
-            && rm -f ${CMAKE_CURRENT_SOURCE_DIR}/include/SeosKeyStoreApi.h
+            # move the html directory into the binary dir
+            && rm -rf ${CMAKE_CURRENT_BINARY_DIR}/html && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/html ${CMAKE_CURRENT_BINARY_DIR}
+            # remove the link to SeosCryptoApi.h
+            && rm -f ${CMAKE_CURRENT_SOURCE_DIR}/include/SeosCryptoApi.h
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Generating API documentation with Doxygen"
+        COMMENT "Generating API documentation for seos_keystore with Doxygen"
         VERBATIM )
 else(DOXYGEN_FOUND)
     message("Doxygen needs to be installed to generate the doxygen documentation")
