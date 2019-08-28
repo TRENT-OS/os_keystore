@@ -39,13 +39,11 @@ SeosKeyStoreApi_getKey(SeosKeyStoreCtx*         keyStoreCtx,
 
 seos_err_t
 SeosKeyStoreApi_deleteKey(SeosKeyStoreCtx*          keyStoreCtx,
-                          SeosCrypto_KeyHandle      keyHandle,
-                          const char*               name)
+                          SeosCrypto_KeyHandle    keyHandle)
 {
     Debug_ASSERT_SELF(keyStoreCtx);
     return keyStoreCtx->vtable->deleteKey(keyStoreCtx,
-                                          keyHandle,
-                                          name);
+                                          keyHandle);
 }
 
 seos_err_t SeosKeyStoreApi_closeKey(SeosKeyStoreCtx*       keyStoreCtx,
@@ -59,26 +57,22 @@ seos_err_t SeosKeyStoreApi_closeKey(SeosKeyStoreCtx*       keyStoreCtx,
 seos_err_t
 SeosKeyStoreApi_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
                         SeosCrypto_KeyHandle    keyHandle,
-                        const char*             name,
                         SeosKeyStoreCtx*        destKeyStore)
 {
     Debug_ASSERT_SELF(keyStoreCtx);
     return keyStoreCtx->vtable->copyKey(keyStoreCtx,
                                         keyHandle,
-                                        name,
                                         destKeyStore);
 }
 
 seos_err_t
 SeosKeyStoreApi_moveKey(SeosKeyStoreCtx*        keyStoreCtx,
                         SeosCrypto_KeyHandle    keyHandle,
-                        const char*             name,
                         SeosKeyStoreCtx*        destKeyStore)
 {
     Debug_ASSERT_SELF(keyStoreCtx);
     return keyStoreCtx->vtable->moveKey(keyStoreCtx,
                                         keyHandle,
-                                        name,
                                         destKeyStore);
 }
 

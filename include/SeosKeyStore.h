@@ -1,5 +1,5 @@
 /**
- * @addtogroup SEOS
+ * @addtogroup API
  * @{
  *
  * @file SeosKeyStore.h
@@ -14,6 +14,7 @@
 #include "seos_err.h"
 #include "LibIO/FileStream.h"
 #include "LibIO/FileStreamFactory.h"
+#include "KeyNameMap.h"
 #include "SeosCrypto.h"
 #include "SeosCrypto_Handles.h"
 #include "SeosKeyStoreCtx.h"
@@ -23,6 +24,22 @@
 
 /* Exported types ------------------------------------------------------------*/
 typedef struct SeosKeyStore SeosKeyStore;
+typedef void* (SeosKeyStore_MallocFunc)(size_t size);
+typedef void  (SeosKeyStore_FreeFunc)(void* ptr);
+
+typedef struct
+{
+    SeosKeyStore_MallocFunc*   malloc;
+    SeosKeyStore_FreeFunc*     free;
+}
+SeosKeyStore_MemIf;
+
+typedef struct
+{
+    void*   buf;
+    size_t  len;
+}
+SeosKeyStore_StaticBuf;
 
 struct SeosKeyStore
 {
@@ -30,6 +47,13 @@ struct SeosKeyStore
     FileStreamFactory* fsFactory;
     SeosCrypto* cryptoCore;
     char* name;
+    union
+    {
+        SeosKeyStore_MemIf        memIf;
+        SeosKeyStore_StaticBuf    staticBuf;
+    }
+    mem;
+    KeyNameMap keyNameMap;
 };
 
 /* Exported constants --------------------------------------------------------*/
@@ -111,15 +135,13 @@ SeosKeyStore_getKeySizeBytes(SeosKeyStore*  self,
  *
  * @param keyStoreCtx   pointer to keyStoreCtx
  * @param keyHandle     key handle
- * @param name          key name
  *
  * @return seos_err
  *
  */
 seos_err_t
 SeosKeyStore_deleteKey(SeosKeyStoreCtx*         keyStoreCtx,
-                       SeosCrypto_KeyHandle     keyHandle,
-                       const char*              name);
+                       SeosCrypto_KeyHandle     keyHandle);
 /**
  * @brief Frees the resources of the passed key (dtor) but the key remains
  * in the non volatile storage
@@ -139,7 +161,6 @@ SeosKeyStore_closeKey(SeosKeyStoreCtx*          keyStoreCtx,
  *
  * @param keyStoreCtx   pointer to keyStoreCtx
  * @param keyHandle     key handle
- * @param name          name of the key we want to copy
  * @param destKeyStore  pointer to the destination key store
  *
  * @return seos_err
@@ -148,7 +169,6 @@ SeosKeyStore_closeKey(SeosKeyStoreCtx*          keyStoreCtx,
 seos_err_t
 SeosKeyStore_copyKey(SeosKeyStoreCtx*           keyStoreCtx,
                      SeosCrypto_KeyHandle       keyHandle,
-                     const char*                name,
                      SeosKeyStoreCtx*           destKeyStore);
 /**
  * @brief Moves the key with a selected name from the current key store to
@@ -157,7 +177,6 @@ SeosKeyStore_copyKey(SeosKeyStoreCtx*           keyStoreCtx,
  *
  * @param keyStoreCtx   pointer to keyStoreCtx
  * @param keyHandle     key handle
- * @param name          name of the key we want to move
  * @param destKeyStore  pointer to the destination key store
  *
  * @return seos_err
@@ -166,7 +185,6 @@ SeosKeyStore_copyKey(SeosKeyStoreCtx*           keyStoreCtx,
 seos_err_t
 SeosKeyStore_moveKey(SeosKeyStoreCtx*           keyStoreCtx,
                      SeosCrypto_KeyHandle       keyHandle,
-                     const char*                name,
                      SeosKeyStoreCtx*           destKeyStore);
 /**
  * @brief Generates a key with a given name using an RNG, stores the key into the key store

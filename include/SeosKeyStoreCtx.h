@@ -33,8 +33,7 @@ typedef seos_err_t
 
 typedef seos_err_t
 (*SeosKeyStoreCtx_deleteKeyT)(SeosKeyStoreCtx*          self,
-                              SeosCrypto_KeyHandle      keyHandle,
-                              const char*               name);
+                              SeosCrypto_KeyHandle      keyHandle);
 
 typedef seos_err_t
 (*SeosKeyStoreCtx_closeKeyT)(SeosKeyStoreCtx*          self,
@@ -43,13 +42,11 @@ typedef seos_err_t
 typedef seos_err_t
 (*SeosKeyStoreCtx_copyKeyT)(SeosKeyStoreCtx*        self,
                             SeosCrypto_KeyHandle    keyHandle,
-                            const char*             name,
                             SeosKeyStoreCtx*        destKeyStore);
 
 typedef seos_err_t
 (*SeosKeyStoreCtx_moveKeyT)(SeosKeyStoreCtx*        self,
                             SeosCrypto_KeyHandle    keyHandle,
-                            const char*             name,
                             SeosKeyStoreCtx*        destKeyStore);
 
 typedef seos_err_t
