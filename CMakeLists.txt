@@ -10,6 +10,7 @@ add_library(
     "src/SeosKeyStoreClient.c"
     "src/SeosKeyStoreRpc.c"
     "src/KeyNameMap.c"
+    "src/KeyStoreCtxRegister.c"
 )
 if (ENABLE_LINT)
         set(CMAKE_C_CPPCHECK "cppcheck;--enable=warning;--inline-suppr")
