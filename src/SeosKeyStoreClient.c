@@ -72,7 +72,8 @@ SeosKeyStoreClient_importKey(SeosKeyStoreCtx*            keyStoreCtx,
     else
     {
         memcpy(self->clientDataport, keyBytesBuffer, LEN_BITS_TO_BYTES(lenBits));
-        memcpy(self->clientDataport + LEN_BITS_TO_BYTES(lenBits), name, nameLen);
+        strncpy(self->clientDataport + LEN_BITS_TO_BYTES(lenBits), name,
+                PAGE_SIZE - LEN_BITS_TO_BYTES(lenBits));
 
         retval = SeosKeyStoreRpc_importKey(self->rpcHandle, keyHandle, algorithm, flags,
                                            lenBits);
@@ -103,8 +104,7 @@ SeosKeyStoreClient_getKey(SeosKeyStoreCtx*            keyStoreCtx,
     }
     else
     {
-        memset(self->clientDataport, 0, PAGE_SIZE);
-        memcpy(self->clientDataport, name, nameLen);
+        strncpy(self->clientDataport, name, PAGE_SIZE);
         retval = SeosKeyStoreRpc_getKey(self->rpcHandle, keyHandle);
         if (retval != SEOS_SUCCESS)
         {
@@ -221,9 +221,7 @@ SeosKeyStoreClient_generateKey(SeosKeyStoreCtx*            keyStoreCtx,
     }
     else
     {
-        memset(self->clientDataport, 0, PAGE_SIZE);
-        memcpy(self->clientDataport, name, nameLen);
-
+        strncpy(self->clientDataport, name, PAGE_SIZE);
         retval = SeosKeyStoreRpc_generateKey(self->rpcHandle, keyHandle, algorithm,
                                              flags, lenBits);
         if (retval != SEOS_SUCCESS)

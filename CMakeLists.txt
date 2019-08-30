@@ -25,11 +25,8 @@ target_compile_options(${PROJECT_NAME}
 
 if (KEYSTORE_CONFIG_H_FILE)
     list(APPEND PUBLIC_TARGET_COMPILE_DEFINITIONS
-        "KEYSTORE_CONFIG_H_FILE=${KEYSTORE_CONFIG_H_FILE}"
-    )
-else(KEYSTORE_CONFIG_H_FILE)
-    message("KeyStore configuration file needs to be defined! There is an example of the configuration in configs/KeyStore_Config.h.example")
-endif(KEYSTORE_CONFIG_H_FILE)
+        "KEYSTORE_CONFIG_H_FILE=${KEYSTORE_CONFIG_H_FILE}")
+endif()
 
 if (DEBUG_CONFIG_H_FILE)
     list(APPEND PUBLIC_TARGET_COMPILE_DEFINITIONS

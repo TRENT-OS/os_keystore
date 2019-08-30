@@ -7,9 +7,10 @@
 #include "SeosCryptoApi.h"
 #include "mbedtls/base64.h"
 /* Defines -------------------------------------------------------------------*/
-#define KEY_INT_PROPERTY_LEN                4
-#define KEY_DATA_HASH_LEN                   32
-#define NUM_OF_PROPERTIES                   3
+#define KEY_DATA_HASH_LEN                   32  // length of the checksum produced by hashing the key data
+// (len, bytes, algorithm and flags)
+#define NUM_OF_PROPERTIES                   3   // number of additional properties saved to the file
+// (alongside the raw key)
 
 // we round up the MAX_KEY_LEN / B64_KEY_DATA_HASH_LEN to the first
 // value divisible by 3 and multiply it ny 4/3 (overhead for base64)
@@ -20,10 +21,6 @@
 #define MAX_KEY_DATA_LEN                    (MAX_B64_KEY_LEN + NUM_OF_PROPERTIES*B64_KEY_INT_PROPERTY_LEN + B64_KEY_DATA_HASH_LEN + 4)
 
 #define KEY_BYTES_INDEX                     (NUM_OF_PROPERTIES*B64_KEY_INT_PROPERTY_LEN + 3)
-
-#define DELIMITER_STRING                    ","
-
-#define RNG_SEED                            "9f19a9b95fea4d3419f39697ed54fd32"
 
 /* Macros -------------------------------------------------------------------*/
 #define LEN_BITS_TO_BYTES(lenBits)          (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
@@ -150,7 +147,7 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStoreCtx*          keyStoreCtx,
         goto exit;
     }
 
-    err = SeosCryptoApi_keyImport(&(self->cryptoCore->parent),
+    err = SeosCryptoApi_keyImport(SeosCrypto_TO_SEOS_CRYPTO_CTX(self->cryptoCore),
                                   keyHandle,
                                   algorithm,
                                   flags,
@@ -224,7 +221,7 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
         goto exit;
     }
 
-    err = SeosCryptoApi_keyImport(&(self->cryptoCore->parent),
+    err = SeosCryptoApi_keyImport(SeosCrypto_TO_SEOS_CRYPTO_CTX(self->cryptoCore),
                                   keyHandle,
                                   readKeyAlgorithm,
                                   readKeyFlags,
@@ -337,7 +334,8 @@ seos_err_t SeosKeyStore_closeKey(SeosKeyStoreCtx* keyStoreCtx,
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
 
-    seos_err_t err = SeosCryptoApi_keyClose(&(self->cryptoCore->parent), keyHandle);
+    seos_err_t err = SeosCryptoApi_keyClose(SeosCrypto_TO_SEOS_CRYPTO_CTX(
+                                                self->cryptoCore), keyHandle);
 
     if (err != SEOS_SUCCESS)
     {
@@ -436,7 +434,7 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStoreCtx*            keyStoreCtx,
     seos_err_t err = SEOS_SUCCESS;
     KeyEntry newKeyEntry;
 
-    err = SeosCryptoApi_keyGenerate(&(self->cryptoCore->parent),
+    err = SeosCryptoApi_keyGenerate(SeosCrypto_TO_SEOS_CRYPTO_CTX(self->cryptoCore),
                                     keyHandle,
                                     algorithm,
                                     flags,
@@ -779,15 +777,15 @@ static seos_err_t registerKeyName(SeosKeyStore*               self,
     SeosKeyStore_KeyName keyName;
     size_t nameLen = strlen(name);
 
-    if (nameLen > MAX_KEY_NAME_LEN)
+    if (nameLen >= MAX_KEY_NAME_LEN)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name is %d, but the max allowed size is %d!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
         return SEOS_ERROR_INSUFFICIENT_SPACE;
     }
 
-    memset(keyName.buffer, 0, MAX_KEY_NAME_LEN);
     strncpy(keyName.buffer, name, nameLen);
+    keyName.buffer[nameLen] = 0;
 
     if (!KeyNameMap_insert(&self->keyNameMap, keyHandle, &keyName))
     {
@@ -804,7 +802,7 @@ static seos_err_t deRegisterKeyName(SeosKeyStore*               self,
     if (!KeyNameMap_remove(&self->keyNameMap, &keyHandle))
     {
         Debug_LOG_ERROR("%s: Failed to remove the key name!", __func__);
-        return SEOS_ERROR_INSUFFICIENT_SPACE;
+        return SEOS_ERROR_ABORTED;
     }
 
     return SEOS_SUCCESS;
