@@ -4,7 +4,7 @@
  *
  * @file KeyStoreCtxRegister.h
  *
- * @brief register that saves the key store context for 
+ * @brief register that saves the key store context for
  * each key handle in use
  *
  * Copyright (C) 2019, Hensoldt Cyber GmbH
@@ -23,13 +23,13 @@ MapT_DECLARE(SeosCrypto_KeyHandle, SeosKeyStoreCtxHandle, KeyStoreCtxRegister);
 /* Value functions ----------------------------------------------------------*/
 bool
 SeosKeyStoreCtxHandle_ctorCopy(SeosKeyStoreCtxHandle* dst,
-                              SeosKeyStoreCtxHandle const* src);
+                               SeosKeyStoreCtxHandle const* src);
 bool
 SeosKeyStoreCtxHandle_ctorMove(SeosKeyStoreCtxHandle* dst,
-                              SeosKeyStoreCtxHandle const* src);
+                               SeosKeyStoreCtxHandle const* src);
 bool
 SeosKeyStoreCtxHandle_assign(SeosKeyStoreCtxHandle* dst,
-                            SeosKeyStoreCtxHandle const* src);
+                             SeosKeyStoreCtxHandle const* src);
 void
 SeosKeyStoreCtxHandle_dtor(SeosKeyStoreCtxHandle* el);
 

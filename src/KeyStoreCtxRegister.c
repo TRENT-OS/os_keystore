@@ -10,21 +10,21 @@ MapT_DEFINE(SeosCrypto_KeyHandle, SeosKeyStoreCtxHandle, KeyStoreCtxRegister);
 /* Value functions ----------------------------------------------------------*/
 bool
 SeosKeyStoreCtxHandle_ctorCopy(SeosKeyStoreCtxHandle* dst,
-                              SeosKeyStoreCtxHandle const* src)
+                               SeosKeyStoreCtxHandle const* src)
 {
     return SeosKeyStoreCtxHandle_assign(dst, src);
 }
 
 bool
 SeosKeyStoreCtxHandle_ctorMove(SeosKeyStoreCtxHandle* dst,
-                              SeosKeyStoreCtxHandle const* src)
+                               SeosKeyStoreCtxHandle const* src)
 {
     return SeosKeyStoreCtxHandle_assign(dst, src);
 }
 
 bool
 SeosKeyStoreCtxHandle_assign(SeosKeyStoreCtxHandle* dst,
-                            SeosKeyStoreCtxHandle const* src)
+                             SeosKeyStoreCtxHandle const* src)
 {
     *dst = *src;
     return true;
