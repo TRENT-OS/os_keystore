@@ -161,5 +161,15 @@ SeosKeyStoreRpc_generateKey(SeosKeyStoreRpc*        self,
                             unsigned int            algorithm,
                             unsigned int            flags,
                             size_t                  lenBits);
+/**
+ * @brief Deletes all the keys from the keystore
+ *
+ * @param self          pointer to self
+ *
+ * @return seos_err
+ *
+ */
+seos_err_t
+SeosKeyStoreRpc_wipeKeyStore(SeosKeyStoreRpc* self);
 
 /** @} */

@@ -173,6 +173,42 @@ SeosKeyStoreApi_generateKey(SeosKeyStoreCtx*            keyStoreCtx,
     return retval;
 }
 
+seos_err_t
+SeosKeyStoreApi_wipeKeyStore(SeosKeyStoreCtx* keyStoreCtx)
+{
+    seos_err_t retval = keyStoreCtx->vtable->wipeKeyStore(keyStoreCtx);
+
+    if (retval == SEOS_SUCCESS)
+    {
+        KeyStoreCtxRegister* ctxRegister = KeyStoreCtxRegister_getInstance();
+        int registerSize = KeyStoreCtxRegister_getSize(ctxRegister);
+        if (registerSize < 0)
+        {
+            Debug_LOG_ERROR("%s: Failed to read the key context register size!", __func__);
+            return SEOS_ERROR_ABORTED;
+        }
+
+        for (int i = registerSize - 1; i >= 0; i--)
+        {
+            SeosKeyStoreCtxHandle* ctxHandle = (SeosKeyStoreCtxHandle*)
+                                               KeyStoreCtxRegister_getValueAt(ctxRegister, i);
+            if (*ctxHandle == NULL)
+            {
+                Debug_LOG_ERROR("Failed to retreive the context!");
+                return SEOS_ERROR_NOT_FOUND;
+            }
+            if (*ctxHandle == keyStoreCtx)
+            {
+                SeosCrypto_KeyHandle* keyHandle = (SeosCrypto_KeyHandle*)
+                                                  KeyStoreCtxRegister_getKeyAt(ctxRegister, i);
+                deregisterContext(*keyHandle);
+            }
+        }
+    }
+
+    return retval;
+}
+
 /* Private functions ----------------------------------------------------------*/
 static KeyStoreCtxRegister* KeyStoreCtxRegister_getInstance()
 {

@@ -171,5 +171,15 @@ SeosKeyStoreClient_generateKey(SeosKeyStoreCtx*         keyStoreCtx,
                                unsigned int             algorithm,
                                unsigned int             flags,
                                size_t                   lenBits);
+/**
+ * @brief Deletes all the keys from the keystore
+ *
+ * @param keyStoreCtx   pointer to keyStoreCtx
+ *
+ * @return seos_err
+ *
+ */
+seos_err_t
+SeosKeyStoreClient_wipeKeyStore(SeosKeyStoreCtx* keyStoreCtx);
 
 /** @} */

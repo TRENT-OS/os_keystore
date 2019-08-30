@@ -249,6 +249,29 @@ SeosKeyStoreRpc_generateKey(SeosKeyStoreRpc*            self,
     return retval;
 }
 
+seos_err_t
+SeosKeyStoreRpc_wipeKeyStore(SeosKeyStoreRpc* self)
+{
+    Debug_ASSERT_SELF(self);
+    seos_err_t retval = SEOS_ERROR_GENERIC;
+
+    if (!isValidHandle(self))
+    {
+        retval = SEOS_ERROR_INVALID_PARAMETER;
+    }
+    else
+    {
+        retval = SeosKeyStore_wipeKeyStore(self->seosKeyStoreCtx);
+        if (retval != SEOS_SUCCESS)
+        {
+            Debug_LOG_ERROR("%s: SeosKeyStore_wipeKeyStore failed, err %d!", __func__,
+                            retval);
+        }
+    }
+
+    return retval;
+}
+
 /* Private functions ---------------------------------------------------------*/
 static inline bool
 registerHandle(SeosKeyStoreRpc* self)

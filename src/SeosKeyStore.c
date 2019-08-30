@@ -63,6 +63,7 @@ static const SeosKeyStoreCtx_Vtable SeosKeyStore_vtable =
     .copyKey        = SeosKeyStore_copyKey,
     .moveKey        = SeosKeyStore_moveKey,
     .generateKey    = SeosKeyStore_generateKey,
+    .wipeKeyStore   = SeosKeyStore_wipeKeyStore,
     .deInit         = SeosKeyStore_deInit,
 };
 /* Public functions ----------------------------------------------------------*/
@@ -487,6 +488,36 @@ err1:
     SeosKeyStore_closeKey(keyStoreCtx, *keyHandle);
 
 exit:
+    return err;
+}
+
+seos_err_t
+SeosKeyStore_wipeKeyStore(SeosKeyStoreCtx* keyStoreCtx)
+{
+    SeosKeyStore* self = (SeosKeyStore*)keyStoreCtx;
+    Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
+    seos_err_t err = SEOS_ERROR_GENERIC;
+
+    int registerSize = KeyNameMap_getSize(&self->keyNameMap);
+    if (registerSize < 0)
+    {
+        Debug_LOG_ERROR("%s: Failed to read the key name register size!", __func__);
+        return SEOS_ERROR_ABORTED;
+    }
+
+    for (int i = registerSize - 1; i >= 0; i--)
+    {
+        SeosCrypto_KeyHandle* keyHandle = (SeosCrypto_KeyHandle*)KeyNameMap_getKeyAt(
+                                              &self->keyNameMap, i);
+        err = SeosKeyStore_deleteKey(keyStoreCtx, *keyHandle);
+        if (err != SEOS_SUCCESS)
+        {
+            Debug_LOG_ERROR("%s: Failed to delete the key %p!", __func__, keyHandle);
+            return err;
+        }
+    }
+
     return err;
 }
 

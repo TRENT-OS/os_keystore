@@ -57,6 +57,9 @@ typedef seos_err_t
                                 unsigned int                flags,
                                 size_t                      lenBits);
 
+typedef seos_err_t
+(*SeosKeyStoreCtx_wipeKeyStoreT)(SeosKeyStoreCtx* self);
+
 typedef void
 (*SeosKeyStoreCtx_deInitT)(SeosKeyStoreCtx* self);
 
@@ -69,6 +72,7 @@ typedef struct
     SeosKeyStoreCtx_copyKeyT        copyKey;
     SeosKeyStoreCtx_moveKeyT        moveKey;
     SeosKeyStoreCtx_generateKeyT    generateKey;
+    SeosKeyStoreCtx_wipeKeyStoreT   wipeKeyStore;
 
     SeosKeyStoreCtx_deInitT         deInit;
 }

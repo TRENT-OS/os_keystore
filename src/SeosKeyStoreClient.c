@@ -18,6 +18,7 @@ static const SeosKeyStoreCtx_Vtable SeosKeyStoreClient_vtable =
     .copyKey        = SeosKeyStoreClient_copyKey,
     .moveKey        = SeosKeyStoreClient_moveKey,
     .generateKey    = SeosKeyStoreClient_generateKey,
+    .wipeKeyStore   = SeosKeyStoreClient_wipeKeyStore,
     .deInit         = SeosKeyStoreClient_deInit,
 };
 
@@ -229,6 +230,24 @@ SeosKeyStoreClient_generateKey(SeosKeyStoreCtx*            keyStoreCtx,
             Debug_LOG_ERROR("%s: SeosKeyStoreRpc_generateKey failed, err %d!", __func__,
                             retval);
         }
+    }
+
+    return retval;
+}
+
+seos_err_t
+SeosKeyStoreClient_wipeKeyStore(SeosKeyStoreCtx* keyStoreCtx)
+{
+    SeosKeyStoreClient* self = (SeosKeyStoreClient*)keyStoreCtx;
+    Debug_ASSERT_SELF(self);
+    Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
+    seos_err_t retval = SEOS_ERROR_GENERIC;
+
+    retval = SeosKeyStoreRpc_wipeKeyStore(self->rpcHandle);
+    if (retval != SEOS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: SeosKeyStoreRpc_wipeKeyStore failed, err %d!", __func__,
+                        retval);
     }
 
     return retval;
