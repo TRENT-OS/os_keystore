@@ -35,9 +35,9 @@ SeosKeyStoreClient;
 /**
  * @brief constructor of a seos KeyStore client
  *
- * @param self (required) pointer to the seos KeyStore client object to be constructed
- * @params rpcHandle handle to point the remote RPC context
- * @params dataport pointer to the dataport connected to the server
+ * @param self          (required) pointer to the seos KeyStore client object to be constructed
+ * @param rpcHandle     handle to point the remote RPC context
+ * @param dataport      pointer to the dataport connected to the server
  *
  * @return an error code
  * @retval SEOS_SUCCESS if all right
@@ -52,8 +52,8 @@ SeosKeyStoreClient_init(SeosKeyStoreClient*     self,
 /**
  * @brief destructor of a seos KeyStore client
  *
- * @param keyStoreCtx (required) pointer to the seos KeyStore client object to be
- *  destructed
+ * @param keyStoreCtx   (required) pointer to the seos KeyStore client object to be
+ *                      destructed
  *
  */
 void
@@ -101,15 +101,13 @@ SeosKeyStoreClient_getKey(SeosKeyStoreCtx*      keyStoreCtx,
  *
  * @param keyStoreCtx   pointer to keyStoreCtx
  * @param keyHandle     key handle
- * @param name          name of the keyHandle we want to delete
  *
  * @return seos_err
  *
  */
 seos_err_t
 SeosKeyStoreClient_deleteKey(SeosKeyStoreCtx*       keyStoreCtx,
-                             SeosCrypto_KeyHandle   keyHandle,
-                             const char*            name);
+                             SeosCrypto_KeyHandle   keyHandle);
 /**
  * @brief Closes a key with a given handle
  *
@@ -127,7 +125,6 @@ SeosKeyStoreClient_closeKey(SeosKeyStoreCtx*        keyStoreCtx,
  *
  * @param keyStoreCtx   pointer to keyStoreCtx
  * @param keyHandle     key handle
- * @param name          name of the key to be copied
  * @param destKeyStore  pointer to the destination key store
  *
  * @return seos_err
@@ -136,7 +133,6 @@ SeosKeyStoreClient_closeKey(SeosKeyStoreCtx*        keyStoreCtx,
 seos_err_t
 SeosKeyStoreClient_copyKey(SeosKeyStoreCtx*     keyStoreCtx,
                            SeosCrypto_KeyHandle keyHandle,
-                           const char*          name,
                            SeosKeyStoreCtx*     destKeyStore);
 /**
  * @brief Moves the key from the current key store to
@@ -145,7 +141,6 @@ SeosKeyStoreClient_copyKey(SeosKeyStoreCtx*     keyStoreCtx,
  *
  * @param keyStoreCtx   pointer to keyStoreCtx
  * @param keyHandle     key handle
- * @param name          name of the key to be moved
  * @param destKeyStore  pointer to the destination key store
  *
  * @return seos_err
@@ -154,7 +149,6 @@ SeosKeyStoreClient_copyKey(SeosKeyStoreCtx*     keyStoreCtx,
 seos_err_t
 SeosKeyStoreClient_moveKey(SeosKeyStoreCtx*     keyStoreCtx,
                            SeosCrypto_KeyHandle keyHandle,
-                           const char*          name,
                            SeosKeyStoreCtx*     destKeyStore);
 /**
  * @brief Generates a key with a given name using an RNG, stores the key into the key store

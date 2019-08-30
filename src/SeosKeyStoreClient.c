@@ -23,27 +23,23 @@ static const SeosKeyStoreCtx_Vtable SeosKeyStoreClient_vtable =
 
 /* Public functions ----------------------------------------------------------*/
 seos_err_t
-SeosKeyStoreClient_init(SeosKeyStoreClient* self,
-                        SeosKeyStoreRpc_Handle rpcHandle, void* dataport)
+SeosKeyStoreClient_init(SeosKeyStoreClient*         self,
+                        SeosKeyStoreRpc_Handle      rpcHandle,
+                        void*                       dataport)
 {
     Debug_ASSERT_SELF(self);
-    seos_err_t retval = SEOS_ERROR_GENERIC;
 
-    memset(self, 0, sizeof(*self));
-
-    if (NULL == rpcHandle || NULL == dataport)
+    if (NULL == rpcHandle
+        || NULL == dataport)
     {
-        retval = SEOS_ERROR_INVALID_PARAMETER;
-        goto exit;
+        return SEOS_ERROR_INVALID_PARAMETER;
     }
 
     self->clientDataport    = dataport;
     self->rpcHandle         = rpcHandle;
     self->parent.vtable     = &SeosKeyStoreClient_vtable;
-    retval                  = SEOS_SUCCESS;
 
-exit:
-    return retval;
+    return SEOS_SUCCESS;
 }
 
 void
@@ -67,15 +63,17 @@ SeosKeyStoreClient_importKey(SeosKeyStoreCtx*            keyStoreCtx,
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
+    size_t nameLen = strlen(name);
 
-    if (NULL == name || (strlen(name) + LEN_BITS_TO_BYTES(lenBits)) > PAGE_SIZE)
+    if (NULL == name || (nameLen + LEN_BITS_TO_BYTES(lenBits)) > PAGE_SIZE)
     {
         retval = SEOS_ERROR_INVALID_PARAMETER;
     }
     else
     {
         memcpy(self->clientDataport, keyBytesBuffer, LEN_BITS_TO_BYTES(lenBits));
-        memcpy(self->clientDataport + LEN_BITS_TO_BYTES(lenBits), name, strlen(name));
+        strncpy(self->clientDataport + LEN_BITS_TO_BYTES(lenBits), name,
+                PAGE_SIZE - LEN_BITS_TO_BYTES(lenBits));
 
         retval = SeosKeyStoreRpc_importKey(self->rpcHandle, keyHandle, algorithm, flags,
                                            lenBits);
@@ -98,15 +96,15 @@ SeosKeyStoreClient_getKey(SeosKeyStoreCtx*            keyStoreCtx,
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
+    size_t nameLen = strlen(name);
 
-    if (NULL == name || strlen(name) > PAGE_SIZE)
+    if (NULL == name || nameLen > PAGE_SIZE)
     {
         retval = SEOS_ERROR_INVALID_PARAMETER;
     }
     else
     {
-        memset(self->clientDataport, 0, PAGE_SIZE);
-        memcpy(self->clientDataport, name, strlen(name));
+        strncpy(self->clientDataport, name, PAGE_SIZE);
         retval = SeosKeyStoreRpc_getKey(self->rpcHandle, keyHandle);
         if (retval != SEOS_SUCCESS)
         {
@@ -120,28 +118,18 @@ SeosKeyStoreClient_getKey(SeosKeyStoreCtx*            keyStoreCtx,
 
 seos_err_t
 SeosKeyStoreClient_deleteKey(SeosKeyStoreCtx*        keyStoreCtx,
-                             SeosCrypto_KeyHandle    keyHandle,
-                             const char*             name)
+                             SeosCrypto_KeyHandle    keyHandle)
 {
     SeosKeyStoreClient* self = (SeosKeyStoreClient*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
-    if (NULL == name || strlen(name) > PAGE_SIZE)
+    retval = SeosKeyStoreRpc_deleteKey(self->rpcHandle, keyHandle);
+    if (retval != SEOS_SUCCESS)
     {
-        retval = SEOS_ERROR_INVALID_PARAMETER;
-    }
-    else
-    {
-        memset(self->clientDataport, 0, PAGE_SIZE);
-        memcpy(self->clientDataport, name, strlen(name));
-        retval = SeosKeyStoreRpc_deleteKey(self->rpcHandle, keyHandle);
-        if (retval != SEOS_SUCCESS)
-        {
-            Debug_LOG_ERROR("%s: SeosKeyStoreRpc_deleteKey failed, err %d!", __func__,
-                            retval);
-        }
+        Debug_LOG_ERROR("%s: SeosKeyStoreRpc_deleteKey failed, err %d!", __func__,
+                        retval);
     }
 
     return retval;
@@ -169,7 +157,6 @@ SeosKeyStoreClient_closeKey(SeosKeyStoreCtx*        keyStoreCtx,
 seos_err_t
 SeosKeyStoreClient_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
                            SeosCrypto_KeyHandle    keyHandle,
-                           const char*             name,
                            SeosKeyStoreCtx*        destKeyStore)
 {
     SeosKeyStoreClient* self = (SeosKeyStoreClient*)keyStoreCtx;
@@ -179,23 +166,14 @@ SeosKeyStoreClient_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
     Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
-    if (NULL == name || strlen(name) > PAGE_SIZE)
+    retval = SeosKeyStoreRpc_copyKey(self->rpcHandle, keyHandle,
+                                     destKeyStoreRpc->rpcHandle);
+    if (retval != SEOS_SUCCESS)
     {
-        retval = SEOS_ERROR_INVALID_PARAMETER;
+        Debug_LOG_ERROR("%s: SeosKeyStoreRpc_copyKey failed, err %d!", __func__,
+                        retval);
     }
-    else
-    {
-        memset(self->clientDataport, 0, PAGE_SIZE);
-        memcpy(self->clientDataport, name, strlen(name));
 
-        retval = SeosKeyStoreRpc_copyKey(self->rpcHandle, keyHandle,
-                                         destKeyStoreRpc->rpcHandle);
-        if (retval != SEOS_SUCCESS)
-        {
-            Debug_LOG_ERROR("%s: SeosKeyStoreRpc_copyKey failed, err %d!", __func__,
-                            retval);
-        }
-    }
 
     return retval;
 }
@@ -203,7 +181,6 @@ SeosKeyStoreClient_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
 seos_err_t
 SeosKeyStoreClient_moveKey(SeosKeyStoreCtx*        keyStoreCtx,
                            SeosCrypto_KeyHandle    keyHandle,
-                           const char*             name,
                            SeosKeyStoreCtx*        destKeyStore)
 {
     SeosKeyStoreClient* self = (SeosKeyStoreClient*)keyStoreCtx;
@@ -213,22 +190,12 @@ SeosKeyStoreClient_moveKey(SeosKeyStoreCtx*        keyStoreCtx,
     Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
-    if (NULL == name || strlen(name) > PAGE_SIZE)
+    retval = SeosKeyStoreRpc_moveKey(self->rpcHandle, keyHandle,
+                                     destKeyStoreRpc->rpcHandle);
+    if (retval != SEOS_SUCCESS)
     {
-        retval = SEOS_ERROR_INVALID_PARAMETER;
-    }
-    else
-    {
-        memset(self->clientDataport, 0, PAGE_SIZE);
-        memcpy(self->clientDataport, name, strlen(name));
-
-        retval = SeosKeyStoreRpc_moveKey(self->rpcHandle, keyHandle,
-                                         destKeyStoreRpc->rpcHandle);
-        if (retval != SEOS_SUCCESS)
-        {
-            Debug_LOG_ERROR("%s: SeosKeyStoreRpc_moveKey failed, err %d!", __func__,
-                            retval);
-        }
+        Debug_LOG_ERROR("%s: SeosKeyStoreRpc_moveKey failed, err %d!", __func__,
+                        retval);
     }
 
     return retval;
@@ -246,16 +213,15 @@ SeosKeyStoreClient_generateKey(SeosKeyStoreCtx*            keyStoreCtx,
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStoreClient_vtable);
     seos_err_t retval = SEOS_ERROR_GENERIC;
+    size_t nameLen = strlen(name);
 
-    if (NULL == name || strlen(name) > PAGE_SIZE)
+    if (NULL == name || nameLen > PAGE_SIZE)
     {
         retval = SEOS_ERROR_INVALID_PARAMETER;
     }
     else
     {
-        memset(self->clientDataport, 0, PAGE_SIZE);
-        memcpy(self->clientDataport, name, strlen(name));
-
+        strncpy(self->clientDataport, name, PAGE_SIZE);
         retval = SeosKeyStoreRpc_generateKey(self->rpcHandle, keyHandle, algorithm,
                                              flags, lenBits);
         if (retval != SEOS_SUCCESS)

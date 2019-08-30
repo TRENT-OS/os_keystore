@@ -9,6 +9,8 @@ add_library(
     "src/SeosKeyStoreApi.c"
     "src/SeosKeyStoreClient.c"
     "src/SeosKeyStoreRpc.c"
+    "src/KeyNameMap.c"
+    "src/KeyStoreCtxRegister.c"
 )
 if (ENABLE_LINT)
         set(CMAKE_C_CPPCHECK "cppcheck;--enable=warning;--inline-suppr")
@@ -20,6 +22,11 @@ target_compile_options(${PROJECT_NAME}
         -Wall
         -Werror
 )
+
+if (KEYSTORE_CONFIG_H_FILE)
+    list(APPEND PUBLIC_TARGET_COMPILE_DEFINITIONS
+        "KEYSTORE_CONFIG_H_FILE=${KEYSTORE_CONFIG_H_FILE}")
+endif()
 
 if (DEBUG_CONFIG_H_FILE)
     list(APPEND PUBLIC_TARGET_COMPILE_DEFINITIONS

@@ -4,17 +4,13 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "SeosKeyStore.h"
-#include "SeosCryptoDigest.h"
-#include "SeosCryptoCipher.h"
+#include "SeosCryptoApi.h"
 #include "mbedtls/base64.h"
-#include "LibMem/BitmapAllocator.h"
 /* Defines -------------------------------------------------------------------*/
-#define MAX_KEY_LEN                         256
-
-#define KEY_INT_PROPERTY_LEN                4
-#define KEY_DATA_HASH_LEN                   32
-
-#define NUM_OF_PROPERTIES                   3
+#define KEY_DATA_HASH_LEN                   32  // length of the checksum produced by hashing the key data
+// (len, bytes, algorithm and flags)
+#define NUM_OF_PROPERTIES                   3   // number of additional properties saved to the file
+// (alongside the raw key)
 
 // we round up the MAX_KEY_LEN / B64_KEY_DATA_HASH_LEN to the first
 // value divisible by 3 and multiply it ny 4/3 (overhead for base64)
@@ -25,10 +21,6 @@
 #define MAX_KEY_DATA_LEN                    (MAX_B64_KEY_LEN + NUM_OF_PROPERTIES*B64_KEY_INT_PROPERTY_LEN + B64_KEY_DATA_HASH_LEN + 4)
 
 #define KEY_BYTES_INDEX                     (NUM_OF_PROPERTIES*B64_KEY_INT_PROPERTY_LEN + 3)
-
-#define DELIMITER_STRING                    ","
-
-#define RNG_SEED                            "9f19a9b95fea4d3419f39697ed54fd32"
 
 /* Macros -------------------------------------------------------------------*/
 #define LEN_BITS_TO_BYTES(lenBits)          (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
@@ -51,6 +43,13 @@ static seos_err_t writeKeyToFile(FileStreamFactory* fsFactory,
                                  KeyEntry* keyEntry, size_t keySize, const char* name);
 static seos_err_t readKeyFromFile(FileStreamFactory* fsFactory,
                                   KeyEntry* keyEntry, const char* name);
+static seos_err_t deleteKeyFromFile(FileStreamFactory* fsFactory,
+                                    const char* name);
+static seos_err_t registerKeyName(SeosKeyStore*               self,
+                                  SeosCrypto_KeyHandle*       keyHandle,
+                                  const char*                 name);
+static seos_err_t deRegisterKeyName(SeosKeyStore*               self,
+                                    SeosCrypto_KeyHandle        keyHandle);
 static void cpyIntToBuf(uint32_t integer, unsigned char* buf);
 static size_t cpyBufToInt(const char* buf);
 /* Private variables ---------------------------------------------------------*/
@@ -67,12 +66,13 @@ static const SeosKeyStoreCtx_Vtable SeosKeyStore_vtable =
     .deInit         = SeosKeyStore_deInit,
 };
 /* Public functions ----------------------------------------------------------*/
-seos_err_t SeosKeyStore_init(SeosKeyStore*      self,
-                             FileStreamFactory* fileStreamFactory,
-                             SeosCrypto*        cryptoCore,
-                             char*              name)
+seos_err_t SeosKeyStore_init(SeosKeyStore*              self,
+                             FileStreamFactory*         fileStreamFactory,
+                             SeosCrypto*                cryptoCore,
+                             char*                      name)
 {
     Debug_ASSERT_SELF(self);
+    seos_err_t retval = SEOS_ERROR_GENERIC;
 
     if (NULL == fileStreamFactory
         || NULL == cryptoCore
@@ -81,12 +81,23 @@ seos_err_t SeosKeyStore_init(SeosKeyStore*      self,
         return SEOS_ERROR_INVALID_PARAMETER;
     }
 
-    self->fsFactory     = fileStreamFactory;
-    self->name          = name;
-    self->cryptoCore    = cryptoCore;
-    self->parent.vtable = &SeosKeyStore_vtable;
+    memset(self, 0, sizeof(*self));
 
-    return SEOS_SUCCESS;
+    if (!KeyNameMap_ctor(&self->keyNameMap, 1))
+    {
+        retval = SEOS_ERROR_ABORTED;
+    }
+    else
+    {
+        self->fsFactory     = fileStreamFactory;
+        self->name          = name;
+        self->cryptoCore    = cryptoCore;
+        self->parent.vtable = &SeosKeyStore_vtable;
+
+        retval = SEOS_SUCCESS;
+    }
+
+    return retval;
 }
 
 void SeosKeyStore_deInit(SeosKeyStoreCtx* keyStoreCtx)
@@ -124,7 +135,7 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStoreCtx*          keyStoreCtx,
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not hash the key data, err %d!", __func__, err);
-        return err;
+        goto exit;
     }
 
     err = writeKeyToFile(self->fsFactory, &newKeyEntry,
@@ -133,22 +144,39 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStoreCtx*          keyStoreCtx,
     {
         Debug_LOG_ERROR("%s: Could not write the key data to the file, err %d!",
                         __func__, err);
-        return err;
+        goto exit;
     }
 
-    SeosCrypto_keyImport(&(self->cryptoCore->parent),
-                         keyHandle,
-                         algorithm,
-                         flags,
-                         keyBytesBuffer,
-                         lenBits);
+    err = SeosCryptoApi_keyImport(SeosCrypto_TO_SEOS_CRYPTO_CTX(self->cryptoCore),
+                                  keyHandle,
+                                  algorithm,
+                                  flags,
+                                  keyBytesBuffer,
+                                  lenBits);
     if (err != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: SeosCrypto_keyImport failed with error code %d!",
+        Debug_LOG_ERROR("%s: SeosCryptoApi_keyImport failed with error code %d!",
                         __func__, err);
-        return err;
+        goto err1;
     }
 
+    err = registerKeyName(self, keyHandle, name);
+    if (err != SEOS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: Failed to register the key name, error code %d!",
+                        __func__, err);
+        goto err0;
+    }
+
+    goto exit;
+
+err0:
+    SeosKeyStore_closeKey(keyStoreCtx, *keyHandle);
+
+err1:
+    deleteKeyFromFile(self->fsFactory, name);
+
+exit:
     return err;
 }
 
@@ -168,7 +196,7 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
     {
         Debug_LOG_ERROR("%s: Could not read the key data from the file, err %d!",
                         __func__, err);
-        return err;
+        goto exit;
     }
 
     size_t readKeySize      = cpyBufToInt((char*)newKeyEntry.keyProperties[0]);
@@ -182,29 +210,44 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
     {
         Debug_LOG_ERROR("%s: Could not hash the key data, err %d!",
                         __func__, err);
-        return err;
+        goto exit;
     }
 
     if (memcmp(newKeyEntry.hash, calculatedHash, KEY_DATA_HASH_LEN) != 0)
     {
         Debug_LOG_ERROR("%s: The key is corrupted - hash value does not correspond to the data!",
                         __func__);
-        return SEOS_ERROR_GENERIC;
+        err = SEOS_ERROR_GENERIC;
+        goto exit;
     }
 
-    err = SeosCrypto_keyImport(&(self->cryptoCore->parent),
-                               keyHandle,
-                               readKeyAlgorithm,
-                               readKeyFlags,
-                               newKeyEntry.keyBytes,
-                               readKeySize);
+    err = SeosCryptoApi_keyImport(SeosCrypto_TO_SEOS_CRYPTO_CTX(self->cryptoCore),
+                                  keyHandle,
+                                  readKeyAlgorithm,
+                                  readKeyFlags,
+                                  newKeyEntry.keyBytes,
+                                  readKeySize);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCryptoApi_keyImport failed to construct the key with error code %d!",
                         __func__, err);
-        return err;
+        goto exit;
     }
 
+    err = registerKeyName(self, keyHandle, name);
+    if (err != SEOS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: Failed to register the key name, error code %d!",
+                        __func__, err);
+        goto err0;
+    }
+
+    goto exit;
+
+err0:
+    SeosKeyStore_closeKey(keyStoreCtx, *keyHandle);
+
+exit:
     return err;
 }
 
@@ -249,28 +292,31 @@ seos_err_t SeosKeyStore_getKeySizeBytes(SeosKeyStore*   self,
 }
 
 seos_err_t SeosKeyStore_deleteKey(SeosKeyStoreCtx*          keyStoreCtx,
-                                  SeosCrypto_KeyHandle      keyHandle,
-                                  const char*               name)
+                                  SeosCrypto_KeyHandle      keyHandle)
 {
     SeosKeyStore* self = (SeosKeyStore*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
-    BitMap16 flags = 0;
 
-    FileStream* file = FileStreamFactory_create(self->fsFactory, name,
-                                                FileStream_OpenMode_r);
-    if (file == NULL)
+    int index = KeyNameMap_getIndexOf(&self->keyNameMap, &keyHandle);
+    if (index < 0)
     {
-        Debug_LOG_ERROR("%s: Failed to open the file stream with a path '%s'!",
-                        __func__, name);
+        Debug_LOG_ERROR("%s: Key corresponding to the passed key handle not found!",
+                        __func__);
         return SEOS_ERROR_NOT_FOUND;
     }
+    const SeosKeyStore_KeyName* name = KeyNameMap_getValueAt(&self->keyNameMap,
+                                                             index);
 
-    BitMap_SET_BIT(flags, FileStream_DeleteFlags_CLOSE);
-    BitMap_SET_BIT(flags, FileStream_DeleteFlags_DELETE);
-    FileStreamFactory_destroy(self->fsFactory, file, flags);
+    seos_err_t err = deleteKeyFromFile(self->fsFactory, name->buffer);
+    if (err != SEOS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: deleteKeyFromFile failed with error code %d!",
+                        __func__, err);
+        return err;
+    }
 
-    seos_err_t err = SeosKeyStore_closeKey(keyStoreCtx, keyHandle);
+    err = SeosKeyStore_closeKey(keyStoreCtx, keyHandle);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosKeyStore_closeKey failed with error code %d!",
@@ -288,11 +334,20 @@ seos_err_t SeosKeyStore_closeKey(SeosKeyStoreCtx* keyStoreCtx,
     Debug_ASSERT_SELF(self);
     Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
 
-    seos_err_t err = SeosCrypto_keyClose(&(self->cryptoCore->parent), keyHandle);
+    seos_err_t err = SeosCryptoApi_keyClose(SeosCrypto_TO_SEOS_CRYPTO_CTX(
+                                                self->cryptoCore), keyHandle);
 
     if (err != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: SeosCrypto_keyClose failed with error code %d!",
+        Debug_LOG_ERROR("%s: SeosCryptoApi_keyClose failed with error code %d!",
+                        __func__, err);
+        return err;
+    }
+
+    err = deRegisterKeyName(self, keyHandle);
+    if (err != SEOS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: Failed to deregister the key name, error code %d!",
                         __func__, err);
         return err;
     }
@@ -302,7 +357,6 @@ seos_err_t SeosKeyStore_closeKey(SeosKeyStoreCtx* keyStoreCtx,
 
 seos_err_t SeosKeyStore_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
                                 SeosCrypto_KeyHandle    keyHandle,
-                                const char*             name,
                                 SeosKeyStoreCtx*        destKeyStore)
 {
     SeosKeyStore* self = (SeosKeyStore*)keyStoreCtx;
@@ -311,14 +365,25 @@ seos_err_t SeosKeyStore_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
     Debug_ASSERT_SELF(destKeyStore);
     seos_err_t err = SEOS_SUCCESS;
 
-    err = SeosKeyStore_getKey(keyStoreCtx, &keyHandle, name);
+    int index = KeyNameMap_getIndexOf(&self->keyNameMap, &keyHandle);
+    if (index < 0)
+    {
+        Debug_LOG_ERROR("%s: Key corresponding to the passed key handle not found!",
+                        __func__);
+        return SEOS_ERROR_NOT_FOUND;
+    }
+    const SeosKeyStore_KeyName* name = KeyNameMap_getValueAt(&self->keyNameMap,
+                                                             index);
+
+    err = SeosKeyStore_getKey(keyStoreCtx, &keyHandle, name->buffer);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: getKey failed with err %d!", __func__, err);
         return err;
     }
 
-    err = SeosKeyStore_importKey(destKeyStore, &keyHandle, name, keyHandle->bytes,
+    err = SeosKeyStore_importKey(destKeyStore, &keyHandle, name->buffer,
+                                 keyHandle->bytes,
                                  keyHandle->algorithm, keyHandle->flags, keyHandle->lenBits);
     if (err != SEOS_SUCCESS)
     {
@@ -331,7 +396,6 @@ seos_err_t SeosKeyStore_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
 
 seos_err_t SeosKeyStore_moveKey(SeosKeyStoreCtx*        keyStoreCtx,
                                 SeosCrypto_KeyHandle    keyHandle,
-                                const char*             name,
                                 SeosKeyStoreCtx*        destKeyStore)
 {
     SeosKeyStore* self = (SeosKeyStore*)keyStoreCtx;
@@ -340,14 +404,14 @@ seos_err_t SeosKeyStore_moveKey(SeosKeyStoreCtx*        keyStoreCtx,
     Debug_ASSERT_SELF(destKeyStore);
     seos_err_t err = SEOS_SUCCESS;
 
-    err = SeosKeyStore_copyKey(keyStoreCtx, keyHandle, name, destKeyStore);
+    err = SeosKeyStore_copyKey(keyStoreCtx, keyHandle, destKeyStore);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: copyKey failed with err %d!", __func__, err);
         return err;
     }
 
-    err = SeosKeyStore_deleteKey(keyStoreCtx, keyHandle, name);
+    err = SeosKeyStore_deleteKey(keyStoreCtx, keyHandle);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: deleteKey failed with err %d!", __func__, err);
@@ -370,16 +434,16 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStoreCtx*            keyStoreCtx,
     seos_err_t err = SEOS_SUCCESS;
     KeyEntry newKeyEntry;
 
-    SeosCrypto_keyGenerate(&(self->cryptoCore->parent),
-                           keyHandle,
-                           algorithm,
-                           flags,
-                           lenBits);
+    err = SeosCryptoApi_keyGenerate(SeosCrypto_TO_SEOS_CRYPTO_CTX(self->cryptoCore),
+                                    keyHandle,
+                                    algorithm,
+                                    flags,
+                                    lenBits);
     if (err != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: SeosCrypto_keyGenerate failed to construct the key with error code %d!",
+        Debug_LOG_ERROR("%s: SeosCryptoApi_keyGenerate failed to construct the key with error code %d!",
                         __func__, err);
-        return err;
+        goto exit;
     }
 
     memcpy(newKeyEntry.keyBytes, (*keyHandle)->bytes, LEN_BITS_TO_BYTES(lenBits));
@@ -394,7 +458,7 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStoreCtx*            keyStoreCtx,
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not hash the key data, err %d!", __func__, err);
-        return err;
+        goto err1;
     }
 
     err = writeKeyToFile(self->fsFactory, &newKeyEntry,
@@ -403,9 +467,26 @@ seos_err_t SeosKeyStore_generateKey(SeosKeyStoreCtx*            keyStoreCtx,
     {
         Debug_LOG_ERROR("%s: Could not write the key data to the file, err %d!",
                         __func__, err);
-        return err;
+        goto err1;
     }
 
+    err = registerKeyName(self, keyHandle, name);
+    if (err != SEOS_SUCCESS)
+    {
+        Debug_LOG_ERROR("%s: Failed to register the key name, error code %d!",
+                        __func__, err);
+        goto err0;
+    }
+
+    goto exit;
+
+err0:
+    deleteKeyFromFile(self->fsFactory, name);
+
+err1:
+    SeosKeyStore_closeKey(keyStoreCtx, *keyHandle);
+
+exit:
     return err;
 }
 
@@ -666,6 +747,65 @@ ERROR:
     FileStreamFactory_destroy(fsFactory, file, flags);
 
     return err;
+}
+
+static seos_err_t deleteKeyFromFile(FileStreamFactory* fsFactory,
+                                    const char* name)
+{
+    FileStream* file = FileStreamFactory_create(fsFactory, name,
+                                                FileStream_OpenMode_r);
+    BitMap16 flags = 0;
+
+    if (file == NULL)
+    {
+        Debug_LOG_ERROR("%s: Failed to open the file stream with a path '%s'!",
+                        __func__, name);
+        return SEOS_ERROR_NOT_FOUND;
+    }
+
+    BitMap_SET_BIT(flags, FileStream_DeleteFlags_CLOSE);
+    BitMap_SET_BIT(flags, FileStream_DeleteFlags_DELETE);
+    FileStreamFactory_destroy(fsFactory, file, flags);
+
+    return SEOS_SUCCESS;
+}
+
+static seos_err_t registerKeyName(SeosKeyStore*               self,
+                                  SeosCrypto_KeyHandle*       keyHandle,
+                                  const char*                 name)
+{
+    SeosKeyStore_KeyName keyName;
+    size_t nameLen = strlen(name);
+
+    if (nameLen >= MAX_KEY_NAME_LEN)
+    {
+        Debug_LOG_ERROR("%s: The length of the passed key name is %d, but the max allowed size is %d!",
+                        __func__, nameLen, MAX_KEY_NAME_LEN);
+        return SEOS_ERROR_INSUFFICIENT_SPACE;
+    }
+
+    strncpy(keyName.buffer, name, nameLen);
+    keyName.buffer[nameLen] = 0;
+
+    if (!KeyNameMap_insert(&self->keyNameMap, keyHandle, &keyName))
+    {
+        Debug_LOG_ERROR("%s: Failed to save the key name!", __func__);
+        return SEOS_ERROR_INSUFFICIENT_SPACE;
+    }
+
+    return SEOS_SUCCESS;
+}
+
+static seos_err_t deRegisterKeyName(SeosKeyStore*               self,
+                                    SeosCrypto_KeyHandle        keyHandle)
+{
+    if (!KeyNameMap_remove(&self->keyNameMap, &keyHandle))
+    {
+        Debug_LOG_ERROR("%s: Failed to remove the key name!", __func__);
+        return SEOS_ERROR_ABORTED;
+    }
+
+    return SEOS_SUCCESS;
 }
 
 static void cpyIntToBuf(uint32_t integer, unsigned char* buf)
