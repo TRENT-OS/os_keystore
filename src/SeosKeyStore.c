@@ -7,10 +7,13 @@
 #include "SeosCryptoApi.h"
 #include "mbedtls/base64.h"
 /* Defines -------------------------------------------------------------------*/
-#define KEY_DATA_HASH_LEN                   32  // length of the checksum produced by hashing the key data
-// (len, bytes, algorithm and flags)
-#define NUM_OF_PROPERTIES                   3   // number of additional properties saved to the file
-// (alongside the raw key)
+#define KEY_DATA_HASH_LEN   32  /* length of the checksum produced by hashing the key data
+                                (len, bytes, algorithm and flags) */
+#define NUM_OF_PROPERTIES   3   /* number of additional properties saved to the file
+                                (alongside the raw key) */
+
+#define DELIMITER_STRING    "," /* Delimiter used for separating the serialized key parameters inside 
+                                a file when saving a key (i.e. keyLen, keyBytes, algorithm, flags) */
 
 // we round up the MAX_KEY_LEN / B64_KEY_DATA_HASH_LEN to the first
 // value divisible by 3 and multiply it ny 4/3 (overhead for base64)
