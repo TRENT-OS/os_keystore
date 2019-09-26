@@ -71,10 +71,7 @@ SeosKeyStoreRpc_deInit(SeosKeyStoreRpc* self);
  */
 seos_err_t
 SeosKeyStoreRpc_importKey(SeosKeyStoreRpc*      self,
-                          SeosCrypto_KeyHandle* keyHandle,
-                          unsigned int          algorithm,
-                          unsigned int          flags,
-                          size_t                lenBits);
+                          size_t                keySize);
 /**
  * @brief Retreives the key with a given name from the keystore
  *
@@ -85,8 +82,8 @@ SeosKeyStoreRpc_importKey(SeosKeyStoreRpc*      self,
  *
  */
 seos_err_t
-SeosKeyStoreRpc_getKey(SeosKeyStoreRpc*         self,
-                       SeosCrypto_KeyHandle*    keyHandle);
+SeosKeyStoreRpc_getKey(SeosKeyStoreRpc* self,
+                       size_t*          keysize);
 /**
  * @brief Deletes a key with a given name from the keystore
  *
@@ -97,20 +94,7 @@ SeosKeyStoreRpc_getKey(SeosKeyStoreRpc*         self,
  *
  */
 seos_err_t
-SeosKeyStoreRpc_deleteKey(SeosKeyStoreRpc*      self,
-                          SeosCrypto_KeyHandle  keyHandle);
-/**
- * @brief Closes a key with a given handle
- *
- * @param self          pointer to self
- * @param keyHandle     key handle
- *
- * @return seos_err
- *
- */
-seos_err_t
-SeosKeyStoreRpc_closeKey(SeosKeyStoreRpc*       self,
-                         SeosCrypto_KeyHandle   keyHandle);
+SeosKeyStoreRpc_deleteKey(SeosKeyStoreRpc*      self);
 /**
  * @brief Copies the key with a selected name from the current key store to
  * the destination key store
@@ -124,7 +108,6 @@ SeosKeyStoreRpc_closeKey(SeosKeyStoreRpc*       self,
  */
 seos_err_t
 SeosKeyStoreRpc_copyKey(SeosKeyStoreRpc*        self,
-                        SeosCrypto_KeyHandle    keyHandle,
                         SeosKeyStoreRpc*        destKeyStore);
 /**
  * @brief Moves the key with a selected name from the current key store to
@@ -140,27 +123,7 @@ SeosKeyStoreRpc_copyKey(SeosKeyStoreRpc*        self,
  */
 seos_err_t
 SeosKeyStoreRpc_moveKey(SeosKeyStoreRpc*        self,
-                        SeosCrypto_KeyHandle    keyHandle,
                         SeosKeyStoreRpc*        destKeyStore);
-/**
- * @brief Generates a key with a given name using an RNG, stores the key into the key store
- * and returns the key data in the key object.
- *
- * @param self          pointer to self
- * @param keyHandle     key handle
- * @param algorithm     algorithm that uses the key
- * @param flags         flags
- * @param lenBits       length of the key in bits
- *
- * @return seos_err
- *
- */
-seos_err_t
-SeosKeyStoreRpc_generateKey(SeosKeyStoreRpc*        self,
-                            SeosCrypto_KeyHandle*   keyHandle,
-                            unsigned int            algorithm,
-                            unsigned int            flags,
-                            size_t                  lenBits);
 /**
  * @brief Deletes all the keys from the keystore
  *

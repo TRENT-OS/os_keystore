@@ -64,119 +64,95 @@ SeosKeyStoreClient_deInit(SeosKeyStoreCtx* keyStoreCtx);
  * @brief Imports a SeosCrypto_Key object into the keystore
  *
  * @param keyStoreCtx       pointer to keyStoreCtx
- * @param keyHandle         key handle
  * @param name              name of the key to import
- * @param keyBytesBuffer    buffer containing the key bytes
- * @param algorithm         algorithm that uses the key
- * @param flags             flags
- * @param lenBits           length of the key in bits
+ * @param keyData           buffer containing the key data
+ * @param keySize           size of the key data in bytes
  *
- * @return seos_err
+ * @retval SEOS_ERROR_INSUFFICIENT_SPACE
+ * @retval SEOS_ERROR_INVALID_PARAMETER
+ * @retval SEOS_ERROR_OPERATION_DENIED
  *
  */
 seos_err_t
-SeosKeyStoreClient_importKey(SeosKeyStoreCtx*       keyStoreCtx,
-                             SeosCrypto_KeyHandle*  keyHandle,
-                             const char*            name,
-                             void const*            keyBytesBuffer,
-                             unsigned int           algorithm,
-                             unsigned int           flags,
-                             size_t                 lenBits);
+SeosKeyStoreClient_importKey(SeosKeyStoreCtx*   keyStoreCtx,
+                             const char*        name,
+                             void const*        keyData,
+                             size_t             keySize);
 /**
  * @brief Retreives the key with a given name from the keystore
  *
- * @param keyStoreCtx   pointer to keyStoreCtx
- * @param keyHandle     key handle
- * @param name          name of the key to get
+ * @param       keyStoreCtx     pointer to keyStoreCtx
+ * @param       name            name of the key to get
+ * @param[out]  keyData         address of the buffer which will be filled
+ *                              with key data
+ * @param[out]  keySize         address of the variable which will be filled
+ *                              with key data size
  *
- * @return seos_err
+ * @return SEOS_ERROR_GENERIC
+ * @retval SEOS_ERROR_INSUFFICIENT_SPACE
+ * @retval SEOS_ERROR_INVALID_PARAMETER
+ * @retval SEOS_ERROR_OPERATION_DENIED
  *
  */
 seos_err_t
-SeosKeyStoreClient_getKey(SeosKeyStoreCtx*      keyStoreCtx,
-                          SeosCrypto_KeyHandle* keyHandle,
-                          const char*           name);
+SeosKeyStoreClient_getKey(SeosKeyStoreCtx*  keyStoreCtx,
+                          const char*       name,
+                          void*             keyData,
+                          size_t*           keySize);
 /**
  * @brief Deletes a key with a given name from the keystore
  *
  * @param keyStoreCtx   pointer to keyStoreCtx
- * @param keyHandle     key handle
+ * @param name          name of the key to delete
  *
- * @return seos_err
- *
- */
-seos_err_t
-SeosKeyStoreClient_deleteKey(SeosKeyStoreCtx*       keyStoreCtx,
-                             SeosCrypto_KeyHandle   keyHandle);
-/**
- * @brief Closes a key with a given handle
- *
- * @param keyStoreCtx   pointer to keyStoreCtx
- * @param keyHandle     key handle
- *
- * @return seos_err
+ * @return SEOS_ERROR_NOT_FOUND
  *
  */
 seos_err_t
-SeosKeyStoreClient_closeKey(SeosKeyStoreCtx*        keyStoreCtx,
-                            SeosCrypto_KeyHandle    keyHandle);
+SeosKeyStoreClient_deleteKey(SeosKeyStoreCtx*   keyStoreCtx,
+                             const char*        name);
 /**
  * @brief Copies the key from the current key store to the destination key store
  *
  * @param keyStoreCtx   pointer to keyStoreCtx
- * @param keyHandle     key handle
+ * @param name          name of the key to copy
  * @param destKeyStore  pointer to the destination key store
  *
- * @return seos_err
+ * @return SEOS_ERROR_GENERIC
+ * @retval SEOS_ERROR_INSUFFICIENT_SPACE
+ * @retval SEOS_ERROR_INVALID_PARAMETER
+ * @retval SEOS_ERROR_OPERATION_DENIED
  *
  */
 seos_err_t
-SeosKeyStoreClient_copyKey(SeosKeyStoreCtx*     keyStoreCtx,
-                           SeosCrypto_KeyHandle keyHandle,
-                           SeosKeyStoreCtx*     destKeyStore);
+SeosKeyStoreClient_copyKey(SeosKeyStoreCtx* keyStoreCtx,
+                           const char*      name,
+                           SeosKeyStoreCtx* destKeyStore);
 /**
  * @brief Moves the key from the current key store to
  * the destination key store (after the operation the key is no longer in the
  * current key store)
  *
  * @param keyStoreCtx   pointer to keyStoreCtx
- * @param keyHandle     key handle
+ * @param name          name of the key to move
  * @param destKeyStore  pointer to the destination key store
  *
- * @return seos_err
+ * @return SEOS_ERROR_GENERIC
+ * @retval SEOS_ERROR_INSUFFICIENT_SPACE
+ * @retval SEOS_ERROR_INVALID_PARAMETER
+ * @retval SEOS_ERROR_OPERATION_DENIED
  *
  */
 seos_err_t
-SeosKeyStoreClient_moveKey(SeosKeyStoreCtx*     keyStoreCtx,
-                           SeosCrypto_KeyHandle keyHandle,
-                           SeosKeyStoreCtx*     destKeyStore);
-/**
- * @brief Generates a key with a given name using an RNG, stores the key into the key store
- * and returns the key data in the key object.
- *
- * @param keyStoreCtx   pointer to keyStoreCtx
- * @param keyHandle     key handle
- * @param name          name of the key to get
- * @param algorithm     algorithm that uses the key
- * @param flags         flags
- * @param lenBits       length of the key in bits
- *
- * @return seos_err
- *
- */
-seos_err_t
-SeosKeyStoreClient_generateKey(SeosKeyStoreCtx*         keyStoreCtx,
-                               SeosCrypto_KeyHandle*    keyHandle,
-                               const char*              name,
-                               unsigned int             algorithm,
-                               unsigned int             flags,
-                               size_t                   lenBits);
+SeosKeyStoreClient_moveKey(SeosKeyStoreCtx* keyStoreCtx,
+                           const char*      name,
+                           SeosKeyStoreCtx* destKeyStore);
 /**
  * @brief Deletes all the keys from the keystore
  *
  * @param keyStoreCtx   pointer to keyStoreCtx
  *
- * @return seos_err
+ * @retval SEOS_ERROR_NOT_FOUND
  *
  */
 seos_err_t

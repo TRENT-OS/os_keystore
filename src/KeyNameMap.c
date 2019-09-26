@@ -4,43 +4,34 @@
  */
 
 #include "KeyNameMap.h"
+#include <string.h>
 
-MapT_DEFINE(SeosCrypto_KeyHandle, SeosKeyStore_KeyName, KeyNameMap);
+MapT_DEFINE(SeosKeyStore_KeyName, size_t, KeyNameMap);
 
 /* Key functions ----------------------------------------------------------*/
 bool
-SeosCrypto_KeyHandle_ctorCopy(SeosCrypto_KeyHandle* dst,
-                              SeosCrypto_KeyHandle const* src)
+size_t_ctorCopy(size_t* dst, size_t const* src)
 {
-    return SeosCrypto_KeyHandle_assign(dst, src);
+    return size_t_assign(dst, src);
 }
 
 bool
-SeosCrypto_KeyHandle_ctorMove(SeosCrypto_KeyHandle* dst,
-                              SeosCrypto_KeyHandle const* src)
+size_t_ctorMove(size_t* dst, size_t const* src)
 {
-    return SeosCrypto_KeyHandle_assign(dst, src);
+    return size_t_assign(dst, src);
 }
 
 bool
-SeosCrypto_KeyHandle_assign(SeosCrypto_KeyHandle* dst,
-                            SeosCrypto_KeyHandle const* src)
+size_t_assign(size_t* dst, size_t const* src)
 {
     *dst = *src;
     return true;
 }
 
 void
-SeosCrypto_KeyHandle_dtor(SeosCrypto_KeyHandle* el)
+size_t_dtor(size_t* el)
 {
     return;
-}
-
-bool
-SeosCrypto_KeyHandle_isEqual(SeosCrypto_KeyHandle const* a,
-                             SeosCrypto_KeyHandle const* b)
-{
-    return *a == *b;
 }
 
 /* Value functions ----------------------------------------------------------*/
@@ -70,5 +61,12 @@ void
 SeosKeyStore_KeyName_dtor(SeosKeyStore_KeyName* el)
 {
     return;
+}
+
+bool
+SeosKeyStore_KeyName_isEqual(SeosKeyStore_KeyName const* a,
+                             SeosKeyStore_KeyName const* b)
+{
+    return !strncmp(a->buffer, b->buffer, MAX_KEY_NAME_LEN);
 }
 
