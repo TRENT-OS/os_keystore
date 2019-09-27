@@ -19,7 +19,7 @@
 #include "SeosKeyStoreCtx.h"
 
 /* Exported macro ------------------------------------------------------------*/
-#define SeosKeyStoreClient_TO_SEOS_KEY_STORE_CTX(self) ((&(self))->parent)
+#define SeosKeyStoreClient_TO_SEOS_KEY_STORE_CTX(self) (&(self)->parent)
 
 /* Exported types ------------------------------------------------------------*/
 typedef struct
