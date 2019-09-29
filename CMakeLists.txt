@@ -18,7 +18,7 @@ if (ENABLE_LINT)
 endif()
 
 if(NO_KERNEL_BUILD)
-    # when building for the x64 architecture, some warnings are 
+    # when building for the x64 architecture, some warnings are
     # reported (i.e. printf formatting) that the code is full of,
     # and that are otherwise not reported, so as a quick fix we
     # remove the -Werror in this build situation
@@ -27,7 +27,7 @@ if(NO_KERNEL_BUILD)
             -Wall
     )
 
-    # since PAGE_SIZE is normally defined as part of musllibc 
+    # since PAGE_SIZE is normally defined as part of musllibc
     # (which is missing here) we have to define it
     target_compile_definitions(${PROJECT_NAME} PRIVATE PAGE_SIZE=${PAGE_SIZE_VALUE})
 else()
