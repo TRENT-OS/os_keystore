@@ -85,23 +85,26 @@ target_link_libraries(${PROJECT_NAME}
     seos_core_api
 )
 
-get_target_property(SEOS_CORE_API_INCLUDES seos_core_api INTERFACE_INCLUDE_DIRECTORIES)
-find_file(SEOS_KEY_STORE_API_HEADER SeosKeyStoreApi.h PATHS ${SEOS_CORE_API_INCLUDES} CMAKE_FIND_ROOT_PATH_BOTH)
+# if invoked from the SOES sandbox, provide a documentation build target
+if (COMMAND seos_create_doxygen_target)
 
-find_package(Doxygen)
-if (DOXYGEN_FOUND AND DOXYGEN_DOT_FOUND)
-    add_custom_target( seos_keystore_doc
-        COMMAND
-            export DOXYGEN_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}
-            # link the API file SeosKeyStoreApi.h from seos_core_api in order to produce a complete doxygen documentation
-            && ln -sf ${SEOS_KEY_STORE_API_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include
-            # run doxygen
-            && ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile
-            # remove the link to SeosKeyStoreApi.h
-            && rm -f ${CMAKE_CURRENT_SOURCE_DIR}/include/SeosKeyStoreApi.h
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        COMMENT "Generating API documentation for seos_keystore with Doxygen"
-        VERBATIM )
-else(DOXYGEN_FOUND AND DOXYGEN_DOT_FOUND)
-    message("Doxygen needs to be installed to generate the doxygen documentation")
-endif(DOXYGEN_FOUND AND DOXYGEN_DOT_FOUND)
+    get_target_property(
+        SEOS_CORE_API_INCLUDES
+        seos_core_api
+        INTERFACE_INCLUDE_DIRECTORIES)
+
+    find_file(
+        SEOS_KEYSTORE_API_HEADER
+        SeosKeyStoreApi.h
+        PATHS ${SEOS_CORE_API_INCLUDES}
+        CMAKE_FIND_ROOT_PATH_BOTH)
+
+    seos_create_doxygen_target( seos_keystore_doc
+        # pre-step: link the API file SeosKeyStoreApi.h from seos_core_api in
+        #           order to produce a complete doxygen documentation
+        "ln -sf ${SEOS_KEYSTORE_API_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include"
+        # post-step: remove the link to SeosCryptoApi.h
+        "rm -f ${CMAKE_CURRENT_SOURCE_DIR}/include/SeosKeyStoreApi.h"
+    )
+
+endif()
