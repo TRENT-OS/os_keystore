@@ -2,15 +2,24 @@
 
 project(seos_keystore C)
 
-add_library(
-    ${PROJECT_NAME} STATIC
+set(seos_keystore_SOURCES)
+list(
+    APPEND seos_keystore_SOURCES
 
     "src/SeosKeyStore.c"
     "src/SeosKeyStoreApi.c"
-    "src/SeosKeyStoreClient.c"
-    "src/SeosKeyStoreRpc.c"
-    "src/KeyNameMap.c"
-)
+    "src/KeyNameMap.c")
+
+if(KEYSTORE_AS_COMPONENT)
+    list(
+        APPEND seos_keystore_SOURCES
+
+        "src/SeosKeyStoreClient.c"
+        "src/SeosKeyStoreRpc.c")
+endif()
+
+add_library(${PROJECT_NAME} STATIC ${seos_keystore_SOURCES})
+
 if (ENABLE_LINT)
         set(CMAKE_C_CPPCHECK "cppcheck;--enable=warning;--inline-suppr")
         set(CMAKE_C_CLANG_TIDY "clang-tidy;-checks=*")
