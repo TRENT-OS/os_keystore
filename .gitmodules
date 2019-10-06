@@ -1,4 +1,4 @@
 [submodule "3rdParty/mbedtls"]
 	path = 3rdParty/mbedtls
-	url = ssh://git@bitbucket.hensoldt-cyber.systems:7999/ext/mbedtls.git
+	url = ../../ext/mbedtls.git
 	branch = master
