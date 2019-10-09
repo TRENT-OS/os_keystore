@@ -5,33 +5,13 @@
 /* Includes ------------------------------------------------------------------*/
 #include "SeosKeyStore.h"
 #include "SeosCryptoApi.h"
-#include "mbedtls/base64.h"
+
 /* Defines -------------------------------------------------------------------*/
 #define KEY_DATA_HASH_LEN   32  /* length of the checksum produced by hashing the key data
                                 (len, bytes, algorithm and flags) */
 
-#define DELIMITER_STRING    "," /* Delimiter used for separating the serialized key parameters inside 
-                                a file when saving a key (i.e. keyLen, keyBytes, algorithm, flags) */
-
-// we round up the MAX_KEY_LEN / B64_KEY_DATA_HASH_LEN to the first
-// value divisible by 3 and multiply it ny 4/3 (overhead for base64)
-#define MAX_B64_KEY_LEN                     ((MAX_KEY_LEN + 2) / 3 * 4)
-#define B64_KEY_DATA_HASH_LEN               ((KEY_DATA_HASH_LEN + 2) / 3 * 4)
-#define B64_KEY_INT_PROPERTY_LEN            ((KEY_INT_PROPERTY_LEN + 2) / 3 * 4)
-
-#define MAX_KEY_DATA_LEN                    (MAX_B64_KEY_LEN + B64_KEY_INT_PROPERTY_LEN + B64_KEY_DATA_HASH_LEN + 2)
-
 /* Macros -------------------------------------------------------------------*/
 #define LEN_BITS_TO_BYTES(lenBits)          (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
-
-#define KEY_SIZE_INDEX                      0
-#define KEY_DATA_INDEX                      (B64_KEY_INT_PROPERTY_LEN + 1)
-#define KEY_HASH_INDEX(keyDataLen)          (KEY_DATA_INDEX + keyDataLen + 1)
-
-#define KEY_DATA_TOTAL_LEN(keyDataLen)      (B64_KEY_INT_PROPERTY_LEN + keyDataLen + 2 + B64_KEY_DATA_HASH_LEN)
-
-/* Private variables ----------------------------------------------*/
-static unsigned char buffer[MAX_KEY_DATA_LEN];
 
 /* Private functions prototypes ----------------------------------------------*/
 static seos_err_t createKeyHash(SeosCryptoCtx* cryptoCtx,
@@ -43,15 +23,13 @@ static seos_err_t writeKeyToFile(FileStreamFactory* fsFactory,
                                  const void* keyData,
                                  const void* keyDataHash,
                                  size_t keySize,
-                                 const char* name,
-                                 unsigned char* buffer);
+                                 const char* name);
 
-static seos_err_t readKeyFromFile(FileStreamFactory* fsFactory,
+static seos_err_t readKeyFromFile(SeosKeyStore* self,
                                   void* keyData,
                                   void* keyDataHash,
                                   size_t* keySize,
-                                  const char* name,
-                                  unsigned char* buffer);
+                                  const char* name);
 
 static seos_err_t deleteKeyFromFile(FileStreamFactory* fsFactory,
                                     const char* name);
@@ -71,6 +49,8 @@ static void cpyIntToBuf(uint32_t integer,
 
 static size_t cpyBufToInt(const char* buf);
 /* Private variables ---------------------------------------------------------*/
+static unsigned char buffer[MAX_KEY_LEN];
+
 /* Private variables ----------------------------------------------------------*/
 static const SeosKeyStoreCtx_Vtable SeosKeyStore_vtable =
 {
@@ -153,7 +133,7 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStoreCtx*          keyStoreCtx,
     if (keySize >= MAX_KEY_LEN || keySize == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range 0 - %zu!",
-                        __func__, keySize, MAX_KEY_DATA_LEN);
+                        __func__, keySize, MAX_KEY_LEN);
         return SEOS_ERROR_INVALID_PARAMETER;
     }
 
@@ -174,8 +154,7 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStoreCtx*          keyStoreCtx,
         goto exit;
     }
 
-    err = writeKeyToFile(self->fsFactory, keyData, keyDataHash, keySize, name,
-                         buffer);
+    err = writeKeyToFile(self->fsFactory, keyData, keyDataHash, keySize, name);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not write the key data to the file, err %d!",
@@ -226,8 +205,7 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
                         __func__, nameLen, MAX_KEY_NAME_LEN);
         return SEOS_ERROR_INVALID_PARAMETER;
     }
-    err = readKeyFromFile(self->fsFactory, keyData, readHash, keySize, name,
-                          buffer);
+    err = readKeyFromFile(self, keyData, readHash, keySize, name);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not read the key data from the file, err %d!",
@@ -466,84 +444,14 @@ static seos_err_t writeKeyToFile(FileStreamFactory* fsFactory,
                                  const void* keyData,
                                  const void* keyDataHash,
                                  size_t keySize,
-                                 const char* name,
-                                 unsigned char* buffer)
+                                 const char* name)
 {
     Debug_ASSERT_SELF(fsFactory);
-    //unsigned char keyDataBuffer[MAX_KEY_DATA_LEN + 1] = {0};
-    size_t encodedBytes = 0;
-    size_t encodedSize = 0;
-    size_t encodedKeySize = 0;
     uint8_t keySizeBuffer[KEY_INT_PROPERTY_LEN] = {0};
+    BitMap16 flags = 0;
     seos_err_t err = SEOS_SUCCESS;
 
     cpyIntToBuf(keySize, keySizeBuffer);
-
-    // encode the key size to base64 and write it to the buffer
-    // + 1 is added to B64_KEY_INT_PROPERTY_LEN because the function adds the '\0' char at the end
-    err = mbedtls_base64_encode(&buffer[KEY_SIZE_INDEX],
-                                B64_KEY_INT_PROPERTY_LEN + 1,
-                                &encodedBytes,
-                                keySizeBuffer,
-                                KEY_INT_PROPERTY_LEN);
-    if (err != SEOS_SUCCESS || encodedBytes != B64_KEY_INT_PROPERTY_LEN)
-    {
-        Debug_LOG_ERROR("%s: Could not base64 encode the key property, err %d, encoded bytes = %d, expected size = %d!",
-                        __func__, err, encodedBytes, B64_KEY_INT_PROPERTY_LEN);
-        err = err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL ?
-              SEOS_ERROR_INSUFFICIENT_SPACE : SEOS_ERROR_INVALID_PARAMETER;
-        return err;
-    }
-
-    // add a delimiter between the key size and the key bytes
-    buffer[KEY_DATA_INDEX - 1] = DELIMITER_STRING[0];
-
-    // get the length of the base64 encoded key
-    err = mbedtls_base64_encode(NULL,
-                                0,
-                                &encodedKeySize,
-                                keyData,
-                                keySize);
-    // encode the key bytes to base64 and write it to the buffer
-    err = mbedtls_base64_encode(&buffer[KEY_DATA_INDEX],
-                                encodedKeySize,
-                                &encodedBytes,
-                                keyData,
-                                keySize);
-    // encodedKeySize represents the length of the key bytes + '\0'
-    encodedKeySize--;
-    if (err != SEOS_SUCCESS || encodedBytes != encodedKeySize)
-    {
-        Debug_LOG_ERROR("%s: Could not base64 encode the key, err %d, encoded bytes = %d, expected size = %d!",
-                        __func__, err, encodedBytes, encodedKeySize);
-        err = err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL ?
-              SEOS_ERROR_INSUFFICIENT_SPACE : SEOS_ERROR_INVALID_PARAMETER;
-        return err;
-    }
-
-    // add a delimiter between the key bytes and the hash
-    buffer[KEY_HASH_INDEX(encodedKeySize) - 1] = DELIMITER_STRING[0];
-
-    // get the length of the base64 encoded hash
-    err = mbedtls_base64_encode(NULL,
-                                0,
-                                &encodedSize,
-                                keyDataHash,
-                                KEY_DATA_HASH_LEN);
-    // encode the hash to base64 and write it to the buffer
-    err = mbedtls_base64_encode(&buffer[KEY_HASH_INDEX(encodedKeySize)],
-                                encodedSize,
-                                &encodedBytes,
-                                keyDataHash,
-                                KEY_DATA_HASH_LEN);
-    if (err != SEOS_SUCCESS || encodedBytes != encodedSize - 1)
-    {
-        Debug_LOG_ERROR("%s: Could not base64 encode the hash, err %d, encoded bytes = %d, expected size = %d!",
-                        __func__, err, encodedBytes, encodedSize);
-        err = err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL ?
-              SEOS_ERROR_INSUFFICIENT_SPACE : SEOS_ERROR_INVALID_PARAMETER;
-        return err;
-    }
 
     // create a file
     FileStream* file = FileStreamFactory_create(fsFactory, name,
@@ -555,39 +463,59 @@ static seos_err_t writeKeyToFile(FileStreamFactory* fsFactory,
         return SEOS_ERROR_OPERATION_DENIED;
     }
 
-    // write the prepared buffer to the file
-    if (Stream_write(FileStream_TO_STREAM(file), (char*)buffer,
-                     KEY_DATA_TOTAL_LEN(encodedKeySize)) != KEY_DATA_TOTAL_LEN(encodedKeySize))
+    // write the hash to the file
+    if (Stream_write(FileStream_TO_STREAM(file), (char*)keyDataHash,
+                     KEY_DATA_HASH_LEN) != KEY_DATA_HASH_LEN)
     {
-        Debug_LOG_ERROR("%s: Stream_write failed!", __func__);
+        Debug_LOG_ERROR("%s: Stream_write failed while writing the hash!", __func__);
         err = SEOS_ERROR_OPERATION_DENIED;
+        goto ERROR;
     }
+
+    // write the size of the key data to the file
+    if (Stream_write(FileStream_TO_STREAM(file), (char*)keySizeBuffer,
+                     KEY_INT_PROPERTY_LEN) != KEY_INT_PROPERTY_LEN)
+    {
+        Debug_LOG_ERROR("%s: Stream_write failed while writing the key size!",
+                        __func__);
+        err = SEOS_ERROR_OPERATION_DENIED;
+        goto ERROR;
+    }
+
+    // write the key data to the file
+    if (Stream_write(FileStream_TO_STREAM(file), (char*)keyData,
+                     keySize) != keySize)
+    {
+        Debug_LOG_ERROR("%s: Stream_write failed while writing the key data!",
+                        __func__);
+        err = SEOS_ERROR_OPERATION_DENIED;
+        goto ERROR;
+    }
+
+ERROR:
     // destroy (close) the file
-    BitMap16 flags = 0;
     BitMap_SET_BIT(flags, FileStream_DeleteFlags_CLOSE);
     FileStreamFactory_destroy(fsFactory, file, flags);
 
     return err;
 }
 
-static seos_err_t readKeyFromFile(FileStreamFactory* fsFactory,
+static seos_err_t readKeyFromFile(SeosKeyStore* self,
                                   void* keyData,
                                   void* keyDataHash,
                                   size_t* keySize,
-                                  const char* name,
-                                  unsigned char* buffer)
+                                  const char* name)
 {
-    Debug_ASSERT_SELF(fsFactory);
-    size_t decodedBytes = 0;
-    size_t decodedSize = 0;
+    Debug_ASSERT_SELF(self);
     int readBytes = 0;
     uint8_t keySizeBuffer[KEY_INT_PROPERTY_LEN] = {0};
-    seos_err_t err = SEOS_SUCCESS;
     BitMap16 flags = 0;
-    BitMap_SET_BIT(flags, FileStream_DeleteFlags_CLOSE);
+    int keyIndex = 0;
+    size_t keyDataSize = 0;
+    seos_err_t err = SEOS_SUCCESS;
 
     // create a file stream
-    FileStream* file = FileStreamFactory_create(fsFactory, name,
+    FileStream* file = FileStreamFactory_create(self->fsFactory, name,
                                                 FileStream_OpenMode_r);
     if (file == NULL)
     {
@@ -596,92 +524,54 @@ static seos_err_t readKeyFromFile(FileStreamFactory* fsFactory,
         return SEOS_ERROR_NOT_FOUND;
     }
 
-    // read and decode the key length and store it into the keyEntry object
-    // + 1 is added to B64_KEY_INT_PROPERTY_LEN to read past the first delimiter
-    readBytes = Stream_get(FileStream_TO_STREAM(file),
-                           (char*)buffer, B64_KEY_INT_PROPERTY_LEN + 1, DELIMITER_STRING, 0);
+    // read the key data hash
+    readBytes = Stream_read(FileStream_TO_STREAM(file), (char*)keyDataHash,
+                            KEY_DATA_HASH_LEN);
     if (readBytes <= 0)
     {
-        Debug_LOG_ERROR("%s: Stream_get failed, for property! Return value = %d",
+        Debug_LOG_ERROR("%s: Stream_read failed while reading the hash! Return value = %d",
                         __func__,
                         readBytes);
         err = SEOS_ERROR_OPERATION_DENIED;
         goto ERROR;
     }
 
-    err = mbedtls_base64_decode(keySizeBuffer,
-                                KEY_INT_PROPERTY_LEN,
-                                &decodedBytes,
-                                buffer,
-                                readBytes);
-    if (err != SEOS_SUCCESS || decodedBytes != KEY_INT_PROPERTY_LEN)
+    // read the key data size
+    readBytes = Stream_read(FileStream_TO_STREAM(file), (char*)keySizeBuffer,
+                            KEY_INT_PROPERTY_LEN);
+    if (readBytes <= 0)
     {
-        Debug_LOG_ERROR("%s: Could not base64 decode the key property, err = %d, decoded bytes = %d, expected size = %d!",
-                        __func__, err, decodedBytes, KEY_INT_PROPERTY_LEN);
-        err = err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL ?
-              SEOS_ERROR_INSUFFICIENT_SPACE : SEOS_ERROR_INVALID_PARAMETER;
+        Debug_LOG_ERROR("%s: Stream_read failed while reading the key size! Return value = %d",
+                        __func__,
+                        readBytes);
+        err = SEOS_ERROR_OPERATION_DENIED;
         goto ERROR;
     }
     *keySize = cpyBufToInt((char*)keySizeBuffer);
 
-    // read and decode the key bytes and store it into the keyEntry object
-    // + 1 is added to B64_KEY_INT_PROPERTY_LEN to read past the first delimiter
-    readBytes = Stream_get(FileStream_TO_STREAM(file),
-                           (char*)buffer, MAX_B64_KEY_LEN + 1, DELIMITER_STRING, 0);
-    if (readBytes <= 0)
-    {
-        Debug_LOG_ERROR("%s: Stream_get failed! Return value = %d", __func__,
-                        readBytes);
-        err = SEOS_ERROR_OPERATION_DENIED;
-        goto ERROR;
-    }
-    //when the *dst = NULL the function returns the decoded size inside *olen
-    err = mbedtls_base64_decode(NULL,
-                                0,
-                                &decodedSize,
-                                buffer,
-                                readBytes);
-    err = mbedtls_base64_decode(keyData,
-                                decodedSize,
-                                &decodedBytes,
-                                buffer,
-                                readBytes);
-    if (err != SEOS_SUCCESS || decodedBytes != decodedSize)
-    {
-        Debug_LOG_ERROR("%s: Could not base64 decode the key, err %d, decoded bytes = %d, expected size = %d!",
-                        __func__, err, decodedBytes, decodedSize);
-        err = err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL ?
-              SEOS_ERROR_INSUFFICIENT_SPACE : SEOS_ERROR_INVALID_PARAMETER;
-        goto ERROR;
-    }
+    /* read the key data (get the size of the written key
+       data from the map and read that amount of bytes) */
+    keyIndex = KeyNameMap_getIndexOf(&self->keyNameMap,
+                                     (SeosKeyStore_KeyName*)name);
+    keyDataSize = keyIndex >= 0 ?
+                  *KeyNameMap_getValueAt(&self->keyNameMap, keyIndex)
+                  : MAX_KEY_LEN;
 
-    // read and decode the hash and store it into the keyEntry object
-    readBytes = Stream_get(FileStream_TO_STREAM(file),
-                           (char*)buffer, B64_KEY_DATA_HASH_LEN, DELIMITER_STRING, 0);
+    readBytes = Stream_read(FileStream_TO_STREAM(file), (char*)keyData,
+                            keyDataSize);
     if (readBytes <= 0)
     {
-        Debug_LOG_ERROR("%s: Stream_get failed! Return value = %d", __func__,
+        Debug_LOG_ERROR("%s: Stream_read failed while reading the key data! Return value = %d",
+                        __func__,
                         readBytes);
         err = SEOS_ERROR_OPERATION_DENIED;
-        goto ERROR;
-    }
-    err = mbedtls_base64_decode(keyDataHash,
-                                KEY_DATA_HASH_LEN,
-                                &decodedBytes,
-                                buffer,
-                                readBytes);
-    if (err != SEOS_SUCCESS || decodedBytes != KEY_DATA_HASH_LEN)
-    {
-        Debug_LOG_ERROR("%s: Could not base64 decode the hash, err %d, decoded bytes = %d, expected size = %d!",
-                        __func__, err, decodedBytes, KEY_DATA_HASH_LEN);
-        err = err == MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL ?
-              SEOS_ERROR_INSUFFICIENT_SPACE : SEOS_ERROR_INVALID_PARAMETER;
         goto ERROR;
     }
 
 ERROR:
     // destroy (close) the file
-    FileStreamFactory_destroy(fsFactory, file, flags);
+    BitMap_SET_BIT(flags, FileStream_DeleteFlags_CLOSE);
+    FileStreamFactory_destroy(self->fsFactory, file, flags);
 
     return err;
 }

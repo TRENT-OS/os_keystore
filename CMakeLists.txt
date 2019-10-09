@@ -63,18 +63,6 @@ if (MEMORY_CONFIG_H_FILE)
     )
 endif()
 
-list(APPEND PRIVATE_TARGET_COMPILE_DEFINITIONS
-    MBEDTLS_CONFIG_FILE="${CMAKE_CURRENT_SOURCE_DIR}/configs/MbedTLS_Config.h"
-)
-target_include_directories(${PROJECT_NAME}
-    PUBLIC
-    "3rdParty/mbedtls/include"
-)
-target_sources(${PROJECT_NAME}
-    PRIVATE
-    "3rdParty/mbedtls/library/base64.c"
-)
-
 target_compile_definitions(${PROJECT_NAME}
     PUBLIC
         ${PUBLIC_TARGET_COMPILE_DEFINITIONS}
