@@ -406,7 +406,7 @@ static seos_err_t createKeyHash(SeosCryptoCtx*  cryptoCtx,
     SeosCrypto_DigestHandle scDigestHandle;
 
     err = SeosCryptoApi_digestInit(cryptoCtx, &scDigestHandle,
-                                   SeosCryptoDigest_Algorithm_SHA256, NULL, 0);
+                                   SeosCryptoDigest_Algorithm_SHA256);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCryptoDigest_init failed with error code %d!",
@@ -414,8 +414,8 @@ static seos_err_t createKeyHash(SeosCryptoCtx*  cryptoCtx,
         goto ERR_EXIT;
     }
 
-    err = SeosCryptoApi_digestUpdate(cryptoCtx, scDigestHandle, keyData,
-                                     keyDataSize);
+    err = SeosCryptoApi_digestProcess(cryptoCtx, scDigestHandle, keyData,
+                                      keyDataSize);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCryptoDigest_update failed with error code %d!",
@@ -424,7 +424,7 @@ static seos_err_t createKeyHash(SeosCryptoCtx*  cryptoCtx,
     }
 
     size_t digestSize = KEY_DATA_HASH_LEN;
-    err = SeosCryptoApi_digestFinalize(cryptoCtx, scDigestHandle, NULL, 0, &output,
+    err = SeosCryptoApi_digestFinalize(cryptoCtx, scDigestHandle, output,
                                        &digestSize);
     if (err != SEOS_SUCCESS)
     {
@@ -434,7 +434,7 @@ static seos_err_t createKeyHash(SeosCryptoCtx*  cryptoCtx,
     }
 
 ERR_DESTRUCT:
-    SeosCryptoApi_digestClose(cryptoCtx, scDigestHandle);
+    SeosCryptoApi_digestFree(cryptoCtx, scDigestHandle);
 
 ERR_EXIT:
     return err;
