@@ -67,7 +67,8 @@ SeosKeyStoreClient_importKey(SeosKeyStoreCtx*   keyStoreCtx,
 
     if ((strlen(name) + keySize) > PAGE_SIZE)
     {
-        Debug_LOG_ERROR("%s: the length of the name and the key data is larger than the dataport!", __func__);
+        Debug_LOG_ERROR("%s: the length of the name and the key data is larger than the dataport!",
+                        __func__);
         return SEOS_ERROR_BUFFER_TOO_SMALL;
     }
 

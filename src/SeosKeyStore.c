@@ -590,7 +590,7 @@ static seos_err_t readKeyFromFile(SeosKeyStore* self,
         goto ERROR;
     }
 
-    // returning the successfully read key size 
+    // returning the successfully read key size
     *keySize = requestedKeySize;
 
 ERROR:

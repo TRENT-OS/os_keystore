@@ -63,9 +63,9 @@ SeosKeyStoreRpc_importKey(SeosKeyStoreRpc*          self,
     ((char*)(self->serverDataport))[PAGE_SIZE - 1] = 0;
 
     return SeosKeyStore_importKey(self->seosKeyStoreCtx,
-                                    (self->serverDataport + keySize),
-                                    self->serverDataport,
-                                    keySize);
+                                  (self->serverDataport + keySize),
+                                  self->serverDataport,
+                                  keySize);
 }
 
 seos_err_t
@@ -105,7 +105,7 @@ SeosKeyStoreRpc_deleteKey(SeosKeyStoreRpc* self)
     }
 
     return SeosKeyStore_deleteKey(self->seosKeyStoreCtx,
-                                    self->serverDataport);
+                                  self->serverDataport);
 }
 
 seos_err_t
