@@ -205,11 +205,19 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
         return SEOS_ERROR_INVALID_PARAMETER;
     }
 
+    size_t requestedKeysize = *keySize;
+
     size_t nameLen = strlen(name);
     if (nameLen >= MAX_KEY_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %zu!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
+        return SEOS_ERROR_INVALID_PARAMETER;
+    }
+    if (requestedKeysize >= MAX_KEY_LEN)
+    {
+        Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range 0 - %zu!",
+                        __func__, requestedKeysize, MAX_KEY_LEN);
         return SEOS_ERROR_INVALID_PARAMETER;
     }
     err = readKeyFromFile(self, keyData, readHash, keySize, name);
@@ -222,7 +230,7 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
 
     err = createKeyHash(SeosCrypto_TO_SEOS_CRYPTO_CTX(self->cryptoCore),
                         keyData,
-                        *keySize,
+                        requestedKeysize,
                         calculatedHash);
     if (err != SEOS_SUCCESS)
     {
@@ -517,9 +525,24 @@ static seos_err_t readKeyFromFile(SeosKeyStore* self,
     int readBytes = 0;
     uint8_t keySizeBuffer[KEY_INT_PROPERTY_LEN] = {0};
     BitMap16 flags = 0;
-    int keyIndex = 0;
-    size_t keyDataSize = 0;
     seos_err_t err = SEOS_SUCCESS;
+
+    size_t requestedKeySize = *keySize;
+
+    /* get the size of the written key data from the map
+       and check that the provided buffer is large enough */
+    int keyIndex = KeyNameMap_getIndexOf(&self->keyNameMap,
+                                         (SeosKeyStore_KeyName*)name);
+    size_t savedKeySize = keyIndex >= 0 ?
+                          *KeyNameMap_getValueAt(&self->keyNameMap, keyIndex)
+                          : requestedKeySize;
+
+    if (requestedKeySize < savedKeySize)
+    {
+        Debug_LOG_ERROR("%s: The requested size of the key data: %zu is smaller than the amount of saved bytes: %zu!",
+                        __func__, requestedKeySize, savedKeySize);
+        return SEOS_ERROR_BUFFER_TOO_SMALL;
+    }
 
     // create a file stream
     FileStream* file = FileStreamFactory_create(self->fsFactory, name,
@@ -554,18 +577,10 @@ static seos_err_t readKeyFromFile(SeosKeyStore* self,
         err = SEOS_ERROR_OPERATION_DENIED;
         goto ERROR;
     }
-    *keySize = cpyBufToInt((char*)keySizeBuffer);
-
-    /* read the key data (get the size of the written key
-       data from the map and read that amount of bytes) */
-    keyIndex = KeyNameMap_getIndexOf(&self->keyNameMap,
-                                     (SeosKeyStore_KeyName*)name);
-    keyDataSize = keyIndex >= 0 ?
-                  *KeyNameMap_getValueAt(&self->keyNameMap, keyIndex)
-                  : MAX_KEY_LEN;
+    requestedKeySize = cpyBufToInt((char*)keySizeBuffer);
 
     readBytes = Stream_read(FileStream_TO_STREAM(file), (char*)keyData,
-                            keyDataSize);
+                            savedKeySize);
     if (readBytes <= 0)
     {
         Debug_LOG_ERROR("%s: Stream_read failed while reading the key data! Return value = %d",
@@ -574,6 +589,9 @@ static seos_err_t readKeyFromFile(SeosKeyStore* self,
         err = SEOS_ERROR_OPERATION_DENIED;
         goto ERROR;
     }
+
+    // returning the successfully read key size 
+    *keySize = requestedKeySize;
 
 ERROR:
     // destroy (close) the file
