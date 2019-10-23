@@ -66,7 +66,7 @@ static const SeosKeyStoreCtx_Vtable SeosKeyStore_vtable =
 seos_err_t SeosKeyStore_init(SeosKeyStore*              self,
                              FileStreamFactory*         fileStreamFactory,
                              SeosCrypto*                cryptoCore,
-                             char*                      name)
+                             const char*                name)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t retval = SEOS_ERROR_GENERIC;
@@ -74,6 +74,12 @@ seos_err_t SeosKeyStore_init(SeosKeyStore*              self,
     if (NULL == fileStreamFactory
         || NULL == cryptoCore
         || NULL == name)
+    {
+        return SEOS_ERROR_INVALID_PARAMETER;
+    }
+
+    size_t nameLen = strlen(name);
+    if (nameLen > SeosKeyStore_MAX_KEYSTORE_NAME_LEN)
     {
         return SEOS_ERROR_INVALID_PARAMETER;
     }
@@ -87,9 +93,10 @@ seos_err_t SeosKeyStore_init(SeosKeyStore*              self,
     else
     {
         self->fsFactory     = fileStreamFactory;
-        self->name          = name;
         self->cryptoCore    = cryptoCore;
         self->parent.vtable = &SeosKeyStore_vtable;
+
+        memcpy(self->name, name, nameLen);
 
         retval = SEOS_SUCCESS;
     }

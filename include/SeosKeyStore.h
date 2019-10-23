@@ -22,6 +22,9 @@
 /* Exported macro ------------------------------------------------------------*/
 #define SeosKeyStore_TO_SEOS_KEY_STORE_CTX(self) (&(self)->parent)
 
+/* Exported defines ------------------------------------------------------------*/
+#define SeosKeyStore_MAX_KEYSTORE_NAME_LEN MAX_KEY_NAME_LEN
+
 /* Exported types ------------------------------------------------------------*/
 typedef struct SeosKeyStore SeosKeyStore;
 typedef void* (SeosKeyStore_MallocFunc)(size_t size);
@@ -46,7 +49,7 @@ struct SeosKeyStore
     SeosKeyStoreCtx parent;
     FileStreamFactory* fsFactory;
     SeosCrypto* cryptoCore;
-    char* name;
+    char name[SeosKeyStore_MAX_KEYSTORE_NAME_LEN];
     union
     {
         SeosKeyStore_MemIf        memIf;
@@ -73,7 +76,7 @@ seos_err_t
 SeosKeyStore_init(SeosKeyStore*         self,
                   FileStreamFactory*    fileStreamFactory,
                   SeosCrypto*           cryptoCore,
-                  char*                 name);
+                  const char*           name);
 /**
  * @brief Destructor
  *
