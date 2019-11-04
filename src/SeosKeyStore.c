@@ -399,6 +399,13 @@ SeosKeyStore_wipeKeyStore(SeosKeyStoreCtx* keyStoreCtx)
         return SEOS_ERROR_ABORTED;
     }
 
+    if (registerSize == 0)
+    {
+        Debug_LOG_INFO("%s: Trying to wipe an empty keystore! Returning...",
+                       __func__);
+        return SEOS_SUCCESS;
+    }
+
     for (int i = registerSize - 1; i >= 0; i--)
     {
         SeosKeyStore_KeyName* keyName = (SeosKeyStore_KeyName*)KeyNameMap_getKeyAt(
