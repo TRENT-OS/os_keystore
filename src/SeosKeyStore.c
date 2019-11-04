@@ -5,6 +5,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "SeosKeyStore.h"
 #include "SeosCryptoApi.h"
+#include "SeosKeyStoreApi.h"
 
 /* Defines -------------------------------------------------------------------*/
 #define KEY_DATA_HASH_LEN   32  /* length of the checksum produced by hashing the key data
@@ -330,7 +331,7 @@ seos_err_t SeosKeyStore_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
         return err;
     }
 
-    err = SeosKeyStore_importKey(destKeyStore, name, buffer, keySize);
+    err = SeosKeyStoreApi_importKey(destKeyStore, name, buffer, keySize);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: importKey failed with err %d!", __func__, err);
