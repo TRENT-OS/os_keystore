@@ -221,7 +221,7 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
                         __func__, requestedKeysize, MAX_KEY_LEN);
         return SEOS_ERROR_INVALID_PARAMETER;
     }
-    err = readKeyFromFile(self, keyData, readHash, keySize, name);
+    err = readKeyFromFile(self, keyData, readHash, &requestedKeysize, name);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not read the key data from the file, err %d!",
@@ -247,6 +247,8 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
         err = SEOS_ERROR_GENERIC;
         return err;
     }
+
+    *keySize = requestedKeysize;
 
     return err;
 }
