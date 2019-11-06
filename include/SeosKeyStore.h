@@ -57,6 +57,7 @@ struct SeosKeyStore
     }
     mem;
     KeyNameMap keyNameMap;
+    unsigned char buffer[MAX_KEY_LEN];
 };
 
 /* Exported constants --------------------------------------------------------*/

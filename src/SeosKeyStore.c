@@ -49,8 +49,6 @@ static void cpyIntToBuf(uint32_t integer,
                         unsigned char* buf);
 
 static size_t cpyBufToInt(const char* buf);
-/* Private variables ---------------------------------------------------------*/
-static unsigned char buffer[MAX_KEY_LEN];
 
 /* Private variables ----------------------------------------------------------*/
 static const SeosKeyStoreCtx_Vtable SeosKeyStore_vtable =
@@ -326,14 +324,14 @@ seos_err_t SeosKeyStore_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
         return SEOS_ERROR_INVALID_PARAMETER;
     }
 
-    err = SeosKeyStore_getKey(keyStoreCtx, name, buffer, &keySize);
+    err = SeosKeyStore_getKey(keyStoreCtx, name, self->buffer, &keySize);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: getKey failed with err %d!", __func__, err);
         return err;
     }
 
-    err = SeosKeyStoreApi_importKey(destKeyStore, name, buffer, keySize);
+    err = SeosKeyStoreApi_importKey(destKeyStore, name, self->buffer, keySize);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: importKey failed with err %d!", __func__, err);
