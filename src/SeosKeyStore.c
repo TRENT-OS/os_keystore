@@ -138,7 +138,7 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStoreCtx*          keyStoreCtx,
                         __func__, nameLen, MAX_KEY_NAME_LEN);
         return SEOS_ERROR_INVALID_PARAMETER;
     }
-    if (keySize >= MAX_KEY_LEN || keySize == 0)
+    if (keySize > MAX_KEY_LEN || keySize == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range 0 - %d!",
                         __func__, keySize, MAX_KEY_LEN);
@@ -215,7 +215,7 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
                         __func__, nameLen, MAX_KEY_NAME_LEN);
         return SEOS_ERROR_INVALID_PARAMETER;
     }
-    if (requestedKeysize >= MAX_KEY_LEN)
+    if (requestedKeysize > MAX_KEY_LEN)
     {
         Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range 0 - %d!",
                         __func__, requestedKeysize, MAX_KEY_LEN);
