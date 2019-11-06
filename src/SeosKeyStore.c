@@ -308,7 +308,7 @@ seos_err_t SeosKeyStore_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
     Debug_ASSERT(self->parent.vtable == &SeosKeyStore_vtable);
     Debug_ASSERT_SELF(destKeyStore);
     seos_err_t err = SEOS_SUCCESS;
-    size_t keySize = 0;
+    size_t keySize = MAX_KEY_LEN;
 
     if (name == NULL)
     {
