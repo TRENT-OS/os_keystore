@@ -11,7 +11,7 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include "seos_err.h"
+#include "SeosError.h"
 #include "LibIO/FileStream.h"
 #include "LibIO/FileStreamFactory.h"
 #include "KeyNameMap.h"

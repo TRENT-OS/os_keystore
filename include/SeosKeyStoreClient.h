@@ -14,7 +14,7 @@
  */
 #pragma once
 /* Defines ------------------------------------------------------------------*/
-#include "seos_err.h"
+#include "SeosError.h"
 #include "SeosKeyStoreRpc.h"
 #include "SeosKeyStoreCtx.h"
 
