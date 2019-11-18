@@ -30,16 +30,18 @@ typedef SeosKeyStoreRpc* SeosKeyStoreRpc_Handle;
 /**
  * @brief constructor of a seos KeyStore RPC object
  *
- * @param self (required) pointer to the seos KeyStore rpc object to be
- *  constructed
- * @param SeosKeyStoreRpcCtx the SeosKeyStore context needed to allocate the
- *  resources
- * @param serverDataport pointer to the dataport connected to the client
+ * @param self                  (required) pointer to the seos KeyStore rpc object to be
+ *                              constructed
+ * @param SeosKeyStoreRpcCtx    the SeosKeyStore context needed to allocate the
+ *                              resources
+ * @param serverDataport        pointer to the dataport connected to the client
  *
- * @return an error code.
- * @retval SEOS_ERROR_INVALID_PARAMETER if any of the required parameters is
- *  missing or wrong
- * @retval SEOS_ERROR_ABORTED if there is no way to allocate needed resources
+ * @return seos_err_t
+ *
+ * @retval SEOS_ERROR_INVALID_PARAMETER     If any of the required parameters is
+ *                                          NULL
+ *
+ * @retval SEOS_ERROR_INSUFFICIENT_SPACE    Failed to register handle
  *
  */
 seos_err_t
@@ -49,8 +51,8 @@ SeosKeyStoreRpc_init(SeosKeyStoreRpc*   self,
 /**
  * @brief destructor of a seos KeyStore RPC object
  *
- * @param self (required) pointer to the seos KeyStore rpc object to be
- *  destructed
+ * @param self  (required) pointer to the seos KeyStore rpc object to be
+ *              destructed
  *
  */
 void

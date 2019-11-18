@@ -39,10 +39,10 @@ SeosKeyStoreClient;
  * @param rpcHandle     handle to point the remote RPC context
  * @param dataport      pointer to the dataport connected to the server
  *
- * @return an error code
- * @retval SEOS_SUCCESS if all right
+ * @return seos_err_t
+ *
  * @retval SEOS_ERROR_INVALID_PARAMETER if any of the required parameters is
- *  missing or if any parameter is invalid
+ *                                      NULL
  *
  */
 seos_err_t
@@ -68,9 +68,16 @@ SeosKeyStoreClient_deInit(SeosKeyStoreCtx* keyStoreCtx);
  * @param keyData           buffer containing the key data
  * @param keySize           size of the key data in bytes
  *
- * @retval SEOS_ERROR_INSUFFICIENT_SPACE
- * @retval SEOS_ERROR_INVALID_PARAMETER
- * @retval SEOS_ERROR_OPERATION_DENIED
+ * @return seos_err_t
+ *
+ * @retval SEOS_ERROR_INVALID_PARAMETER     One of the handles is NULL,
+ *                                          one of the parameters exceeds
+ *                                          the maximum allowed length or the
+ *                                          key with the same name already exists
+ *
+ * @retval SEOS_ERROR_BUFFER_TOO_SMALL      Key data size combined with the size
+ *                                          of the key name exceeds the dataport
+ *                                          size
  *
  */
 seos_err_t
@@ -88,10 +95,12 @@ SeosKeyStoreClient_importKey(SeosKeyStoreCtx*   keyStoreCtx,
  * @param[out]  keySize         address of the variable which will be filled
  *                              with key data size
  *
- * @return SEOS_ERROR_GENERIC
- * @retval SEOS_ERROR_INSUFFICIENT_SPACE
- * @retval SEOS_ERROR_INVALID_PARAMETER
- * @retval SEOS_ERROR_OPERATION_DENIED
+ * @return seos_err_t
+ *
+ * @retval SEOS_ERROR_INVALID_PARAMETER     One of the handles is NULL,
+ *                                          one of the parameters exceeds
+ *                                          the maximum allowed length or the
+ *                                          key with the same name already exists
  *
  */
 seos_err_t
@@ -105,7 +114,12 @@ SeosKeyStoreClient_getKey(SeosKeyStoreCtx*  keyStoreCtx,
  * @param keyStoreCtx   pointer to keyStoreCtx
  * @param name          name of the key to delete
  *
- * @return SEOS_ERROR_NOT_FOUND
+ * @return seos_err_t
+ *
+ * @retval SEOS_ERROR_INVALID_PARAMETER     One of the handles is NULL,
+ *                                          one of the parameters exceeds
+ *                                          the maximum allowed length or the
+ *                                          key with the same name already exists
  *
  */
 seos_err_t
@@ -118,10 +132,12 @@ SeosKeyStoreClient_deleteKey(SeosKeyStoreCtx*   keyStoreCtx,
  * @param name          name of the key to copy
  * @param destKeyStore  pointer to the destination key store
  *
- * @return SEOS_ERROR_GENERIC
- * @retval SEOS_ERROR_INSUFFICIENT_SPACE
- * @retval SEOS_ERROR_INVALID_PARAMETER
- * @retval SEOS_ERROR_OPERATION_DENIED
+ * @return seos_err_t
+ *
+ * @retval SEOS_ERROR_INVALID_PARAMETER     One of the handles is NULL,
+ *                                          one of the parameters exceeds
+ *                                          the maximum allowed length or the
+ *                                          key with the same name already exists
  *
  */
 seos_err_t
@@ -137,10 +153,12 @@ SeosKeyStoreClient_copyKey(SeosKeyStoreCtx* keyStoreCtx,
  * @param name          name of the key to move
  * @param destKeyStore  pointer to the destination key store
  *
- * @return SEOS_ERROR_GENERIC
- * @retval SEOS_ERROR_INSUFFICIENT_SPACE
- * @retval SEOS_ERROR_INVALID_PARAMETER
- * @retval SEOS_ERROR_OPERATION_DENIED
+ * @return seos_err_t
+ *
+ * @retval SEOS_ERROR_INVALID_PARAMETER     One of the handles is NULL,
+ *                                          one of the parameters exceeds
+ *                                          the maximum allowed length or the
+ *                                          key with the same name already exists
  *
  */
 seos_err_t
@@ -152,7 +170,12 @@ SeosKeyStoreClient_moveKey(SeosKeyStoreCtx* keyStoreCtx,
  *
  * @param keyStoreCtx   pointer to keyStoreCtx
  *
- * @retval SEOS_ERROR_NOT_FOUND
+ * @return seos_err_t
+ *
+ * @retval SEOS_ERROR_INVALID_PARAMETER     One of the handles is NULL,
+ *                                          one of the parameters exceeds
+ *                                          the maximum allowed length or the
+ *                                          key with the same name already exists
  *
  */
 seos_err_t

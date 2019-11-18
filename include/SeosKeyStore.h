@@ -91,9 +91,17 @@ SeosKeyStore_deInit(SeosKeyStoreCtx* keyStoreCtx);
  * @param keyData           buffer containing the key data
  * @param keySize           size of the key data in bytes
  *
- * @retval SEOS_ERROR_INSUFFICIENT_SPACE
- * @retval SEOS_ERROR_INVALID_PARAMETER
- * @retval SEOS_ERROR_OPERATION_DENIED
+ * @return seos_err_t
+ *
+ * @retval SEOS_ERROR_INVALID_PARAMETER     One of the handles is NULL,
+ *                                          one of the parameters exceeds
+ *                                          the maximum allowed length or the
+ *                                          key with the same name already exists
+ *
+ * @retval SEOS_ERROR_OPERATION_DENIED      Underlying filesytsem operation failed
+ *
+ * @retval SEOS_ERROR_INSUFFICIENT_SPACE    Not enough space in the internal key
+ *                                          name register
  *
  */
 seos_err_t SeosKeyStore_importKey(SeosKeyStoreCtx*          keyStoreCtx,
@@ -110,10 +118,18 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStoreCtx*          keyStoreCtx,
  * @param[out]  keySize         address of the variable which will be filled
  *                              with key data size
  *
- * @return SEOS_ERROR_GENERIC
- * @retval SEOS_ERROR_INSUFFICIENT_SPACE
- * @retval SEOS_ERROR_INVALID_PARAMETER
- * @retval SEOS_ERROR_OPERATION_DENIED
+ * @return seos_err_t
+ *
+ * @retval SEOS_ERROR_INVALID_PARAMETER     One of the handles is NULL,
+ *                                          one of the parameters exceeds
+ *                                          the maximum allowed length
+ *
+ * @retval SEOS_ERROR_BUFFER_TOO_SMALL      The requested size of the key data is
+ *                                          smaller than the amount of saved bytes
+ *
+ * @retval SEOS_ERROR_NOT_FOUND             There is no saved key with the passed name
+ *
+ * @retval SEOS_ERROR_OPERATION_DENIED      Underlying filesytsem operation failed
  *
  */
 seos_err_t
@@ -127,7 +143,16 @@ SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
  * @param keyStoreCtx   pointer to keyStoreCtx
  * @param name          name of the key to delete
  *
- * @return SEOS_ERROR_NOT_FOUND
+ * @return seos_err_t
+ *
+ * @retval SEOS_ERROR_INVALID_PARAMETER     One of the handles is NULL,
+ *                                          one of the parameters exceeds
+ *                                          the maximum allowed length
+ *
+ * @retval SEOS_ERROR_ABORTED               Failed to retreive the key name from the
+ *                                          internal register
+ *
+ * @retval SEOS_ERROR_NOT_FOUND             There is no saved key with the passed name
  *
  */
 seos_err_t
@@ -140,10 +165,11 @@ SeosKeyStore_deleteKey(SeosKeyStoreCtx*         keyStoreCtx,
  * @param name          name of the key to copy
  * @param destKeyStore  pointer to the destination key store
  *
- * @return SEOS_ERROR_GENERIC
- * @retval SEOS_ERROR_INSUFFICIENT_SPACE
- * @retval SEOS_ERROR_INVALID_PARAMETER
- * @retval SEOS_ERROR_OPERATION_DENIED
+ * @return seos_err_t
+ *
+ * @retval SEOS_ERROR_INVALID_PARAMETER     One of the handles is NULL,
+ *                                          one of the parameters exceeds
+ *                                          the maximum allowed length
  *
  */
 seos_err_t
@@ -159,10 +185,11 @@ SeosKeyStore_copyKey(SeosKeyStoreCtx*           keyStoreCtx,
  * @param name          name of the key to move
  * @param destKeyStore  pointer to the destination key store
  *
- * @return SEOS_ERROR_GENERIC
- * @retval SEOS_ERROR_INSUFFICIENT_SPACE
- * @retval SEOS_ERROR_INVALID_PARAMETER
- * @retval SEOS_ERROR_OPERATION_DENIED
+ * @return seos_err_t
+ *
+ * @retval SEOS_ERROR_INVALID_PARAMETER     One of the handles is NULL,
+ *                                          one of the parameters exceeds
+ *                                          the maximum allowed length
  *
  */
 seos_err_t
@@ -174,7 +201,8 @@ SeosKeyStore_moveKey(SeosKeyStoreCtx*           keyStoreCtx,
  *
  * @param keyStoreCtx   pointer to keyStoreCtx
  *
- * @retval SEOS_ERROR_NOT_FOUND
+ * @retval SEOS_ERROR_ABORTED               Failed to retreive the size of the
+ *                                          internal register
  *
  */
 seos_err_t
