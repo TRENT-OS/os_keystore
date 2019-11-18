@@ -64,14 +64,14 @@ static const SeosKeyStoreCtx_Vtable SeosKeyStore_vtable =
 /* Public functions ----------------------------------------------------------*/
 seos_err_t SeosKeyStore_init(SeosKeyStore*              self,
                              FileStreamFactory*         fileStreamFactory,
-                             SeosCrypto*                cryptoCore,
+                             SeosCryptoCtx*             cryptoCtx,
                              const char*                name)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
     if (NULL == fileStreamFactory
-        || NULL == cryptoCore
+        || NULL == cryptoCtx
         || NULL == name)
     {
         return SEOS_ERROR_INVALID_PARAMETER;
@@ -92,7 +92,7 @@ seos_err_t SeosKeyStore_init(SeosKeyStore*              self,
     else
     {
         self->fsFactory     = fileStreamFactory;
-        self->cryptoCore    = cryptoCore;
+        self->cryptoCtx     = cryptoCtx;
         self->parent.vtable = &SeosKeyStore_vtable;
 
         memcpy(self->name, name, nameLen);
@@ -150,7 +150,7 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStoreCtx*          keyStoreCtx,
         return SEOS_ERROR_INVALID_PARAMETER;
     }
 
-    err = createKeyHash(SeosCrypto_TO_SEOS_CRYPTO_CTX(self->cryptoCore),
+    err = createKeyHash(self->cryptoCtx,
                         keyData,
                         keySize,
                         keyDataHash);
@@ -227,7 +227,7 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
         return err;
     }
 
-    err = createKeyHash(SeosCrypto_TO_SEOS_CRYPTO_CTX(self->cryptoCore),
+    err = createKeyHash(self->cryptoCtx,
                         keyData,
                         requestedKeysize,
                         calculatedHash);

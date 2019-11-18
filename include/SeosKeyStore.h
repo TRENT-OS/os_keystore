@@ -15,9 +15,8 @@
 #include "LibIO/FileStream.h"
 #include "LibIO/FileStreamFactory.h"
 #include "KeyNameMap.h"
-#include "SeosCrypto.h"
-#include "SeosCrypto_Handles.h"
 #include "SeosKeyStoreCtx.h"
+#include "SeosCryptoCtx.h"
 
 /* Exported macro ------------------------------------------------------------*/
 #define SeosKeyStore_TO_SEOS_KEY_STORE_CTX(self) (&(self)->parent)
@@ -48,7 +47,7 @@ struct SeosKeyStore
 {
     SeosKeyStoreCtx parent;
     FileStreamFactory* fsFactory;
-    SeosCrypto* cryptoCore;
+    SeosCryptoCtx* cryptoCtx;
     char name[SeosKeyStore_MAX_KEYSTORE_NAME_LEN];
     union
     {
@@ -76,7 +75,7 @@ struct SeosKeyStore
 seos_err_t
 SeosKeyStore_init(SeosKeyStore*         self,
                   FileStreamFactory*    fileStreamFactory,
-                  SeosCrypto*           cryptoCore,
+                  SeosCryptoCtx*        cryptoCtx,
                   const char*           name);
 /**
  * @brief Destructor
