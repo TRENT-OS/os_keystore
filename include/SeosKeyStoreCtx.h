@@ -13,7 +13,7 @@
 #pragma once
 
 #include "SeosError.h"
-#include "SeosCrypto_Handles.h"
+#include <stddef.h>
 
 typedef struct SeosKeyStoreCtx SeosKeyStoreCtx;
 

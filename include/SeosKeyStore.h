@@ -47,7 +47,7 @@ struct SeosKeyStore
 {
     SeosKeyStoreCtx parent;
     FileStreamFactory* fsFactory;
-    SeosCryptoCtx* cryptoCtx;
+    SeosCryptoApi_Context* cryptoCtx;
     char name[SeosKeyStore_MAX_KEYSTORE_NAME_LEN];
     union
     {
@@ -75,7 +75,7 @@ struct SeosKeyStore
 seos_err_t
 SeosKeyStore_init(SeosKeyStore*         self,
                   FileStreamFactory*    fileStreamFactory,
-                  SeosCryptoCtx*        cryptoCtx,
+                  SeosCryptoApi_Context*        cryptoCtx,
                   const char*           name);
 /**
  * @brief Destructor
@@ -84,7 +84,7 @@ SeosKeyStore_init(SeosKeyStore*         self,
 void
 SeosKeyStore_deInit(SeosKeyStoreCtx* keyStoreCtx);
 /**
- * @brief Imports a SeosCrypto_Key object into the keystore
+ * @brief Imports a SeosCryptoLib_Key object into the keystore
  *
  * @param keyStoreCtx       pointer to keyStoreCtx
  * @param name              name of the key to import

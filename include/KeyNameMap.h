@@ -11,7 +11,6 @@
 #pragma once
 
 #include "LibUtil/MapT.h"
-#include "SeosCrypto_Handles.h"
 
 #if !defined(KEYSTORE_CONFIG_H_FILE)
 #   error a configuration file must be provided! See KeyStore_Config.h.example

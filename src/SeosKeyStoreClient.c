@@ -5,6 +5,7 @@
 #include "SeosKeyStoreClient.h"
 #include "LibDebug/Debug.h"
 #include <string.h>
+#include <limits.h>
 
 /* Macros --------------------------------------------------------------------*/
 #define LEN_BITS_TO_BYTES(lenBits)  (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
