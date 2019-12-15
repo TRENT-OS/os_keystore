@@ -64,7 +64,7 @@ static const SeosKeyStoreCtx_Vtable SeosKeyStore_vtable =
 /* Public functions ----------------------------------------------------------*/
 seos_err_t SeosKeyStore_init(SeosKeyStore*              self,
                              FileStreamFactory*         fileStreamFactory,
-                             SeosCryptoApi_Context*             cryptoCtx,
+                             SeosCryptoApi_Context*     cryptoCtx,
                              const char*                name)
 {
     Debug_ASSERT_SELF(self);
@@ -421,9 +421,9 @@ SeosKeyStore_wipeKeyStore(SeosKeyStoreCtx* keyStoreCtx)
 
 /* Private functions ---------------------------------------------------------*/
 static seos_err_t createKeyHash(SeosCryptoApi_Context*  cryptoCtx,
-                                const void*     keyData,
-                                size_t          keyDataSize,
-                                void*           output)
+                                const void*             keyData,
+                                size_t                  keyDataSize,
+                                void*                   output)
 {
     seos_err_t err = SEOS_SUCCESS;
     SeosCryptoApi_Digest scDigestHandle;
@@ -437,8 +437,7 @@ static seos_err_t createKeyHash(SeosCryptoApi_Context*  cryptoCtx,
         goto ERR_EXIT;
     }
 
-    err = SeosCryptoApi_Digest_process(cryptoCtx, scDigestHandle, keyData,
-                                       keyDataSize);
+    err = SeosCryptoApi_Digest_process(&scDigestHandle, keyData, keyDataSize);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCryptoDigest_update failed with error code %d!",
@@ -447,8 +446,7 @@ static seos_err_t createKeyHash(SeosCryptoApi_Context*  cryptoCtx,
     }
 
     size_t digestSize = KEY_DATA_HASH_LEN;
-    err = SeosCryptoApi_Digest_finalize(cryptoCtx, scDigestHandle, output,
-                                        &digestSize);
+    err = SeosCryptoApi_Digest_finalize(&scDigestHandle, output, &digestSize);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCryptoDigest_finalizeNoData2 failed with error code %d!",
@@ -457,7 +455,7 @@ static seos_err_t createKeyHash(SeosCryptoApi_Context*  cryptoCtx,
     }
 
 ERR_DESTRUCT:
-    SeosCryptoApi_Digest_free(cryptoCtx, scDigestHandle);
+    SeosCryptoApi_Digest_free(&scDigestHandle);
 
 ERR_EXIT:
     return err;
