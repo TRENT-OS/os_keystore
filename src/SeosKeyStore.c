@@ -15,7 +15,7 @@
 #define LEN_BITS_TO_BYTES(lenBits)          (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
 
 /* Private functions prototypes ----------------------------------------------*/
-static seos_err_t createKeyHash(SeosCryptoApi* cryptoCtx,
+static seos_err_t createKeyHash(SeosCryptoApiH hCrypto,
                                 const void* keyData,
                                 size_t keyDataSize,
                                 void* output);
@@ -64,14 +64,14 @@ static const SeosKeyStoreCtx_Vtable SeosKeyStore_vtable =
 /* Public functions ----------------------------------------------------------*/
 seos_err_t SeosKeyStore_init(SeosKeyStore*              self,
                              FileStreamFactory*         fileStreamFactory,
-                             SeosCryptoApi*             cryptoCtx,
+                             SeosCryptoApiH             hCrypto,
                              const char*                name)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t retval = SEOS_ERROR_GENERIC;
 
+    // We do not check hCrypto, as that will be done by the Crypto API layer
     if (NULL == fileStreamFactory
-        || NULL == cryptoCtx
         || NULL == name)
     {
         return SEOS_ERROR_INVALID_PARAMETER;
@@ -92,7 +92,7 @@ seos_err_t SeosKeyStore_init(SeosKeyStore*              self,
     else
     {
         self->fsFactory     = fileStreamFactory;
-        self->cryptoCtx     = cryptoCtx;
+        self->hCrypto       = hCrypto;
         self->parent.vtable = &SeosKeyStore_vtable;
 
         memcpy(self->name, name, nameLen);
@@ -150,7 +150,7 @@ seos_err_t SeosKeyStore_importKey(SeosKeyStoreCtx*          keyStoreCtx,
         return SEOS_ERROR_INVALID_PARAMETER;
     }
 
-    err = createKeyHash(self->cryptoCtx,
+    err = createKeyHash(self->hCrypto,
                         keyData,
                         keySize,
                         keyDataHash);
@@ -227,7 +227,7 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
         return err;
     }
 
-    err = createKeyHash(self->cryptoCtx,
+    err = createKeyHash(self->hCrypto,
                         keyData,
                         requestedKeysize,
                         calculatedHash);
@@ -420,15 +420,15 @@ SeosKeyStore_wipeKeyStore(SeosKeyStoreCtx* keyStoreCtx)
 }
 
 /* Private functions ---------------------------------------------------------*/
-static seos_err_t createKeyHash(SeosCryptoApi*          cryptoCtx,
+static seos_err_t createKeyHash(SeosCryptoApiH          hCrypto,
                                 const void*             keyData,
                                 size_t                  keyDataSize,
                                 void*                   output)
 {
     seos_err_t err = SEOS_SUCCESS;
-    SeosCryptoApi_Digest scDigestHandle;
+    SeosCryptoApi_DigestH hDigest;
 
-    err = SeosCryptoApi_Digest_init(cryptoCtx, &scDigestHandle,
+    err = SeosCryptoApi_Digest_init(&hDigest, hCrypto,
                                     SeosCryptoApi_Digest_ALG_SHA256);
     if (err != SEOS_SUCCESS)
     {
@@ -437,7 +437,7 @@ static seos_err_t createKeyHash(SeosCryptoApi*          cryptoCtx,
         goto ERR_EXIT;
     }
 
-    err = SeosCryptoApi_Digest_process(&scDigestHandle, keyData, keyDataSize);
+    err = SeosCryptoApi_Digest_process(hDigest, keyData, keyDataSize);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCryptoLib_Digest_update failed with error code %d!",
@@ -446,7 +446,7 @@ static seos_err_t createKeyHash(SeosCryptoApi*          cryptoCtx,
     }
 
     size_t digestSize = KEY_DATA_HASH_LEN;
-    err = SeosCryptoApi_Digest_finalize(&scDigestHandle, output, &digestSize);
+    err = SeosCryptoApi_Digest_finalize(hDigest, output, &digestSize);
     if (err != SEOS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: SeosCryptoLib_Digest_finalizeNoData2 failed with error code %d!",
@@ -455,7 +455,7 @@ static seos_err_t createKeyHash(SeosCryptoApi*          cryptoCtx,
     }
 
 ERR_DESTRUCT:
-    SeosCryptoApi_Digest_free(&scDigestHandle);
+    SeosCryptoApi_Digest_free(hDigest);
 
 ERR_EXIT:
     return err;
