@@ -36,16 +36,13 @@ if(NO_KERNEL_BUILD)
 endif(NO_KERNEL_BUILD)
 
 if (KEYSTORE_CONFIG_H_FILE)
-    list(APPEND PUBLIC_TARGET_COMPILE_DEFINITIONS
-        "KEYSTORE_CONFIG_H_FILE=${KEYSTORE_CONFIG_H_FILE}")
-endif()
 
-target_compile_definitions(${PROJECT_NAME}
-    PUBLIC
-        ${PUBLIC_TARGET_COMPILE_DEFINITIONS}
-    PRIVATE
-        ${PRIVATE_TARGET_COMPILE_DEFINITIONS}
-)
+    target_compile_definitions(${PROJECT_NAME}
+        PUBLIC
+            "KEYSTORE_CONFIG_H_FILE=${KEYSTORE_CONFIG_H_FILE}"
+    )
+
+endif()
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
