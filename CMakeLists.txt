@@ -5,7 +5,8 @@ project(seos_keystore C)
 add_library(${PROJECT_NAME} STATIC
     "src/SeosKeyStore.c"
     "src/SeosKeyStoreApi.c"
-    "src/KeyNameMap.c")
+    "src/KeyNameMap.c"
+    "src/AesNvm.c")
 
 if(KEYSTORE_AS_COMPONENT)
 
