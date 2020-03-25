@@ -2,23 +2,19 @@
 
 project(seos_keystore C)
 
-set(seos_keystore_SOURCES)
-list(
-    APPEND seos_keystore_SOURCES
-
+add_library(${PROJECT_NAME} STATIC
     "src/SeosKeyStore.c"
     "src/SeosKeyStoreApi.c"
     "src/KeyNameMap.c")
 
 if(KEYSTORE_AS_COMPONENT)
-    list(
-        APPEND seos_keystore_SOURCES
 
-        "src/SeosKeyStoreClient.c"
-        "src/SeosKeyStoreRpc.c")
+    target_sources(${PROJECT_NAME}
+        PRIVATE
+            "src/SeosKeyStoreClient.c"
+            "src/SeosKeyStoreRpc.c")
+
 endif()
-
-add_library(${PROJECT_NAME} STATIC ${seos_keystore_SOURCES})
 
 if (ENABLE_LINT)
         set(CMAKE_C_CPPCHECK "cppcheck;--enable=warning;--inline-suppr")
