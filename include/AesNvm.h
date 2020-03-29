@@ -44,6 +44,7 @@ bool
 AesNvm_ctor(
     AesNvm*                     self,
     Nvm*                        parent,
+    OS_Crypto_Handle_t          hCrypto,
     const void*                 startIv,
     const OS_CryptoKey_Data_t*  masterKeyData);
 

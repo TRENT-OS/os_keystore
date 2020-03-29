@@ -3,10 +3,7 @@
  */
 
 #include "AesNvm.h"
-
-#include <stdlib.h>
 #include <string.h>
-
 
 #define KEY_LENGTH_IN_BYTES         32
 #define KEY_LENGTH_IN_BITS          (KEY_LENGTH_IN_BYTES*8)
@@ -168,60 +165,17 @@ encryptBlock(
 
 
 //------------------------------------------------------------------------------
-static int
-entropy(
-    void*          ctx,
-    unsigned char* buf,
-    size_t         len)
-{
-    // This would be the platform specific function to obtain entropy
-    memset(buf, 0, len);
-    return 0;
-}
-
-
-//------------------------------------------------------------------------------
-static seos_err_t
-init_crypto(
-    AesNvm*      self)
-{
-    Debug_ASSERT_SELF(self);
-
-    static OS_Crypto_Config_t cfgLib =
-    {
-        .mode = OS_Crypto_MODE_LIBRARY,
-        .mem = {
-            .malloc = malloc,
-            .free = free,
-        },
-        .impl.lib.rng.entropy = entropy,
-    };
-
-    seos_err_t ret = OS_Crypto_init(&(self->hCrypto), &cfgLib);
-
-    if (ret != SEOS_SUCCESS)
-    {
-        Debug_LOG_ERROR("OS_Crypto_init failed, code %d", ret);
-        return ret;
-    }
-
-    return SEOS_SUCCESS;
-
-}
-
-
-//------------------------------------------------------------------------------
 // Public functions
 //------------------------------------------------------------------------------
-
 
 //------------------------------------------------------------------------------
 bool
 AesNvm_ctor(
-    AesNvm*                    self,
-    Nvm*                       nvm,
-    const void*                startIv,
-    const OS_CryptoKey_Data_t* masterKeyData)
+    AesNvm*                     self,
+    Nvm*                        nvm,
+    OS_Crypto_Handle_t          hCrypto,
+    const void*                 startIv,
+    const OS_CryptoKey_Data_t*  masterKeyData)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t ret;
@@ -229,13 +183,7 @@ AesNvm_ctor(
     self->parent.vtable = &AesNvm_vtable;
     self->underlyingNvm = nvm;
     self->startIv = startIv;
-
-    ret = init_crypto(self);
-    if (ret != SEOS_SUCCESS)
-    {
-        Debug_LOG_ERROR("init_crypto failed, code %d", ret);
-        return false;
-    }
+    self->hCrypto = hCrypto;
 
     // Setup key data
     ret = OS_CryptoKey_import(
