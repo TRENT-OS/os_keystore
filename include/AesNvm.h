@@ -12,7 +12,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "LibMem/Nvm.h"
-#include "SeosCryptoApi.h"
+#include "OS_Crypto.h"
 
 /* Exported macro ------------------------------------------------------------*/
 #define AesNvm_TO_NVM(self)             (&(self)->parent)
@@ -23,12 +23,12 @@ typedef struct AesNvm AesNvm;
 
 struct AesNvm
 {
-    Nvm                           parent;
-    Nvm*                          underlyingNvm;
-    const uint8_t*                startIv;
-    SeosCryptoApiH                hCrypto;
-    SeosCryptoApi_KeyH            hKey;
-    SeosCryptoApi_KeyH            hHashedKey;
+    Nvm                        parent;
+    Nvm*                       underlyingNvm;
+    const uint8_t*             startIv;
+    OS_Crypto_Handle_t         hCrypto;
+    OS_CryptoKey_Handle_t      hKey;
+    OS_CryptoKey_Handle_t      hHashedKey;
 };
 
 /* Exported constants --------------------------------------------------------*/
@@ -42,10 +42,10 @@ struct AesNvm
  */
 bool
 AesNvm_ctor(
-    AesNvm*                        self,
-    Nvm*                           parent,
-    const void*                    startIv,
-    const SeosCryptoApi_Key_Data*  masterKeyData);
+    AesNvm*                     self,
+    Nvm*                        parent,
+    const void*                 startIv,
+    const OS_CryptoKey_Data_t*  masterKeyData);
 
 
 void

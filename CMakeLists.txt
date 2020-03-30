@@ -69,7 +69,7 @@ if (COMMAND seos_create_doxygen_target)
         # pre-step: link the API file SeosKeyStoreApi.h from seos_core_api in
         #           order to produce a complete doxygen documentation
         "ln -sf ${SEOS_KEYSTORE_API_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include"
-        # post-step: remove the link to SeosCryptoApi.h
+        # post-step: remove the link to OS_Crypto.h
         "rm -f ${CMAKE_CURRENT_SOURCE_DIR}/include/SeosKeyStoreApi.h"
     )
 

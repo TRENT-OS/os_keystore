@@ -59,7 +59,7 @@ SeosKeyStoreRpc_deInit(SeosKeyStoreRpc* self);
 
 /***************************** KeyStore functions *******************************/
 /**
- * @brief Imports a SeosCryptoLib_Key object into the keystore
+ * @brief Imports a OS_CryptoLibKey_t object into the keystore
  *
  * @param self              pointer to self
  * @param keyHandle         key handle

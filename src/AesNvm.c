@@ -36,7 +36,7 @@ createIV(
     seos_err_t ret;
     char addressArray[IV_LENGTH_IN_BYTES] = {0};
     size_t outputSize = IV_LENGTH_IN_BYTES;
-    SeosCryptoApi_CipherH hCipher;
+    OS_CryptoCipher_Handle_t hCipher;
 
     addressArray[0] = (addr >> 24) & 0xFF;
     addressArray[1] = (addr >> 16) & 0xFF;
@@ -45,21 +45,21 @@ createIV(
 
     // Encrypt the address using the hashed master key and use the encrypted
     // address as new IV
-    ret = SeosCryptoApi_Cipher_init(
+    ret = OS_CryptoCipher_init(
               &hCipher,
               self->hCrypto,
               self->hHashedKey,
-              SeosCryptoApi_Cipher_ALG_AES_CBC_ENC,
+              OS_CryptoCipher_ALG_AES_CBC_ENC,
               startIv,
               IV_LENGTH_IN_BYTES);
 
     if (ret != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("SeosCryptoApi_Cipher_init failed, code %d", ret);
+        Debug_LOG_ERROR("OS_CryptoCipher_init failed, code %d", ret);
         return;
     }
 
-    ret = SeosCryptoApi_Cipher_process(
+    ret = OS_CryptoCipher_process(
               hCipher,
               addressArray,
               IV_LENGTH_IN_BYTES,
@@ -67,7 +67,7 @@ createIV(
               &outputSize);
     if (ret != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("SeosCryptoApi_Cipher_process failed, code %d", ret);
+        Debug_LOG_ERROR("OS_CryptoCipher_process failed, code %d", ret);
     }
 
     if (outputSize != IV_LENGTH_IN_BYTES)
@@ -76,7 +76,7 @@ createIV(
                         outputSize, IV_LENGTH_IN_BYTES);
     }
 
-    SeosCryptoApi_Cipher_free(hCipher);
+    OS_CryptoCipher_free(hCipher);
 }
 
 
@@ -93,11 +93,11 @@ cryptoCalculateBlock(
     seos_err_t ret;
     char iv_temp[IV_LENGTH_IN_BYTES] = {0};
     size_t outputSize = ENCRYPTION_PAGE_LEN;
-    SeosCryptoApi_CipherH hCipher;
+    OS_CryptoCipher_Handle_t hCipher;
 
     createIV(self, addr, startIv, iv_temp);
 
-    ret = SeosCryptoApi_Cipher_init(
+    ret = OS_CryptoCipher_init(
               &hCipher,
               self->hCrypto,
               self->hKey,
@@ -106,15 +106,15 @@ cryptoCalculateBlock(
               IV_LENGTH_IN_BYTES);
     if (ret != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("SeosCryptoApi_Cipher_init failed, code %d", ret);
+        Debug_LOG_ERROR("OS_CryptoCipher_init failed, code %d", ret);
         return;
     }
 
-    ret = SeosCryptoApi_Cipher_process(hCipher, input, ENCRYPTION_PAGE_LEN,
-                                       output, &outputSize);
+    ret = OS_CryptoCipher_process(hCipher, input, ENCRYPTION_PAGE_LEN,
+                                  output, &outputSize);
     if (ret != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("SeosCryptoApi_Cipher_process failed, code %d", ret);
+        Debug_LOG_ERROR("OS_CryptoCipher_process failed, code %d", ret);
     }
 
     if (outputSize != ENCRYPTION_PAGE_LEN)
@@ -123,7 +123,7 @@ cryptoCalculateBlock(
                         outputSize, ENCRYPTION_PAGE_LEN);
     }
 
-    SeosCryptoApi_Cipher_free(hCipher);
+    OS_CryptoCipher_free(hCipher);
 }
 
 
@@ -143,7 +143,7 @@ decryptBlock(
         input,
         output,
         self->startIv,
-        SeosCryptoApi_Cipher_ALG_AES_CBC_DEC);
+        OS_CryptoCipher_ALG_AES_CBC_DEC);
 }
 
 
@@ -163,7 +163,7 @@ encryptBlock(
         input,
         output,
         self->startIv,
-        SeosCryptoApi_Cipher_ALG_AES_CBC_ENC);
+        OS_CryptoCipher_ALG_AES_CBC_ENC);
 }
 
 
@@ -187,9 +187,9 @@ init_crypto(
 {
     Debug_ASSERT_SELF(self);
 
-    static SeosCryptoApi_Config cfgLib =
+    static OS_Crypto_Config_t cfgLib =
     {
-        .mode = SeosCryptoApi_Mode_LIBRARY,
+        .mode = OS_Crypto_MODE_LIBRARY,
         .mem = {
             .malloc = malloc,
             .free = free,
@@ -197,11 +197,11 @@ init_crypto(
         .impl.lib.rng.entropy = entropy,
     };
 
-    seos_err_t ret = SeosCryptoApi_init(&(self->hCrypto), &cfgLib);
+    seos_err_t ret = OS_Crypto_init(&(self->hCrypto), &cfgLib);
 
     if (ret != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("SeosCryptoApi_init failed, code %d", ret);
+        Debug_LOG_ERROR("OS_Crypto_init failed, code %d", ret);
         return ret;
     }
 
@@ -218,10 +218,10 @@ init_crypto(
 //------------------------------------------------------------------------------
 bool
 AesNvm_ctor(
-    AesNvm*      self,
-    Nvm*         nvm,
-    const void*  startIv,
-    const SeosCryptoApi_Key_Data* masterKeyData)
+    AesNvm*                    self,
+    Nvm*                       nvm,
+    const void*                startIv,
+    const OS_CryptoKey_Data_t* masterKeyData)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t ret;
@@ -238,77 +238,77 @@ AesNvm_ctor(
     }
 
     // Setup key data
-    ret = SeosCryptoApi_Key_import(
+    ret = OS_CryptoKey_import(
               &self->hKey,
               self->hCrypto,
               masterKeyData);
     if (ret != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("SeosCryptoApi_Key_import failed for master key, code %d", ret);
+        Debug_LOG_ERROR("OS_CryptoKey_import failed for master key, code %d", ret);
         goto err0;
     }
 
     // Hash the master key
-    SeosCryptoApi_DigestH hDigest;
-    ret = SeosCryptoApi_Digest_init(
+    OS_CryptoDigest_Handle_t hDigest;
+    ret = OS_CryptoDigest_init(
               &hDigest,
               self->hCrypto,
-              SeosCryptoApi_Digest_ALG_SHA256);
+              OS_CryptoDigest_ALG_SHA256);
     if (ret != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("SeosCryptoApi_Digest_init failed, code %d", ret);
+        Debug_LOG_ERROR("OS_CryptoDigest_init failed, code %d", ret);
         goto err1;
     }
 
-    ret = SeosCryptoApi_Digest_process(
+    ret = OS_CryptoDigest_process(
               hDigest,
               masterKeyData->data.aes.bytes,
               masterKeyData->data.aes.len);
     if (ret != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("SeosCryptoApi_Digest_process failed, code %d", ret);
+        Debug_LOG_ERROR("OS_CryptoDigest_process failed, code %d", ret);
         goto err2;
     }
 
-    static SeosCryptoApi_Key_Data hHashedKeyData =
+    static OS_CryptoKey_Data_t hHashedKeyData =
     {
-        .type = SeosCryptoApi_Key_TYPE_AES,
+        .type = OS_CryptoKey_TYPE_AES,
         .data.aes.len = KEY_LENGTH_IN_BYTES
     };
 
     size_t len = sizeof(hHashedKeyData.data.aes.bytes);
-    ret = SeosCryptoApi_Digest_finalize(
+    ret = OS_CryptoDigest_finalize(
               hDigest,
               hHashedKeyData.data.aes.bytes,
               &len);
     if (ret != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("SeosCryptoApi_Digest_finalize failed, code %d",
+        Debug_LOG_ERROR("OS_CryptoDigest_finalize failed, code %d",
                         ret);
         goto err2;
     }
 
-    ret = SeosCryptoApi_Key_import(
+    ret = OS_CryptoKey_import(
               &self->hHashedKey,
               self->hCrypto,
               &hHashedKeyData);
     if (ret != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("SeosCryptoApi_Key_import failed for hashed key, code %d",
+        Debug_LOG_ERROR("OS_CryptoKey_import failed for hashed key, code %d",
                         ret);
         goto err2;
     }
 
-    SeosCryptoApi_Digest_free(hDigest);
+    OS_CryptoDigest_free(hDigest);
 
     return true;
 
 err2:
-    SeosCryptoApi_Digest_free(hDigest);
+    OS_CryptoDigest_free(hDigest);
 err1:
-    SeosCryptoApi_Key_free(self->hKey);
+    OS_CryptoKey_free(self->hKey);
 err0:
-    SeosCryptoApi_free(self->hCrypto);
+    OS_Crypto_free(self->hCrypto);
 
     return false;
 }
@@ -322,9 +322,9 @@ AesNvm_dtor(
     DECL_UNUSED_VAR(AesNvm * self) = (AesNvm*) nvm;
     Debug_ASSERT_SELF(self);
 
-    SeosCryptoApi_Key_free(self->hHashedKey);
-    SeosCryptoApi_Key_free(self->hKey);
-    SeosCryptoApi_free(self->hCrypto);
+    OS_CryptoKey_free(self->hHashedKey);
+    OS_CryptoKey_free(self->hKey);
+    OS_Crypto_free(self->hCrypto);
 }
 
 

@@ -61,7 +61,7 @@ SeosKeyStoreClient_deInit(SeosKeyStoreCtx* keyStoreCtx);
 
 /***************************** KeyStore functions *******************************/
 /**
- * @brief Imports a SeosCryptoLib_Key object into the keystore
+ * @brief Imports a OS_CryptoLibKey_t object into the keystore
  *
  * @param keyStoreCtx       pointer to keyStoreCtx
  * @param name              name of the key to import
