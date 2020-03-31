@@ -15,40 +15,58 @@
 #define LEN_BITS_TO_BYTES(lenBits)          (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
 
 /* Private functions prototypes ----------------------------------------------*/
-static seos_err_t createKeyHash(OS_Crypto_Handle_t hCrypto,
-                                const void* keyData,
-                                size_t keyDataSize,
-                                void* output);
+static seos_err_t
+createKeyHash(
+    OS_Crypto_Handle_t  hCrypto,
+    const void*         keyData,
+    size_t              keyDataSize,
+    void*               output);
 
-static seos_err_t writeKeyToFile(FileStreamFactory* fsFactory,
-                                 const void* keyData,
-                                 const void* keyDataHash,
-                                 size_t keySize,
-                                 const char* name);
+static seos_err_t
+writeKeyToFile(
+    FileStreamFactory*  fsFactory,
+    const void*         keyData,
+    const void*         keyDataHash,
+    size_t              keySize,
+    const char*         name);
 
-static seos_err_t readKeyFromFile(SeosKeyStore* self,
-                                  void* keyData,
-                                  void* keyDataHash,
-                                  size_t* keySize,
-                                  const char* name);
+static seos_err_t
+readKeyFromFile(
+    SeosKeyStore*  self,
+    void*          keyData,
+    void*          keyDataHash,
+    size_t*        keySize,
+    const char*    name);
 
-static seos_err_t deleteKeyFromFile(FileStreamFactory* fsFactory,
-                                    const char* name);
+static seos_err_t
+deleteKeyFromFile(
+    FileStreamFactory*  fsFactory,
+    const char*         name);
 
-static seos_err_t registerKeyName(SeosKeyStore* self,
-                                  const char* name,
-                                  size_t keySize);
+static seos_err_t
+registerKeyName(
+    SeosKeyStore*  self,
+    const char*    name,
+    size_t         keySize);
 
-static seos_err_t deRegisterKeyName(SeosKeyStore* self,
-                                    const char* name);
+static seos_err_t
+deRegisterKeyName(
+    SeosKeyStore*  self,
+    const char*    name);
 
-static bool checkIfKeyNameExists(SeosKeyStore* self,
-                                 const char* name);
+static bool
+checkIfKeyNameExists(
+    SeosKeyStore*  self,
+    const char*    name);
 
-static void cpyIntToBuf(uint32_t integer,
-                        unsigned char* buf);
+static void
+cpyIntToBuf(
+    uint32_t        integer,
+    unsigned char*  buf);
 
-static size_t cpyBufToInt(const char* buf);
+static size_t
+cpyBufToInt(
+    const char*  buf);
 
 /* Private variables ----------------------------------------------------------*/
 static const SeosKeyStoreCtx_Vtable SeosKeyStore_vtable =
@@ -62,10 +80,14 @@ static const SeosKeyStoreCtx_Vtable SeosKeyStore_vtable =
     .deInit         = SeosKeyStore_deInit,
 };
 /* Public functions ----------------------------------------------------------*/
-seos_err_t SeosKeyStore_init(SeosKeyStore*              self,
-                             FileStreamFactory*         fileStreamFactory,
-                             OS_Crypto_Handle_t         hCrypto,
-                             const char*                name)
+
+//------------------------------------------------------------------------------
+seos_err_t
+SeosKeyStore_init(
+    SeosKeyStore*       self,
+    FileStreamFactory*  fileStreamFactory,
+    OS_Crypto_Handle_t  hCrypto,
+    const char*         name)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t retval = SEOS_ERROR_GENERIC;
@@ -103,7 +125,11 @@ seos_err_t SeosKeyStore_init(SeosKeyStore*              self,
     return retval;
 }
 
-void SeosKeyStore_deInit(SeosKeyStoreCtx* keyStoreCtx)
+
+//------------------------------------------------------------------------------
+void
+SeosKeyStore_deInit(
+    SeosKeyStoreCtx*  keyStoreCtx)
 {
     SeosKeyStore* self = (SeosKeyStore*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
@@ -111,10 +137,14 @@ void SeosKeyStore_deInit(SeosKeyStoreCtx* keyStoreCtx)
     FileStreamFactory_dtor(self->fsFactory);
 }
 
-seos_err_t SeosKeyStore_importKey(SeosKeyStoreCtx*          keyStoreCtx,
-                                  const char*               name,
-                                  void const*               keyData,
-                                  size_t                    keySize)
+
+//------------------------------------------------------------------------------
+seos_err_t
+SeosKeyStore_importKey(
+    SeosKeyStoreCtx*  keyStoreCtx,
+    const char*       name,
+    void const*       keyData,
+    size_t            keySize)
 {
     SeosKeyStore* self = (SeosKeyStore*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
@@ -185,10 +215,14 @@ exit:
     return err;
 }
 
-seos_err_t SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
-                               const char*              name,
-                               void*                    keyData,
-                               size_t*                  keySize)
+
+//------------------------------------------------------------------------------
+seos_err_t
+SeosKeyStore_getKey(
+    SeosKeyStoreCtx*  keyStoreCtx,
+    const char*       name,
+    void*             keyData,
+    size_t*           keySize)
 {
     SeosKeyStore* self = (SeosKeyStore*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
@@ -251,8 +285,12 @@ seos_err_t SeosKeyStore_getKey(SeosKeyStoreCtx*         keyStoreCtx,
     return err;
 }
 
-seos_err_t SeosKeyStore_deleteKey(SeosKeyStoreCtx*          keyStoreCtx,
-                                  const char*               name)
+
+//------------------------------------------------------------------------------
+seos_err_t
+SeosKeyStore_deleteKey(
+    SeosKeyStoreCtx*  keyStoreCtx,
+    const char*       name)
 {
     SeosKeyStore* self = (SeosKeyStore*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
@@ -299,9 +337,13 @@ seos_err_t SeosKeyStore_deleteKey(SeosKeyStoreCtx*          keyStoreCtx,
     return err;
 }
 
-seos_err_t SeosKeyStore_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
-                                const char*             name,
-                                SeosKeyStoreCtx*        destKeyStore)
+
+//------------------------------------------------------------------------------
+seos_err_t
+SeosKeyStore_copyKey(
+    SeosKeyStoreCtx*  keyStoreCtx,
+    const char*       name,
+    SeosKeyStoreCtx*  destKeyStore)
 {
     SeosKeyStore* self = (SeosKeyStore*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
@@ -341,9 +383,13 @@ seos_err_t SeosKeyStore_copyKey(SeosKeyStoreCtx*        keyStoreCtx,
     return err;
 }
 
-seos_err_t SeosKeyStore_moveKey(SeosKeyStoreCtx*        keyStoreCtx,
-                                const char*             name,
-                                SeosKeyStoreCtx*        destKeyStore)
+
+//------------------------------------------------------------------------------
+seos_err_t
+SeosKeyStore_moveKey(
+    SeosKeyStoreCtx*  keyStoreCtx,
+    const char*       name,
+    SeosKeyStoreCtx*  destKeyStore)
 {
     SeosKeyStore* self = (SeosKeyStore*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
@@ -382,8 +428,11 @@ seos_err_t SeosKeyStore_moveKey(SeosKeyStoreCtx*        keyStoreCtx,
     return err;
 }
 
+
+//------------------------------------------------------------------------------
 seos_err_t
-SeosKeyStore_wipeKeyStore(SeosKeyStoreCtx* keyStoreCtx)
+SeosKeyStore_wipeKeyStore(
+    SeosKeyStoreCtx*  keyStoreCtx)
 {
     SeosKeyStore* self = (SeosKeyStore*)keyStoreCtx;
     Debug_ASSERT_SELF(self);
@@ -420,10 +469,14 @@ SeosKeyStore_wipeKeyStore(SeosKeyStoreCtx* keyStoreCtx)
 }
 
 /* Private functions ---------------------------------------------------------*/
-static seos_err_t createKeyHash(OS_Crypto_Handle_t      hCrypto,
-                                const void*             keyData,
-                                size_t                  keyDataSize,
-                                void*                   output)
+
+//------------------------------------------------------------------------------
+static seos_err_t
+createKeyHash(
+    OS_Crypto_Handle_t  hCrypto,
+    const void*         keyData,
+    size_t              keyDataSize,
+    void*               output)
 {
     seos_err_t err = SEOS_SUCCESS;
     OS_CryptoDigest_Handle_t hDigest;
@@ -461,11 +514,15 @@ ERR_EXIT:
     return err;
 }
 
-static seos_err_t writeKeyToFile(FileStreamFactory* fsFactory,
-                                 const void* keyData,
-                                 const void* keyDataHash,
-                                 size_t keySize,
-                                 const char* name)
+
+//------------------------------------------------------------------------------
+static seos_err_t
+writeKeyToFile(
+    FileStreamFactory*  fsFactory,
+    const void*         keyData,
+    const void*         keyDataHash,
+    size_t              keySize,
+    const char*         name)
 {
     Debug_ASSERT_SELF(fsFactory);
     uint8_t keySizeBuffer[KEY_INT_PROPERTY_LEN] = {0};
@@ -521,11 +578,15 @@ ERROR:
     return err;
 }
 
-static seos_err_t readKeyFromFile(SeosKeyStore* self,
-                                  void* keyData,
-                                  void* keyDataHash,
-                                  size_t* keySize,
-                                  const char* name)
+
+//------------------------------------------------------------------------------
+static seos_err_t
+readKeyFromFile(
+    SeosKeyStore*  self,
+    void*          keyData,
+    void*          keyDataHash,
+    size_t*        keySize,
+    const char*    name)
 {
     Debug_ASSERT_SELF(self);
     int readBytes = 0;
@@ -607,8 +668,12 @@ ERROR:
     return err;
 }
 
-static seos_err_t deleteKeyFromFile(FileStreamFactory* fsFactory,
-                                    const char* name)
+
+//------------------------------------------------------------------------------
+static seos_err_t
+deleteKeyFromFile(
+    FileStreamFactory*  fsFactory,
+    const char*         name)
 {
     FileStream* file = FileStreamFactory_create(fsFactory, name,
                                                 FileStream_OpenMode_r);
@@ -628,9 +693,13 @@ static seos_err_t deleteKeyFromFile(FileStreamFactory* fsFactory,
     return SEOS_SUCCESS;
 }
 
-static seos_err_t registerKeyName(SeosKeyStore*               self,
-                                  const char*                 name,
-                                  size_t                      keySize)
+
+//------------------------------------------------------------------------------
+static seos_err_t
+registerKeyName(
+    SeosKeyStore*  self,
+    const char*    name,
+    size_t         keySize)
 {
     SeosKeyStore_KeyName keyName;
     size_t nameLen = strlen(name);
@@ -647,8 +716,12 @@ static seos_err_t registerKeyName(SeosKeyStore*               self,
     return SEOS_SUCCESS;
 }
 
-static bool checkIfKeyNameExists(SeosKeyStore*    self,
-                                 const char*      name)
+
+//------------------------------------------------------------------------------
+static bool
+checkIfKeyNameExists(
+    SeosKeyStore*  self,
+    const char*    name)
 {
     SeosKeyStore_KeyName keyName;
     size_t nameLen = strlen(name);
@@ -659,8 +732,12 @@ static bool checkIfKeyNameExists(SeosKeyStore*    self,
     return KeyNameMap_getIndexOf(&self->keyNameMap, &keyName) >= 0 ? true : false;
 }
 
-static seos_err_t deRegisterKeyName(SeosKeyStore* self,
-                                    const char* name)
+
+//------------------------------------------------------------------------------
+static seos_err_t
+deRegisterKeyName(
+    SeosKeyStore*  self,
+    const char*    name)
 {
     SeosKeyStore_KeyName keyName;
     size_t nameLen = strlen(name);
@@ -677,7 +754,11 @@ static seos_err_t deRegisterKeyName(SeosKeyStore* self,
     return SEOS_SUCCESS;
 }
 
-static void cpyIntToBuf(uint32_t integer, unsigned char* buf)
+
+//------------------------------------------------------------------------------
+static void cpyIntToBuf(
+    uint32_t        integer,
+    unsigned char*  buf)
 {
     buf[0] = (integer >> 24) & 0xFF;
     buf[1] = (integer >> 16) & 0xFF;
@@ -685,7 +766,11 @@ static void cpyIntToBuf(uint32_t integer, unsigned char* buf)
     buf[3] = integer & 0xFF;
 }
 
-static size_t cpyBufToInt(const char* buf)
+
+//------------------------------------------------------------------------------
+static size_t
+cpyBufToInt(
+    const char* buf)
 {
     return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]);
 }
