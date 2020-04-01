@@ -8,15 +8,6 @@ add_library(${PROJECT_NAME} STATIC
     "src/KeyNameMap.c"
     "src/AesNvm.c")
 
-if(KEYSTORE_AS_COMPONENT)
-
-    target_sources(${PROJECT_NAME}
-        PRIVATE
-            "src/SeosKeyStoreClient.c"
-            "src/SeosKeyStoreRpc.c")
-
-endif()
-
 if (ENABLE_LINT)
         set(CMAKE_C_CPPCHECK "cppcheck;--enable=warning;--inline-suppr")
         set(CMAKE_C_CLANG_TIDY "clang-tidy;-checks=*")
