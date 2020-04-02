@@ -23,12 +23,12 @@ typedef struct AesNvm AesNvm;
 
 struct AesNvm
 {
-    Nvm                        parent;
-    Nvm*                       underlyingNvm;
-    const uint8_t*             startIv;
-    OS_Crypto_Handle_t         hCrypto;
-    OS_CryptoKey_Handle_t      hKey;
-    OS_CryptoKey_Handle_t      hHashedKey;
+    Nvm parent;
+    Nvm* underlyingNvm;
+    const uint8_t* startIv;
+    OS_Crypto_Handle_t hCrypto;
+    OS_CryptoKey_Handle_t hKey;
+    OS_CryptoKey_Handle_t hHashedKey;
 };
 
 /* Exported constants --------------------------------------------------------*/
@@ -42,11 +42,11 @@ struct AesNvm
  */
 bool
 AesNvm_ctor(
-    AesNvm*                     self,
-    Nvm*                        parent,
-    OS_Crypto_Handle_t          hCrypto,
-    const void*                 startIv,
-    const OS_CryptoKey_Data_t*  masterKeyData);
+    AesNvm*                    self,
+    Nvm*                       parent,
+    OS_Crypto_Handle_t         hCrypto,
+    const void*                startIv,
+    const OS_CryptoKey_Data_t* masterKeyData);
 
 
 void
@@ -65,10 +65,10 @@ AesNvm_dtor(
  */
 size_t
 AesNvm_write(
-    Nvm*         nvm,
-    size_t       addr,
-    void const*  buffer,
-    size_t       length);
+    Nvm*        nvm,
+    size_t      addr,
+    void const* buffer,
+    size_t      length);
 
 
 /**
@@ -81,10 +81,10 @@ AesNvm_write(
  */
 size_t
 AesNvm_read(
-    Nvm*    nvm,
-    size_t  addr,
-    void*   buffer,
-    size_t  length);
+    Nvm*   nvm,
+    size_t addr,
+    void*  buffer,
+    size_t length);
 
 
 /**
@@ -97,9 +97,9 @@ AesNvm_read(
  */
 size_t
 AesNvm_erase(
-    Nvm*    nvm,
-    size_t  addr,
-    size_t  length);
+    Nvm*   nvm,
+    size_t addr,
+    size_t length);
 
 
 /**

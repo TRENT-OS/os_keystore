@@ -20,39 +20,56 @@
 #   include KeyStore_XSTR(KEYSTORE_CONFIG_H_FILE)
 #endif
 
-typedef struct SeosKeyStore_KeyName
+typedef struct KeystoreLib_KeyName
 {
     char buffer[MAX_KEY_NAME_LEN];
-}
-SeosKeyStore_KeyName;
+} KeystoreLib_KeyName;
 
-MapT_DECLARE(SeosKeyStore_KeyName, size_t, KeyNameMap);
+// So we can use our convention
+typedef KeystoreLib_KeyName KeyNameMap_t;
+
+MapT_DECLARE(KeystoreLib_KeyName, size_t, KeyNameMap);
 
 /* Key functions ----------------------------------------------------------*/
 bool
-SeosKeyStore_KeyName_ctorCopy(SeosKeyStore_KeyName* dst,
-                              SeosKeyStore_KeyName const* src);
+KeystoreLib_KeyName_ctorCopy(
+    KeyNameMap_t*       dst,
+    KeyNameMap_t const* src);
 bool
-SeosKeyStore_KeyName_ctorMove(SeosKeyStore_KeyName* dst,
-                              SeosKeyStore_KeyName const* src);
+KeystoreLib_KeyName_ctorMove(
+    KeyNameMap_t*       dst,
+    KeyNameMap_t const* src);
 bool
-SeosKeyStore_KeyName_assign(SeosKeyStore_KeyName* dst,
-                            SeosKeyStore_KeyName const* src);
+KeystoreLib_KeyName_assign(
+    KeyNameMap_t*       dst,
+    KeyNameMap_t const* src);
 void
-SeosKeyStore_KeyName_dtor(SeosKeyStore_KeyName* el);
+KeystoreLib_KeyName_dtor(
+    KeyNameMap_t* el);
 
 bool
-SeosKeyStore_KeyName_isEqual(SeosKeyStore_KeyName const* a,
-                             SeosKeyStore_KeyName const* b);
+KeystoreLib_KeyName_isEqual(
+    KeyNameMap_t const* a,
+    KeyNameMap_t const* b);
 
 /* Value functions ----------------------------------------------------------*/
 bool
-size_t_ctorCopy(size_t* dst, size_t const* src);
+size_t_ctorCopy(
+    size_t*       dst,
+    size_t const* src);
+
 bool
-size_t_ctorMove(size_t* dst, size_t const* src);
+size_t_ctorMove(
+    size_t*       dst,
+    size_t const* src);
+
 bool
-size_t_assign(size_t* dst, size_t const* src);
+size_t_assign(
+    size_t*       dst,
+    size_t const* src);
+
 void
-size_t_dtor(size_t* el);
+size_t_dtor(
+    size_t* el);
 
 ///@}

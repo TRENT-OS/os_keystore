@@ -25,10 +25,10 @@ static const Nvm_Vtable AesNvm_vtable =
 //------------------------------------------------------------------------------
 static void
 createIV(
-    AesNvm*      self,
-    uint32_t     addr,
-    const void*  startIv,
-    void*        newIV)
+    AesNvm*     self,
+    uint32_t    addr,
+    const void* startIv,
+    void*       newIV)
 {
     seos_err_t ret;
     char addressArray[IV_LENGTH_IN_BYTES] = {0};
@@ -80,12 +80,12 @@ createIV(
 //------------------------------------------------------------------------------
 static void
 cryptoCalculateBlock(
-    AesNvm*      self,
-    size_t       addr,
-    const void*  input,
-    void*        output,
-    const void*  startIv,
-    uint8_t      operation)
+    AesNvm*     self,
+    size_t      addr,
+    const void* input,
+    void*       output,
+    const void* startIv,
+    uint8_t     operation)
 {
     seos_err_t ret;
     char iv_temp[IV_LENGTH_IN_BYTES] = {0};
@@ -127,10 +127,10 @@ cryptoCalculateBlock(
 //------------------------------------------------------------------------------
 static void
 decryptBlock(
-    AesNvm*      self,
-    size_t       addr,
-    const void*  input,
-    void*        output)
+    AesNvm*     self,
+    size_t      addr,
+    const void* input,
+    void*       output)
 {
     Debug_ASSERT_SELF(self);
 
@@ -147,10 +147,10 @@ decryptBlock(
 //------------------------------------------------------------------------------
 static void
 encryptBlock(
-    AesNvm*      self,
-    size_t       addr,
-    const void*  input,
-    void*        output)
+    AesNvm*     self,
+    size_t      addr,
+    const void* input,
+    void*       output)
 {
     Debug_ASSERT_SELF(self);
 
@@ -171,11 +171,11 @@ encryptBlock(
 //------------------------------------------------------------------------------
 bool
 AesNvm_ctor(
-    AesNvm*                     self,
-    Nvm*                        nvm,
-    OS_Crypto_Handle_t          hCrypto,
-    const void*                 startIv,
-    const OS_CryptoKey_Data_t*  masterKeyData)
+    AesNvm*                    self,
+    Nvm*                       nvm,
+    OS_Crypto_Handle_t         hCrypto,
+    const void*                startIv,
+    const OS_CryptoKey_Data_t* masterKeyData)
 {
     Debug_ASSERT_SELF(self);
     seos_err_t ret;
@@ -279,10 +279,10 @@ AesNvm_dtor(
 //------------------------------------------------------------------------------
 size_t
 AesNvm_read(
-    Nvm*    nvm,
-    size_t  addr,
-    void*   buffer,
-    size_t  size)
+    Nvm*   nvm,
+    size_t addr,
+    void*  buffer,
+    size_t size)
 {
     AesNvm* self = (AesNvm*) nvm;
     Debug_ASSERT_SELF(self);
@@ -334,10 +334,10 @@ AesNvm_read(
 //------------------------------------------------------------------------------
 size_t
 AesNvm_write(
-    Nvm*         nvm,
-    size_t       addr,
-    void const*  buffer,
-    size_t       size)
+    Nvm*        nvm,
+    size_t      addr,
+    void const* buffer,
+    size_t      size)
 {
     AesNvm* self = (AesNvm*) nvm;
     Debug_ASSERT_SELF(self);
@@ -397,9 +397,9 @@ AesNvm_write(
 //------------------------------------------------------------------------------
 size_t
 AesNvm_erase(
-    Nvm*    nvm,
-    size_t  addr,
-    size_t  size)
+    Nvm*   nvm,
+    size_t addr,
+    size_t size)
 {
     AesNvm* self = (AesNvm*) nvm;
     Debug_ASSERT_SELF(self);

@@ -3,8 +3,8 @@
 project(seos_keystore C)
 
 add_library(${PROJECT_NAME} STATIC
-    "src/SeosKeyStore.c"
-    "src/SeosKeyStoreApi.c"
+    "src/OS_Keystore.c"
+    "src/KeystoreLib.c"
     "src/KeyNameMap.c"
     "src/AesNvm.c")
 
