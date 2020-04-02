@@ -272,7 +272,6 @@ AesNvm_dtor(
 
     OS_CryptoKey_free(self->hHashedKey);
     OS_CryptoKey_free(self->hKey);
-    OS_Crypto_free(self->hCrypto);
 }
 
 
