@@ -58,7 +58,7 @@ createKeyHash(
                                OS_CryptoDigest_ALG_SHA256);
     if (err != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: OS_CryptoLibDigest_init failed with error code %d!",
+        Debug_LOG_ERROR("%s: OS_CryptoDigest_init() failed with error code %d!",
                         __func__, err);
         goto ERR_EXIT;
     }
@@ -66,7 +66,7 @@ createKeyHash(
     err = OS_CryptoDigest_process(hDigest, keyData, keyDataSize);
     if (err != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: OS_CryptoLibDigest_update failed with error code %d!",
+        Debug_LOG_ERROR("%s: OS_CryptoDigest_process() failed with error code %d!",
                         __func__, err);
         goto ERR_DESTRUCT;
     }
@@ -75,7 +75,7 @@ createKeyHash(
     err = OS_CryptoDigest_finalize(hDigest, output, &digestSize);
     if (err != SEOS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: OS_CryptoLibDigest_finalizeNoData2 failed with error code %d!",
+        Debug_LOG_ERROR("%s: OS_CryptoDigest_finalize() failed with error code %d!",
                         __func__, err);
         goto ERR_DESTRUCT;
     }
