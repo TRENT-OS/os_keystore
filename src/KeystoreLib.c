@@ -8,6 +8,8 @@
 #include "KeystoreLib.h"
 #include "KeyNameMap.h"
 
+#include "LibUtil/BitConverter.h"
+
 // Length of the checksum produced by hashing the key data: (len, bytes,
 // algorithm and flags)
 #define KEY_DATA_HASH_LEN           32
@@ -26,23 +28,6 @@ typedef struct
 } KeystoreLib_t;
 
 // Private functions -----------------------------------------------------------
-
-static void cpyIntToBuf(
-    uint32_t       integer,
-    unsigned char* buf)
-{
-    buf[0] = (integer >> 24) & 0xFF;
-    buf[1] = (integer >> 16) & 0xFF;
-    buf[2] = (integer >> 8) & 0xFF;
-    buf[3] = integer & 0xFF;
-}
-
-static size_t
-cpyBufToInt(
-    const char* buf)
-{
-    return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]);
-}
 
 static seos_err_t
 createKeyHash(
@@ -100,7 +85,7 @@ writeKeyToFile(
     BitMap16 flags = 0;
     seos_err_t err = SEOS_SUCCESS;
 
-    cpyIntToBuf(keySize, keySizeBuffer);
+    BitConverter_putUint32BE((uint32_t) keySize, keySizeBuffer);
 
     // create a file
     FileStream* file = FileStreamFactory_create(fsFactory, name,
@@ -212,7 +197,7 @@ readKeyFromFile(
         err = SEOS_ERROR_OPERATION_DENIED;
         goto exit;
     }
-    requestedKeySize = cpyBufToInt((char*)keySizeBuffer);
+    requestedKeySize = BitConverter_getUint32BE(keySizeBuffer);
 
     readBytes = Stream_read(FileStream_TO_STREAM(file), (char*)keyData,
                             savedKeySize);
