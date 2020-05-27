@@ -36,12 +36,12 @@ createKeyHash(
     size_t             keyDataSize,
     void*              output)
 {
-    OS_Error_t err = SEOS_SUCCESS;
+    OS_Error_t err = OS_SUCCESS;
     OS_CryptoDigest_Handle_t hDigest;
 
     err = OS_CryptoDigest_init(&hDigest, hCrypto,
                                OS_CryptoDigest_ALG_SHA256);
-    if (err != SEOS_SUCCESS)
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: OS_CryptoDigest_init() failed with error code %d!",
                         __func__, err);
@@ -49,7 +49,7 @@ createKeyHash(
     }
 
     err = OS_CryptoDigest_process(hDigest, keyData, keyDataSize);
-    if (err != SEOS_SUCCESS)
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: OS_CryptoDigest_process() failed with error code %d!",
                         __func__, err);
@@ -58,7 +58,7 @@ createKeyHash(
 
     size_t digestSize = KEY_DATA_HASH_LEN;
     err = OS_CryptoDigest_finalize(hDigest, output, &digestSize);
-    if (err != SEOS_SUCCESS)
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: OS_CryptoDigest_finalize() failed with error code %d!",
                         __func__, err);
@@ -83,7 +83,7 @@ writeKeyToFile(
     Debug_ASSERT_SELF(fsFactory);
     uint8_t keySizeBuffer[KEY_INT_PROPERTY_LEN] = {0};
     BitMap16 flags = 0;
-    OS_Error_t err = SEOS_SUCCESS;
+    OS_Error_t err = OS_SUCCESS;
 
     BitConverter_putUint32BE((uint32_t) keySize, keySizeBuffer);
 
@@ -94,7 +94,7 @@ writeKeyToFile(
     {
         Debug_LOG_ERROR("%s: Failed to open the file stream with a path '%s'!",
                         __func__, name);
-        return SEOS_ERROR_OPERATION_DENIED;
+        return OS_ERROR_OPERATION_DENIED;
     }
 
     // write the hash to the file
@@ -102,7 +102,7 @@ writeKeyToFile(
                      KEY_DATA_HASH_LEN) != KEY_DATA_HASH_LEN)
     {
         Debug_LOG_ERROR("%s: Stream_write failed while writing the hash!", __func__);
-        err = SEOS_ERROR_OPERATION_DENIED;
+        err = OS_ERROR_OPERATION_DENIED;
         goto exit;
     }
 
@@ -112,7 +112,7 @@ writeKeyToFile(
     {
         Debug_LOG_ERROR("%s: Stream_write failed while writing the key size!",
                         __func__);
-        err = SEOS_ERROR_OPERATION_DENIED;
+        err = OS_ERROR_OPERATION_DENIED;
         goto exit;
     }
 
@@ -122,7 +122,7 @@ writeKeyToFile(
     {
         Debug_LOG_ERROR("%s: Stream_write failed while writing the key data!",
                         __func__);
-        err = SEOS_ERROR_OPERATION_DENIED;
+        err = OS_ERROR_OPERATION_DENIED;
         goto exit;
     }
 
@@ -145,7 +145,7 @@ readKeyFromFile(
     int readBytes = 0;
     uint8_t keySizeBuffer[KEY_INT_PROPERTY_LEN] = {0};
     BitMap16 flags = 0;
-    OS_Error_t err = SEOS_SUCCESS;
+    OS_Error_t err = OS_SUCCESS;
 
     size_t requestedKeySize = *keySize;
 
@@ -161,7 +161,7 @@ readKeyFromFile(
     {
         Debug_LOG_ERROR("%s: The requested size of the key data: %zu is smaller than the amount of saved bytes: %zu!",
                         __func__, requestedKeySize, savedKeySize);
-        return SEOS_ERROR_BUFFER_TOO_SMALL;
+        return OS_ERROR_BUFFER_TOO_SMALL;
     }
 
     // create a file stream
@@ -171,7 +171,7 @@ readKeyFromFile(
     {
         Debug_LOG_ERROR("%s: Failed to open the file stream with a path '%s'!",
                         __func__, name);
-        return SEOS_ERROR_NOT_FOUND;
+        return OS_ERROR_NOT_FOUND;
     }
 
     // read the key data hash
@@ -182,7 +182,7 @@ readKeyFromFile(
         Debug_LOG_ERROR("%s: Stream_read failed while reading the hash! Return value = %d",
                         __func__,
                         readBytes);
-        err = SEOS_ERROR_OPERATION_DENIED;
+        err = OS_ERROR_OPERATION_DENIED;
         goto exit;
     }
 
@@ -194,7 +194,7 @@ readKeyFromFile(
         Debug_LOG_ERROR("%s: Stream_read failed while reading the key size! Return value = %d",
                         __func__,
                         readBytes);
-        err = SEOS_ERROR_OPERATION_DENIED;
+        err = OS_ERROR_OPERATION_DENIED;
         goto exit;
     }
     requestedKeySize = BitConverter_getUint32BE(keySizeBuffer);
@@ -206,7 +206,7 @@ readKeyFromFile(
         Debug_LOG_ERROR("%s: Stream_read failed while reading the key data! Return value = %d",
                         __func__,
                         readBytes);
-        err = SEOS_ERROR_OPERATION_DENIED;
+        err = OS_ERROR_OPERATION_DENIED;
         goto exit;
     }
 
@@ -234,14 +234,14 @@ deleteKeyFromFile(
     {
         Debug_LOG_ERROR("%s: Failed to open the file stream with a path '%s'!",
                         __func__, name);
-        return SEOS_ERROR_NOT_FOUND;
+        return OS_ERROR_NOT_FOUND;
     }
 
     BitMap_SET_BIT(flags, FileStream_DeleteFlags_CLOSE);
     BitMap_SET_BIT(flags, FileStream_DeleteFlags_DELETE);
     FileStreamFactory_destroy(fsFactory, file, flags);
 
-    return SEOS_SUCCESS;
+    return OS_SUCCESS;
 }
 
 static OS_Error_t
@@ -259,10 +259,10 @@ registerKeyName(
     if (!KeyNameMap_insert(&self->keyNameMap, &keyName, &keySize))
     {
         Debug_LOG_ERROR("%s: Failed to save the key name!", __func__);
-        return SEOS_ERROR_INSUFFICIENT_SPACE;
+        return OS_ERROR_INSUFFICIENT_SPACE;
     }
 
-    return SEOS_SUCCESS;
+    return OS_SUCCESS;
 }
 
 static bool
@@ -293,10 +293,10 @@ deRegisterKeyName(
     if (!KeyNameMap_remove(&self->keyNameMap, &keyName))
     {
         Debug_LOG_ERROR("%s: Failed to remove the key name!", __func__);
-        return SEOS_ERROR_ABORTED;
+        return OS_ERROR_ABORTED;
     }
 
-    return SEOS_SUCCESS;
+    return OS_SUCCESS;
 }
 
 // Exported via VTABLE ---------------------------------------------------------
@@ -314,7 +314,7 @@ KeystoreLib_storeKey(
 
     if (NULL == self || NULL == keyData || NULL == name)
     {
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
 
     size_t nameLen = strlen(name);
@@ -322,34 +322,34 @@ KeystoreLib_storeKey(
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
     if (keySize > MAX_KEY_LEN || keySize == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range 0 - %d!",
                         __func__, keySize, MAX_KEY_LEN);
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
 
     if (checkIfKeyNameExists(self, name))
     {
         Debug_LOG_ERROR("%s: The key with the name %s already exists!",
                         __func__, name);
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
 
     err = createKeyHash(self->hCrypto,
                         keyData,
                         keySize,
                         keyDataHash);
-    if (err != SEOS_SUCCESS)
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not hash the key data, err %d!", __func__, err);
         return err;
     }
 
     err = writeKeyToFile(self->fsFactory, keyData, keyDataHash, keySize, name);
-    if (err != SEOS_SUCCESS)
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not write the key data to the file, err %d!",
                         __func__, err);
@@ -357,14 +357,14 @@ KeystoreLib_storeKey(
     }
 
     err = registerKeyName(self, name, keySize);
-    if (err != SEOS_SUCCESS)
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Failed to register the key name, error code %d!",
                         __func__, err);
         goto err0;
     }
 
-    return SEOS_SUCCESS;
+    return OS_SUCCESS;
 
 err0:
     deleteKeyFromFile(self->fsFactory, name);
@@ -385,7 +385,7 @@ KeystoreLib_loadKey(
 
     if (NULL == self || NULL == keySize || NULL == keyData || NULL == name)
     {
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
 
     size_t requestedKeysize = *keySize;
@@ -395,16 +395,16 @@ KeystoreLib_loadKey(
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
     if (requestedKeysize > MAX_KEY_LEN)
     {
         Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range 0 - %d!",
                         __func__, requestedKeysize, MAX_KEY_LEN);
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
     err = readKeyFromFile(self, keyData, readHash, &requestedKeysize, name);
-    if (err != SEOS_SUCCESS)
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not read the key data from the file, err %d!",
                         __func__, err);
@@ -415,7 +415,7 @@ KeystoreLib_loadKey(
                         keyData,
                         requestedKeysize,
                         calculatedHash);
-    if (err != SEOS_SUCCESS)
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not hash the key data, err %d!",
                         __func__, err);
@@ -426,7 +426,7 @@ KeystoreLib_loadKey(
     {
         Debug_LOG_ERROR("%s: The key is corrupted - hash value does not correspond to the data!",
                         __func__);
-        err = SEOS_ERROR_GENERIC;
+        err = OS_ERROR_GENERIC;
         return err;
     }
 
@@ -445,7 +445,7 @@ KeystoreLib_deleteKey(
 
     if (NULL == self || NULL == name)
     {
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
 
     size_t nameLen = strlen(name);
@@ -453,18 +453,18 @@ KeystoreLib_deleteKey(
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
 
     if (!checkIfKeyNameExists(self, name))
     {
         Debug_LOG_ERROR("%s: The key with the name %s does not exist!",
                         __func__, name);
-        return SEOS_ERROR_NOT_FOUND;
+        return OS_ERROR_NOT_FOUND;
     }
 
     err = deRegisterKeyName(self, name);
-    if (err != SEOS_SUCCESS)
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Failed to deregister the key name, error code %d!",
                         __func__, err);
@@ -472,7 +472,7 @@ KeystoreLib_deleteKey(
     }
 
     err = deleteKeyFromFile(self->fsFactory, name);
-    if (err != SEOS_SUCCESS)
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: deleteKeyFromFile failed with error code %d!",
                         __func__, err);
@@ -495,7 +495,7 @@ KeystoreLib_copyKey(
 
     if (NULL == self || NULL == name || NULL == destKeyStore)
     {
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
 
     size_t nameLen = strlen(name);
@@ -503,18 +503,18 @@ KeystoreLib_copyKey(
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
 
     err = KeystoreLib_loadKey(self, name, self->buffer, &keySize);
-    if (err != SEOS_SUCCESS)
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: loadKey failed with err %d!", __func__, err);
         return err;
     }
 
     err = KeystoreLib_storeKey(destKeyStore, name, self->buffer, keySize);
-    if (err != SEOS_SUCCESS)
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: storeKey failed with err %d!", __func__, err);
         return err;
@@ -535,7 +535,7 @@ KeystoreLib_moveKey(
 
     if (NULL == self || NULL  == name || NULL == destKeyStore)
     {
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
 
     size_t nameLen = strlen(name);
@@ -543,18 +543,18 @@ KeystoreLib_moveKey(
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
 
     err = KeystoreLib_copyKey(self, name, destKeyStore);
-    if (err != SEOS_SUCCESS)
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: copyKey failed with err %d!", __func__, err);
         return err;
     }
 
     err = KeystoreLib_deleteKey(self, name);
-    if (err != SEOS_SUCCESS)
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: deleteKey failed with err %d!", __func__, err);
         return err;
@@ -572,21 +572,21 @@ KeystoreLib_wipeKeystore(
 
     if (NULL == self)
     {
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
 
     int registerSize = KeyNameMap_getSize(&self->keyNameMap);
     if (registerSize < 0)
     {
         Debug_LOG_ERROR("%s: Failed to read the key name register size!", __func__);
-        return SEOS_ERROR_ABORTED;
+        return OS_ERROR_ABORTED;
     }
 
     if (registerSize == 0)
     {
         Debug_LOG_INFO("%s: Trying to wipe an empty keystore! Returning...",
                        __func__);
-        return SEOS_SUCCESS;
+        return OS_SUCCESS;
     }
 
     for (int i = registerSize - 1; i >= 0; i--)
@@ -594,7 +594,7 @@ KeystoreLib_wipeKeystore(
         KeyNameMap_t* keyName = (KeyNameMap_t*)KeyNameMap_getKeyAt(
                                     &self->keyNameMap, i);
         err = KeystoreLib_deleteKey(self, keyName->buffer);
-        if (err != SEOS_SUCCESS)
+        if (err != OS_SUCCESS)
         {
             Debug_LOG_ERROR("%s: Failed to delete the key %s!", __func__, keyName->buffer);
             return err;
@@ -628,22 +628,22 @@ KeystoreLib_init(
 
     if (NULL == impl || NULL == fileStreamFactory || NULL == name)
     {
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
     else if (strlen(name) > KeystoreLib_MAX_KEYSTORE_NAME_LEN)
     {
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
 
     if ((self = malloc(sizeof(KeystoreLib_t))) == NULL)
     {
-        return SEOS_ERROR_INSUFFICIENT_SPACE;
+        return OS_ERROR_INSUFFICIENT_SPACE;
     }
 
     memset(self, 0, sizeof(KeystoreLib_t));
     if (!KeyNameMap_ctor(&self->keyNameMap, 1))
     {
-        err = SEOS_ERROR_ABORTED;
+        err = OS_ERROR_ABORTED;
         goto err0;
     }
 
@@ -654,7 +654,7 @@ KeystoreLib_init(
     impl->vtable  = &KeystoreLib_vtable;
     impl->context = self;
 
-    return SEOS_SUCCESS;
+    return OS_SUCCESS;
 
 err0:
     free(self);
@@ -668,11 +668,11 @@ KeystoreLib_free(
 {
     if (impl == NULL || impl->context == NULL)
     {
-        return SEOS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_PARAMETER;
     }
 
     FileStreamFactory_dtor(((KeystoreLib_t*) impl->context)->fsFactory);
     free(impl->context);
 
-    return SEOS_SUCCESS;
+    return OS_SUCCESS;
 }

@@ -25,7 +25,7 @@ OS_Keystore_storeKey(
     size_t               keySize)
 {
     return (NULL == hKeystore) ?
-           SEOS_ERROR_INVALID_HANDLE :
+           OS_ERROR_INVALID_HANDLE :
            hKeystore->impl.vtable->storeKey(hKeystore->impl.context, name,
                                             keyData, keySize);
 }
@@ -38,7 +38,7 @@ OS_Keystore_loadKey(
     size_t*              keySize)
 {
     return (NULL == hKeystore) ?
-           SEOS_ERROR_INVALID_HANDLE :
+           OS_ERROR_INVALID_HANDLE :
            hKeystore->impl.vtable->loadKey(hKeystore->impl.context, name, keyData,
                                            keySize);
 }
@@ -49,7 +49,7 @@ OS_Keystore_deleteKey(
     const char*          name)
 {
     return (NULL == hKeystore) ?
-           SEOS_ERROR_INVALID_HANDLE :
+           OS_ERROR_INVALID_HANDLE :
            hKeystore->impl.vtable->deleteKey(hKeystore->impl.context, name);
 }
 
@@ -60,7 +60,7 @@ OS_Keystore_copyKey(
     OS_Keystore_Handle_t hDestKeystore)
 {
     return (NULL == hKeystore || NULL == hDestKeystore) ?
-           SEOS_ERROR_INVALID_HANDLE :
+           OS_ERROR_INVALID_HANDLE :
            hKeystore->impl.vtable->copyKey(hKeystore->impl.context, name,
                                            hDestKeystore->impl.context);
 }
@@ -72,7 +72,7 @@ OS_Keystore_moveKey(
     OS_Keystore_Handle_t hDestKeystore)
 {
     return (NULL == hKeystore || NULL == hDestKeystore) ?
-           SEOS_ERROR_INVALID_HANDLE :
+           OS_ERROR_INVALID_HANDLE :
            hKeystore->impl.vtable->moveKey(hKeystore->impl.context, name,
                                            hDestKeystore->impl.context);
 }
@@ -82,7 +82,7 @@ OS_Keystore_wipeKeystore(
     OS_Keystore_Handle_t hKeystore)
 {
     return (NULL == hKeystore) ?
-           SEOS_ERROR_INVALID_HANDLE :
+           OS_ERROR_INVALID_HANDLE :
            hKeystore->impl.vtable->wipeKeystore(hKeystore->impl.context);
 }
 
@@ -97,16 +97,16 @@ OS_Keystore_init(
 
     if (NULL == hKeystore)
     {
-        return SEOS_ERROR_INVALID_HANDLE;
+        return OS_ERROR_INVALID_HANDLE;
     }
 
     if ((*hKeystore = malloc(sizeof(OS_Keystore_t))) == NULL)
     {
-        return SEOS_ERROR_INSUFFICIENT_SPACE;
+        return OS_ERROR_INSUFFICIENT_SPACE;
     }
 
     if ((err = KeystoreLib_init(&((*hKeystore)->impl), fileStreamFactory, hCrypto,
-                                name)) != SEOS_SUCCESS)
+                                name)) != OS_SUCCESS)
     {
         free(*hKeystore);
     }
@@ -122,7 +122,7 @@ OS_Keystore_free(
 
     if (NULL == hKeystore)
     {
-        return SEOS_ERROR_INVALID_HANDLE;
+        return OS_ERROR_INVALID_HANDLE;
     }
 
     err = KeystoreLib_free(&hKeystore->impl);

@@ -50,7 +50,7 @@ createIV(
               startIv,
               IV_LENGTH_IN_BYTES);
 
-    if (ret != SEOS_SUCCESS)
+    if (ret != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_CryptoCipher_init failed, code %d", ret);
         return;
@@ -62,7 +62,7 @@ createIV(
               IV_LENGTH_IN_BYTES,
               newIV,
               &outputSize);
-    if (ret != SEOS_SUCCESS)
+    if (ret != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_CryptoCipher_process failed, code %d", ret);
     }
@@ -101,7 +101,7 @@ cryptoCalculateBlock(
               operation,
               iv_temp,
               IV_LENGTH_IN_BYTES);
-    if (ret != SEOS_SUCCESS)
+    if (ret != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_CryptoCipher_init failed, code %d", ret);
         return;
@@ -109,7 +109,7 @@ cryptoCalculateBlock(
 
     ret = OS_CryptoCipher_process(hCipher, input, ENCRYPTION_PAGE_LEN,
                                   output, &outputSize);
-    if (ret != SEOS_SUCCESS)
+    if (ret != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_CryptoCipher_process failed, code %d", ret);
     }
@@ -190,7 +190,7 @@ AesNvm_ctor(
               &self->hKey,
               self->hCrypto,
               masterKeyData);
-    if (ret != SEOS_SUCCESS)
+    if (ret != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_CryptoKey_import failed for master key, code %d", ret);
         goto err0;
@@ -202,7 +202,7 @@ AesNvm_ctor(
               &hDigest,
               self->hCrypto,
               OS_CryptoDigest_ALG_SHA256);
-    if (ret != SEOS_SUCCESS)
+    if (ret != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_CryptoDigest_init failed, code %d", ret);
         goto err1;
@@ -212,7 +212,7 @@ AesNvm_ctor(
               hDigest,
               masterKeyData->data.aes.bytes,
               masterKeyData->data.aes.len);
-    if (ret != SEOS_SUCCESS)
+    if (ret != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_CryptoDigest_process failed, code %d", ret);
         goto err2;
@@ -229,7 +229,7 @@ AesNvm_ctor(
               hDigest,
               hHashedKeyData.data.aes.bytes,
               &len);
-    if (ret != SEOS_SUCCESS)
+    if (ret != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_CryptoDigest_finalize failed, code %d",
                         ret);
@@ -240,7 +240,7 @@ AesNvm_ctor(
               &self->hHashedKey,
               self->hCrypto,
               &hHashedKeyData);
-    if (ret != SEOS_SUCCESS)
+    if (ret != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_CryptoKey_import failed for hashed key, code %d",
                         ret);
