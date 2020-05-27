@@ -1,4 +1,4 @@
-# SEOS KeyStoreLibrary
+# OS KeyStoreLibrary
 
 project(seos_keystore C)
 
@@ -42,24 +42,24 @@ target_link_libraries(${PROJECT_NAME}
     seos_crypto
 )
 
-# if invoked from the SEOS sandbox, provide a documentation build target
+# if invoked from the OS sandbox, provide a documentation build target
 if (COMMAND seos_create_doxygen_target)
 
     get_target_property(
-        SEOS_CORE_API_INCLUDES
+        OS_CORE_API_INCLUDES
         seos_core_api
         INTERFACE_INCLUDE_DIRECTORIES)
 
     find_file(
-        SEOS_KEYSTORE_API_HEADER
+        OS_KEYSTORE_API_HEADER
         SeosKeyStoreApi.h
-        PATHS ${SEOS_CORE_API_INCLUDES}
+        PATHS ${OS_CORE_API_INCLUDES}
         CMAKE_FIND_ROOT_PATH_BOTH)
 
     seos_create_doxygen_target( seos_keystore_doc
         # pre-step: link the API file SeosKeyStoreApi.h from seos_core_api in
         #           order to produce a complete doxygen documentation
-        "ln -sf ${SEOS_KEYSTORE_API_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "ln -sf ${OS_KEYSTORE_API_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include"
         # post-step: remove the link to OS_Crypto.h
         "rm -f ${CMAKE_CURRENT_SOURCE_DIR}/include/SeosKeyStoreApi.h"
     )

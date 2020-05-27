@@ -1,4 +1,4 @@
-# SEOS Key Store
+# OS Key Store
 
 ## Dependencies
 
