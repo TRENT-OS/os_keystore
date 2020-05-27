@@ -30,7 +30,7 @@ createIV(
     const void* startIv,
     void*       newIV)
 {
-    seos_err_t ret;
+    OS_Error_t ret;
     char addressArray[IV_LENGTH_IN_BYTES] = {0};
     size_t outputSize = IV_LENGTH_IN_BYTES;
     OS_CryptoCipher_Handle_t hCipher;
@@ -87,7 +87,7 @@ cryptoCalculateBlock(
     const void* startIv,
     uint8_t     operation)
 {
-    seos_err_t ret;
+    OS_Error_t ret;
     char iv_temp[IV_LENGTH_IN_BYTES] = {0};
     size_t outputSize = ENCRYPTION_PAGE_LEN;
     OS_CryptoCipher_Handle_t hCipher;
@@ -178,7 +178,7 @@ AesNvm_ctor(
     const OS_CryptoKey_Data_t* masterKeyData)
 {
     Debug_ASSERT_SELF(self);
-    seos_err_t ret;
+    OS_Error_t ret;
 
     self->parent.vtable = &AesNvm_vtable;
     self->underlyingNvm = nvm;

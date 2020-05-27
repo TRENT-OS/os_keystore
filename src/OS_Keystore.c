@@ -17,7 +17,7 @@ struct OS_Keystore
     KeystoreImpl_t impl;
 };
 
-seos_err_t
+OS_Error_t
 OS_Keystore_storeKey(
     OS_Keystore_Handle_t hKeystore,
     const char*          name,
@@ -30,7 +30,7 @@ OS_Keystore_storeKey(
                                             keyData, keySize);
 }
 
-seos_err_t
+OS_Error_t
 OS_Keystore_loadKey(
     OS_Keystore_Handle_t hKeystore,
     const char*          name,
@@ -43,7 +43,7 @@ OS_Keystore_loadKey(
                                            keySize);
 }
 
-seos_err_t
+OS_Error_t
 OS_Keystore_deleteKey(
     OS_Keystore_Handle_t hKeystore,
     const char*          name)
@@ -53,7 +53,7 @@ OS_Keystore_deleteKey(
            hKeystore->impl.vtable->deleteKey(hKeystore->impl.context, name);
 }
 
-seos_err_t
+OS_Error_t
 OS_Keystore_copyKey(
     OS_Keystore_Handle_t hKeystore,
     const char*          name,
@@ -65,7 +65,7 @@ OS_Keystore_copyKey(
                                            hDestKeystore->impl.context);
 }
 
-seos_err_t
+OS_Error_t
 OS_Keystore_moveKey(
     OS_Keystore_Handle_t hKeystore,
     const char*          name,
@@ -77,7 +77,7 @@ OS_Keystore_moveKey(
                                            hDestKeystore->impl.context);
 }
 
-seos_err_t
+OS_Error_t
 OS_Keystore_wipeKeystore(
     OS_Keystore_Handle_t hKeystore)
 {
@@ -86,14 +86,14 @@ OS_Keystore_wipeKeystore(
            hKeystore->impl.vtable->wipeKeystore(hKeystore->impl.context);
 }
 
-seos_err_t
+OS_Error_t
 OS_Keystore_init(
     OS_Keystore_Handle_t* hKeystore,
     FileStreamFactory*    fileStreamFactory,
     OS_Crypto_Handle_t    hCrypto,
     const char*           name)
 {
-    seos_err_t err;
+    OS_Error_t err;
 
     if (NULL == hKeystore)
     {
@@ -114,11 +114,11 @@ OS_Keystore_init(
     return err;
 }
 
-seos_err_t
+OS_Error_t
 OS_Keystore_free(
     OS_Keystore_Handle_t hKeystore)
 {
-    seos_err_t err;
+    OS_Error_t err;
 
     if (NULL == hKeystore)
     {

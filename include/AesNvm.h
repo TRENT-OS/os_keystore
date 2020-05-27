@@ -1,5 +1,5 @@
 /**
- * @addtogroup SEOS
+ * @addtogroup OS
  * @{
  *
  * @file AesNvm.h

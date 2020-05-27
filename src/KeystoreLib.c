@@ -29,14 +29,14 @@ typedef struct
 
 // Private functions -----------------------------------------------------------
 
-static seos_err_t
+static OS_Error_t
 createKeyHash(
     OS_Crypto_Handle_t hCrypto,
     const void*        keyData,
     size_t             keyDataSize,
     void*              output)
 {
-    seos_err_t err = SEOS_SUCCESS;
+    OS_Error_t err = SEOS_SUCCESS;
     OS_CryptoDigest_Handle_t hDigest;
 
     err = OS_CryptoDigest_init(&hDigest, hCrypto,
@@ -72,7 +72,7 @@ ERR_EXIT:
     return err;
 }
 
-static seos_err_t
+static OS_Error_t
 writeKeyToFile(
     FileStreamFactory* fsFactory,
     const void*        keyData,
@@ -83,7 +83,7 @@ writeKeyToFile(
     Debug_ASSERT_SELF(fsFactory);
     uint8_t keySizeBuffer[KEY_INT_PROPERTY_LEN] = {0};
     BitMap16 flags = 0;
-    seos_err_t err = SEOS_SUCCESS;
+    OS_Error_t err = SEOS_SUCCESS;
 
     BitConverter_putUint32BE((uint32_t) keySize, keySizeBuffer);
 
@@ -134,7 +134,7 @@ exit:
     return err;
 }
 
-static seos_err_t
+static OS_Error_t
 readKeyFromFile(
     KeystoreLib_t* self,
     void*          keyData,
@@ -145,7 +145,7 @@ readKeyFromFile(
     int readBytes = 0;
     uint8_t keySizeBuffer[KEY_INT_PROPERTY_LEN] = {0};
     BitMap16 flags = 0;
-    seos_err_t err = SEOS_SUCCESS;
+    OS_Error_t err = SEOS_SUCCESS;
 
     size_t requestedKeySize = *keySize;
 
@@ -221,7 +221,7 @@ exit:
     return err;
 }
 
-static seos_err_t
+static OS_Error_t
 deleteKeyFromFile(
     FileStreamFactory* fsFactory,
     const char*        name)
@@ -244,7 +244,7 @@ deleteKeyFromFile(
     return SEOS_SUCCESS;
 }
 
-static seos_err_t
+static OS_Error_t
 registerKeyName(
     KeystoreLib_t* self,
     const char*    name,
@@ -279,7 +279,7 @@ checkIfKeyNameExists(
     return KeyNameMap_getIndexOf(&self->keyNameMap, &keyName) >= 0 ? true : false;
 }
 
-static seos_err_t
+static OS_Error_t
 deRegisterKeyName(
     KeystoreLib_t* self,
     const char*    name)
@@ -301,14 +301,14 @@ deRegisterKeyName(
 
 // Exported via VTABLE ---------------------------------------------------------
 
-static seos_err_t
+static OS_Error_t
 KeystoreLib_storeKey(
     void*       ptr,
     const char* name,
     void const* keyData,
     size_t      keySize)
 {
-    seos_err_t err;
+    OS_Error_t err;
     KeystoreLib_t*  self = (KeystoreLib_t*) ptr;
     char keyDataHash[KEY_DATA_HASH_LEN] = {0};
 
@@ -371,14 +371,14 @@ err0:
     return err;
 }
 
-static seos_err_t
+static OS_Error_t
 KeystoreLib_loadKey(
     void*       ptr,
     const char* name,
     void*       keyData,
     size_t*     keySize)
 {
-    seos_err_t err;
+    OS_Error_t err;
     KeystoreLib_t*  self = (KeystoreLib_t*) ptr;
     unsigned char calculatedHash[KEY_DATA_HASH_LEN];
     unsigned char readHash[KEY_DATA_HASH_LEN];
@@ -435,12 +435,12 @@ KeystoreLib_loadKey(
     return err;
 }
 
-static seos_err_t
+static OS_Error_t
 KeystoreLib_deleteKey(
     void*       ptr,
     const char* name)
 {
-    seos_err_t err;
+    OS_Error_t err;
     KeystoreLib_t*  self = (KeystoreLib_t*) ptr;
 
     if (NULL == self || NULL == name)
@@ -482,13 +482,13 @@ KeystoreLib_deleteKey(
     return err;
 }
 
-static seos_err_t
+static OS_Error_t
 KeystoreLib_copyKey(
     void*       srcPtr,
     const char* name,
     void*       dstPtr)
 {
-    seos_err_t err;
+    OS_Error_t err;
     KeystoreLib_t*  self = (KeystoreLib_t*) srcPtr;
     KeystoreLib_t*  destKeyStore = (KeystoreLib_t*) dstPtr;
     size_t keySize = MAX_KEY_LEN;
@@ -523,13 +523,13 @@ KeystoreLib_copyKey(
     return err;
 }
 
-static seos_err_t
+static OS_Error_t
 KeystoreLib_moveKey(
     void*       srcPtr,
     const char* name,
     void*       dstPtr)
 {
-    seos_err_t err;
+    OS_Error_t err;
     KeystoreLib_t*  self = (KeystoreLib_t*) srcPtr;
     KeystoreLib_t*  destKeyStore = (KeystoreLib_t*) dstPtr;
 
@@ -563,11 +563,11 @@ KeystoreLib_moveKey(
     return err;
 }
 
-static seos_err_t
+static OS_Error_t
 KeystoreLib_wipeKeystore(
     void* ptr)
 {
-    seos_err_t err;
+    OS_Error_t err;
     KeystoreLib_t*  self = (KeystoreLib_t*) ptr;
 
     if (NULL == self)
@@ -616,7 +616,7 @@ static const KeystoreImpl_Vtable_t KeystoreLib_vtable =
     .wipeKeystore   = KeystoreLib_wipeKeystore,
 };
 
-seos_err_t
+OS_Error_t
 KeystoreLib_init(
     KeystoreImpl_t*    impl,
     FileStreamFactory* fileStreamFactory,
@@ -624,7 +624,7 @@ KeystoreLib_init(
     const char*        name)
 {
     KeystoreLib_t* self;
-    seos_err_t err;
+    OS_Error_t err;
 
     if (NULL == impl || NULL == fileStreamFactory || NULL == name)
     {
@@ -662,7 +662,7 @@ err0:
     return err;
 }
 
-seos_err_t
+OS_Error_t
 KeystoreLib_free(
     KeystoreImpl_t* impl)
 {

@@ -4,41 +4,41 @@
 
 #pragma once
 
-#include "SeosError.h"
+#include "OS_Error.h"
 #include <stddef.h>
 
-typedef seos_err_t
+typedef OS_Error_t
 (*KeystoreImpl_storeKey)(
     void*       self,
     const char* name,
     void const* keyData,
     size_t      keySize);
 
-typedef seos_err_t
+typedef OS_Error_t
 (*KeystoreImpl_loadKey)(
     void*       self,
     const char* name,
     void*       keyData,
     size_t*     keySize);
 
-typedef seos_err_t
+typedef OS_Error_t
 (*KeystoreImpl_deleteKey)(
     void*       self,
     const char* name);
 
-typedef seos_err_t
+typedef OS_Error_t
 (*KeystoreImpl_copyKey)(
     void*       self,
     const char* name,
     void*       destKeyStore);
 
-typedef seos_err_t
+typedef OS_Error_t
 (*KeystoreImpl_moveKey)(
     void*       self,
     const char* name,
     void*       destKeyStore);
 
-typedef seos_err_t
+typedef OS_Error_t
 (*KeystoreImpl_wipeKeystore)(
     void* self);
 
