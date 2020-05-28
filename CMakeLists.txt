@@ -43,7 +43,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 # if invoked from the OS sandbox, provide a documentation build target
-if (COMMAND seos_create_doxygen_target)
+if (COMMAND os_create_doxygen_target)
 
     get_target_property(
         OS_CORE_API_INCLUDES
@@ -56,7 +56,7 @@ if (COMMAND seos_create_doxygen_target)
         PATHS ${OS_CORE_API_INCLUDES}
         CMAKE_FIND_ROOT_PATH_BOTH)
 
-    seos_create_doxygen_target( seos_keystore_doc
+    os_create_doxygen_target( os_keystore_doc
         # pre-step: link the API file SeosKeyStoreApi.h from seos_core_api in
         #           order to produce a complete doxygen documentation
         "ln -sf ${OS_KEYSTORE_API_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include"
