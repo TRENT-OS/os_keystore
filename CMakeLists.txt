@@ -57,11 +57,11 @@ if (COMMAND os_create_doxygen_target)
         CMAKE_FIND_ROOT_PATH_BOTH)
 
     os_create_doxygen_target( os_keystore_doc
-        # pre-step: link the API file SeosKeyStoreApi.h from os_core_api in
+        # pre-step: link the API file OS_Keystore.h from os_core_api in
         #           order to produce a complete doxygen documentation
         "ln -sf ${OS_KEYSTORE_API_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include"
-        # post-step: remove the link to OS_Crypto.h
-        "rm -f ${CMAKE_CURRENT_SOURCE_DIR}/include/SeosKeyStoreApi.h"
+        # post-step: remove the link to OS_Keystore.h
+        "rm -f ${CMAKE_CURRENT_SOURCE_DIR}/include/OS_Keystore.h"
     )
 
 endif()
