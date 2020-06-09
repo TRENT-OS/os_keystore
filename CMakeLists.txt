@@ -1,47 +1,50 @@
 # OS KeyStoreLibrary
 
+cmake_minimum_required(VERSION 3.13.0)
+
+# enable new behavior introduced in CMake 3.13, where relative paths will be
+# converted into absolute paths in target_sources(INTERFACE ....)
+cmake_policy(SET CMP0076 NEW)
+
+
+#-------------------------------------------------------------------------------
 project(os_keystore C)
 
-add_library(${PROJECT_NAME} STATIC
-    "src/OS_Keystore.c"
-    "src/KeystoreLib.c"
-    "src/KeyNameMap.c"
-    "src/AesNvm.c")
+add_library(${PROJECT_NAME} INTERFACE)
 
-if (ENABLE_LINT)
-        set(CMAKE_C_CPPCHECK "cppcheck;--enable=warning;--inline-suppr")
-        set(CMAKE_C_CLANG_TIDY "clang-tidy;-checks=*")
-endif()
+target_sources(${PROJECT_NAME}
+    INTERFACE
+        "src/OS_Keystore.c"
+        "src/KeystoreLib.c"
+        "src/KeyNameMap.c"
+        "src/AesNvm.c"
+)
 
-if(NO_KERNEL_BUILD)
+target_include_directories(${PROJECT_NAME}
+    INTERFACE
+        "include"
+)
 
-    # since PAGE_SIZE is normally defined as part of musllibc
-    # (which is missing here) we have to define it
-    target_compile_definitions(${PROJECT_NAME}
-        PRIVATE
-            PAGE_SIZE=${PAGE_SIZE_VALUE})
-
-endif(NO_KERNEL_BUILD)
 
 if (KEYSTORE_CONFIG_H_FILE)
 
     target_compile_definitions(${PROJECT_NAME}
-        PUBLIC
+        INTERFACE
             "KEYSTORE_CONFIG_H_FILE=${KEYSTORE_CONFIG_H_FILE}"
     )
 
 endif()
 
-target_include_directories(${PROJECT_NAME}
-    PUBLIC
-        "include"
-)
 
 target_link_libraries(${PROJECT_NAME}
-    os_core_api
-    os_crypto
+    INTERFACE
+        os_core_api
+        os_libs
+        os_crypto
 )
 
+
+#-------------------------------------------------------------------------------
 # if invoked from the OS sandbox, provide a documentation build target
 if (COMMAND os_create_doxygen_target)
 
