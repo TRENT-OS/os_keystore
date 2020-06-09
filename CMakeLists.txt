@@ -1,6 +1,6 @@
 # OS KeyStoreLibrary
 
-project(seos_keystore C)
+project(os_keystore C)
 
 add_library(${PROJECT_NAME} STATIC
     "src/OS_Keystore.c"
@@ -38,8 +38,8 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    seos_core_api
-    seos_crypto
+    os_core_api
+    os_crypto
 )
 
 # if invoked from the OS sandbox, provide a documentation build target
@@ -47,7 +47,7 @@ if (COMMAND os_create_doxygen_target)
 
     get_target_property(
         OS_CORE_API_INCLUDES
-        seos_core_api
+        os_core_api
         INTERFACE_INCLUDE_DIRECTORIES)
 
     find_file(
@@ -57,7 +57,7 @@ if (COMMAND os_create_doxygen_target)
         CMAKE_FIND_ROOT_PATH_BOTH)
 
     os_create_doxygen_target( os_keystore_doc
-        # pre-step: link the API file SeosKeyStoreApi.h from seos_core_api in
+        # pre-step: link the API file SeosKeyStoreApi.h from os_core_api in
         #           order to produce a complete doxygen documentation
         "ln -sf ${OS_KEYSTORE_API_HEADER} ${CMAKE_CURRENT_SOURCE_DIR}/include"
         # post-step: remove the link to OS_Crypto.h
