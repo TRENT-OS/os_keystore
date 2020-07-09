@@ -4,27 +4,29 @@
 
 #include "OS_Crypto.h"
 #include "OS_Keystore.h"
+#include "OS_FileSystem.h"
 
 #include "KeystoreLib.h"
 #include "KeyNameMap.h"
 
 #include "LibUtil/BitConverter.h"
 
-// Length of the checksum produced by hashing the key data: (len, bytes,
-// algorithm and flags)
-#define KEY_DATA_HASH_LEN           32
-#define LEN_BITS_TO_BYTES(lenBits) \
-    (lenBits / CHAR_BIT + ((lenBits % CHAR_BIT) ? 1 : 0))
+#include <string.h>
 
-#define KeystoreLib_MAX_KEYSTORE_NAME_LEN MAX_KEY_NAME_LEN
+#define KEY_LEN_SIZE          (sizeof(uint32_t))
+#define KEY_HASH_SIZE         32
+#define MAX_INSTANCE_NAME_LEN 16
+#define MAX_KEY_SIZE          2048
+
+#define MAX_FILE_NAME_LEN     (MAX_INSTANCE_NAME_LEN + MAX_KEY_NAME_LEN + 8)
 
 typedef struct
 {
-    FileStreamFactory* fsFactory;
+    OS_FileSystem_Handle_t hFs;
     OS_Crypto_Handle_t hCrypto;
-    char name[KeystoreLib_MAX_KEYSTORE_NAME_LEN];
+    char name[MAX_INSTANCE_NAME_LEN + 1];
     KeyNameMap keyNameMap;
-    unsigned char buffer[MAX_KEY_LEN];
+    unsigned char buffer[MAX_KEY_SIZE];
 } KeystoreLib_t;
 
 // Private functions -----------------------------------------------------------
@@ -56,7 +58,7 @@ createKeyHash(
         goto ERR_DESTRUCT;
     }
 
-    size_t digestSize = KEY_DATA_HASH_LEN;
+    size_t digestSize = KEY_HASH_SIZE;
     err = OS_CryptoDigest_finalize(hDigest, output, &digestSize);
     if (err != OS_SUCCESS)
     {
@@ -72,180 +74,186 @@ ERR_EXIT:
     return err;
 }
 
-static OS_Error_t
-writeKeyToFile(
-    FileStreamFactory* fsFactory,
-    const void*        keyData,
-    const void*        keyDataHash,
-    size_t             keySize,
-    const char*        name)
+static void
+getFileName(
+    const char*  instName,
+    const char*  keyName,
+    const size_t sz,
+    char*        fileName)
 {
-    Debug_ASSERT_SELF(fsFactory);
-    uint8_t keySizeBuffer[KEY_INT_PROPERTY_LEN] = {0};
-    BitMap16 flags = 0;
+    // Todo: Eventually we would like to have each instance have its own
+    //       directory, but right now we don't support that
+    snprintf(fileName, sz, "%s_%s.key", instName, keyName);
+}
+
+static OS_Error_t
+fs_writeKey(
+    OS_FileSystem_Handle_t hFs,
+    const void*            keyData,
+    const void*            keyDataHash,
+    size_t                 keySize,
+    const char*            instName,
+    const char*            keyName)
+{
+    uint8_t keySizeBuffer[KEY_LEN_SIZE];
     OS_Error_t err = OS_SUCCESS;
+    OS_FileSystemFile_Handle_t hFile;
+    char fileName[MAX_FILE_NAME_LEN];
+    size_t offs;
 
-    BitConverter_putUint32BE((uint32_t) keySize, keySizeBuffer);
-
-    // create a file
-    FileStream* file = FileStreamFactory_create(fsFactory, name,
-                                                FileStream_OpenMode_W);
-    if (file == NULL)
+    getFileName(instName, keyName, sizeof(fileName), fileName);
+    if ((err = OS_FileSystemFile_open(hFs, &hFile, fileName,
+                                      OS_FileSystem_OpenMode_RDWR,
+                                      OS_FileSystem_OpenFlags_CREATE)) != OS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: Failed to open the file stream with a path '%s'!",
-                        __func__, name);
+        Debug_LOG_ERROR("OS_FileSystemFile_open() failed on '%s' with %d",
+                        fileName, err);
         return OS_ERROR_OPERATION_DENIED;
     }
 
-    // write the hash to the file
-    if (Stream_write(FileStream_TO_STREAM(file), (char*)keyDataHash,
-                     KEY_DATA_HASH_LEN) != KEY_DATA_HASH_LEN)
+    err  = OS_ERROR_OPERATION_DENIED;
+    offs = 0;
+
+    if ((err = OS_FileSystemFile_write(hFs, hFile, offs,
+                                       KEY_HASH_SIZE,
+                                       keyDataHash)) != OS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: Stream_write failed while writing the hash!", __func__);
-        err = OS_ERROR_OPERATION_DENIED;
-        goto exit;
+        Debug_LOG_ERROR("OS_FileSystemFile_write() failed on '%s' with %d",
+                        fileName, err);
+        goto err0;
     }
 
-    // write the size of the key data to the file
-    if (Stream_write(FileStream_TO_STREAM(file), (char*)keySizeBuffer,
-                     KEY_INT_PROPERTY_LEN) != KEY_INT_PROPERTY_LEN)
+    offs += KEY_HASH_SIZE;
+
+    BitConverter_putUint32BE((uint32_t) keySize, keySizeBuffer);
+    if ((err = OS_FileSystemFile_write(hFs, hFile, offs,
+                                       KEY_LEN_SIZE,
+                                       keySizeBuffer)) != OS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: Stream_write failed while writing the key size!",
-                        __func__);
-        err = OS_ERROR_OPERATION_DENIED;
-        goto exit;
+        Debug_LOG_ERROR("OS_FileSystemFile_write() failed on '%s' with %d",
+                        fileName, err);
+        goto err0;
     }
 
-    // write the key data to the file
-    if (Stream_write(FileStream_TO_STREAM(file), (char*)keyData,
-                     keySize) != keySize)
+    offs += KEY_LEN_SIZE;
+
+    if ((err = OS_FileSystemFile_write(hFs, hFile, offs,
+                                       keySize,
+                                       keyData)) != OS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: Stream_write failed while writing the key data!",
-                        __func__);
-        err = OS_ERROR_OPERATION_DENIED;
-        goto exit;
+        Debug_LOG_ERROR("OS_FileSystemFile_write() failed on '%s' with %d",
+                        fileName, err);
+        goto err0;
     }
 
-exit:
-    // destroy (close) the file
-    BitMap_SET_BIT(flags, FileStream_DeleteFlags_CLOSE);
-    FileStreamFactory_destroy(fsFactory, file, flags);
+err0:
+    if ((err = OS_FileSystemFile_close(hFs, hFile)) != OS_SUCCESS)
+    {
+        Debug_LOG_ERROR("OS_FileSystemFile_close() failed on '%s' with %d",
+                        fileName, err);
+    }
 
     return err;
 }
 
 static OS_Error_t
-readKeyFromFile(
-    KeystoreLib_t* self,
-    void*          keyData,
-    void*          keyDataHash,
-    size_t*        keySize,
-    const char*    name)
+fs_readKey(
+    OS_FileSystem_Handle_t hFs,
+    void*                  keyData,
+    void*                  keyDataHash,
+    size_t                 keySize,
+    const char*            instName,
+    const char*            keyName)
 {
-    int readBytes = 0;
-    uint8_t keySizeBuffer[KEY_INT_PROPERTY_LEN] = {0};
-    BitMap16 flags = 0;
+    uint8_t keySizeBuffer[KEY_LEN_SIZE];
     OS_Error_t err = OS_SUCCESS;
+    OS_FileSystemFile_Handle_t hFile;
+    char fileName[MAX_FILE_NAME_LEN];
+    size_t offs, realKeySize;
 
-    size_t requestedKeySize = *keySize;
-
-    /* get the size of the written key data from the map
-       and check that the provided buffer is large enough */
-    int keyIndex = KeyNameMap_getIndexOf(&self->keyNameMap,
-                                         (KeyNameMap_t*)name);
-    size_t savedKeySize = keyIndex >= 0 ?
-                          *KeyNameMap_getValueAt(&self->keyNameMap, keyIndex)
-                          : requestedKeySize;
-
-    if (requestedKeySize < savedKeySize)
+    getFileName(instName, keyName, sizeof(fileName), fileName);
+    if ((err = OS_FileSystemFile_open(hFs, &hFile, fileName,
+                                      OS_FileSystem_OpenMode_RDONLY,
+                                      OS_FileSystem_OpenFlags_NONE)) != OS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: The requested size of the key data: %zu is smaller than the amount of saved bytes: %zu!",
-                        __func__, requestedKeySize, savedKeySize);
-        return OS_ERROR_BUFFER_TOO_SMALL;
+        Debug_LOG_ERROR("OS_FileSystemFile_open() failed on '%s' with %d",
+                        fileName, err);
+        return OS_ERROR_OPERATION_DENIED;
     }
 
-    // create a file stream
-    FileStream* file = FileStreamFactory_create(self->fsFactory, name,
-                                                FileStream_OpenMode_r);
-    if (file == NULL)
+    err  = OS_ERROR_OPERATION_DENIED;
+    offs = 0;
+
+    if ((err = OS_FileSystemFile_read(hFs, hFile, offs,
+                                      KEY_HASH_SIZE,
+                                      keyDataHash)) != OS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: Failed to open the file stream with a path '%s'!",
-                        __func__, name);
-        return OS_ERROR_NOT_FOUND;
+        Debug_LOG_ERROR("OS_FileSystemFile_read() failed on '%s' with %d",
+                        fileName, err);
+        goto err0;
     }
 
-    // read the key data hash
-    readBytes = Stream_read(FileStream_TO_STREAM(file), (char*)keyDataHash,
-                            KEY_DATA_HASH_LEN);
-    if (readBytes <= 0)
+    offs += KEY_HASH_SIZE;
+
+    if ((err = OS_FileSystemFile_read(hFs, hFile, offs,
+                                      KEY_LEN_SIZE,
+                                      keySizeBuffer)) != OS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: Stream_read failed while reading the hash! Return value = %d",
-                        __func__,
-                        readBytes);
-        err = OS_ERROR_OPERATION_DENIED;
-        goto exit;
+        Debug_LOG_ERROR("OS_FileSystemFile_read() failed on '%s' with %d",
+                        fileName, err);
+        goto err0;
+    }
+    realKeySize = BitConverter_getUint32BE(keySizeBuffer);
+    if (realKeySize != keySize)
+    {
+        Debug_LOG_ERROR("Key size in map (%zu bytes) does not match the size of "
+                        "the key data (%zu bytes) found in '%s'",
+                        keySize, realKeySize, fileName);
+        goto err0;
     }
 
-    // read the key data size
-    readBytes = Stream_read(FileStream_TO_STREAM(file), (char*)keySizeBuffer,
-                            KEY_INT_PROPERTY_LEN);
-    if (readBytes <= 0)
-    {
-        Debug_LOG_ERROR("%s: Stream_read failed while reading the key size! Return value = %d",
-                        __func__,
-                        readBytes);
-        err = OS_ERROR_OPERATION_DENIED;
-        goto exit;
-    }
-    requestedKeySize = BitConverter_getUint32BE(keySizeBuffer);
+    offs += KEY_LEN_SIZE;
 
-    readBytes = Stream_read(FileStream_TO_STREAM(file), (char*)keyData,
-                            savedKeySize);
-    if (readBytes <= 0)
+    if ((err = OS_FileSystemFile_read(hFs, hFile, offs,
+                                      keySize,
+                                      keyData)) != OS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: Stream_read failed while reading the key data! Return value = %d",
-                        __func__,
-                        readBytes);
-        err = OS_ERROR_OPERATION_DENIED;
-        goto exit;
+        Debug_LOG_ERROR("OS_FileSystemFile_read() failed on '%s' with %d",
+                        fileName, err);
+        goto err0;
     }
 
-    // returning the successfully read key size
-    *keySize = requestedKeySize;
-
-exit:
-    // destroy (close) the file
-    BitMap_SET_BIT(flags, FileStream_DeleteFlags_CLOSE);
-    FileStreamFactory_destroy(self->fsFactory, file, flags);
+err0:
+    if ((err = OS_FileSystemFile_close(hFs, hFile)) != OS_SUCCESS)
+    {
+        Debug_LOG_ERROR("OS_FileSystemFile_close() failed on '%s' with %d",
+                        fileName, err);
+    }
 
     return err;
 }
 
 static OS_Error_t
-deleteKeyFromFile(
-    FileStreamFactory* fsFactory,
-    const char*        name)
+fs_deleteKey(
+    OS_FileSystem_Handle_t hFs,
+    const char*            instName,
+    const char*            keyName)
 {
-    FileStream* file = FileStreamFactory_create(fsFactory, name,
-                                                FileStream_OpenMode_r);
-    BitMap16 flags = 0;
+    OS_Error_t err;
+    char fileName[MAX_FILE_NAME_LEN];
 
-    if (file == NULL)
+    getFileName(instName, keyName, sizeof(fileName), fileName);
+    if ((err = OS_FileSystemFile_delete(hFs, fileName)) != OS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: Failed to open the file stream with a path '%s'!",
-                        __func__, name);
-        return OS_ERROR_NOT_FOUND;
+        Debug_LOG_ERROR("OS_FileSystemFile_delete() failed on '%s' with %d",
+                        fileName, err);
     }
 
-    BitMap_SET_BIT(flags, FileStream_DeleteFlags_CLOSE);
-    BitMap_SET_BIT(flags, FileStream_DeleteFlags_DELETE);
-    FileStreamFactory_destroy(fsFactory, file, flags);
-
-    return OS_SUCCESS;
+    return err;
 }
 
 static OS_Error_t
-registerKeyName(
+map_registerKey(
     KeystoreLib_t* self,
     const char*    name,
     size_t         keySize)
@@ -266,7 +274,7 @@ registerKeyName(
 }
 
 static bool
-checkIfKeyNameExists(
+map_checkKeyExists(
     KeystoreLib_t* self,
     const char*    name)
 {
@@ -279,8 +287,24 @@ checkIfKeyNameExists(
     return KeyNameMap_getIndexOf(&self->keyNameMap, &keyName) >= 0 ? true : false;
 }
 
+static size_t
+map_getKeySize(
+    KeystoreLib_t* self,
+    const char*    name)
+{
+    int keyIndex;
+
+    keyIndex = KeyNameMap_getIndexOf(&self->keyNameMap, (KeyNameMap_t*)name);
+    if (keyIndex < 0)
+    {
+        return 0;
+    }
+
+    return *KeyNameMap_getValueAt(&self->keyNameMap, keyIndex);
+}
+
 static OS_Error_t
-deRegisterKeyName(
+map_deregisterKey(
     KeystoreLib_t* self,
     const char*    name)
 {
@@ -310,7 +334,7 @@ KeystoreLib_storeKey(
 {
     OS_Error_t err;
     KeystoreLib_t*  self = (KeystoreLib_t*) ptr;
-    char keyDataHash[KEY_DATA_HASH_LEN] = {0};
+    char keyDataHash[KEY_HASH_SIZE] = {0};
 
     if (NULL == self || NULL == keyData || NULL == name)
     {
@@ -318,20 +342,20 @@ KeystoreLib_storeKey(
     }
 
     size_t nameLen = strlen(name);
-    if (nameLen >= MAX_KEY_NAME_LEN || nameLen == 0)
+    if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
         return OS_ERROR_INVALID_PARAMETER;
     }
-    if (keySize > MAX_KEY_LEN || keySize == 0)
+    if (keySize > MAX_KEY_SIZE || keySize == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range 0 - %d!",
-                        __func__, keySize, MAX_KEY_LEN);
+                        __func__, keySize, MAX_KEY_SIZE);
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    if (checkIfKeyNameExists(self, name))
+    if (map_checkKeyExists(self, name))
     {
         Debug_LOG_ERROR("%s: The key with the name %s already exists!",
                         __func__, name);
@@ -348,7 +372,7 @@ KeystoreLib_storeKey(
         return err;
     }
 
-    err = writeKeyToFile(self->fsFactory, keyData, keyDataHash, keySize, name);
+    err = fs_writeKey(self->hFs, keyData, keyDataHash, keySize, self->name, name);
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not write the key data to the file, err %d!",
@@ -356,7 +380,7 @@ KeystoreLib_storeKey(
         return err;
     }
 
-    err = registerKeyName(self, name, keySize);
+    err = map_registerKey(self, name, keySize);
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Failed to register the key name, error code %d!",
@@ -367,7 +391,7 @@ KeystoreLib_storeKey(
     return OS_SUCCESS;
 
 err0:
-    deleteKeyFromFile(self->fsFactory, name);
+    fs_deleteKey(self->hFs, self->name, name);
     return err;
 }
 
@@ -380,30 +404,47 @@ KeystoreLib_loadKey(
 {
     OS_Error_t err;
     KeystoreLib_t*  self = (KeystoreLib_t*) ptr;
-    unsigned char calculatedHash[KEY_DATA_HASH_LEN];
-    unsigned char readHash[KEY_DATA_HASH_LEN];
+    unsigned char calculatedHash[KEY_HASH_SIZE];
+    unsigned char readHash[KEY_HASH_SIZE];
 
     if (NULL == self || NULL == keySize || NULL == keyData || NULL == name)
     {
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    size_t requestedKeysize = *keySize;
-
     size_t nameLen = strlen(name);
-    if (nameLen >= MAX_KEY_NAME_LEN || nameLen == 0)
+    if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
         return OS_ERROR_INVALID_PARAMETER;
     }
-    if (requestedKeysize > MAX_KEY_LEN)
+    if (*keySize > MAX_KEY_SIZE)
     {
         Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range 0 - %d!",
-                        __func__, requestedKeysize, MAX_KEY_LEN);
+                        __func__, *keySize, MAX_KEY_SIZE);
         return OS_ERROR_INVALID_PARAMETER;
     }
-    err = readKeyFromFile(self, keyData, readHash, &requestedKeysize, name);
+
+    if (!map_checkKeyExists(self, name))
+    {
+        Debug_LOG_ERROR("%s: The key with the name %s does not exist!",
+                        __func__, name);
+        return OS_ERROR_NOT_FOUND;
+    }
+
+    // Get the size of the written key data from the map and check that the provided
+    // buffer is large enough
+    size_t savedKeySize = map_getKeySize(self, name);
+    if (savedKeySize > *keySize)
+    {
+        Debug_LOG_ERROR("%s: The actual amount of key data (%zu bytes) is bigger "
+                        "than the expected size (%zu byes)",
+                        __func__, savedKeySize, *keySize);
+        return OS_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    err = fs_readKey(self->hFs, keyData, readHash, savedKeySize, self->name, name);
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not read the key data from the file, err %d!",
@@ -413,7 +454,7 @@ KeystoreLib_loadKey(
 
     err = createKeyHash(self->hCrypto,
                         keyData,
-                        requestedKeysize,
+                        savedKeySize,
                         calculatedHash);
     if (err != OS_SUCCESS)
     {
@@ -422,7 +463,7 @@ KeystoreLib_loadKey(
         return err;
     }
 
-    if (memcmp(readHash, calculatedHash, KEY_DATA_HASH_LEN) != 0)
+    if (memcmp(readHash, calculatedHash, KEY_HASH_SIZE) != 0)
     {
         Debug_LOG_ERROR("%s: The key is corrupted - hash value does not correspond to the data!",
                         __func__);
@@ -430,7 +471,7 @@ KeystoreLib_loadKey(
         return err;
     }
 
-    *keySize = requestedKeysize;
+    *keySize = savedKeySize;
 
     return err;
 }
@@ -449,21 +490,21 @@ KeystoreLib_deleteKey(
     }
 
     size_t nameLen = strlen(name);
-    if (nameLen >= MAX_KEY_NAME_LEN || nameLen == 0)
+    if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    if (!checkIfKeyNameExists(self, name))
+    if (!map_checkKeyExists(self, name))
     {
         Debug_LOG_ERROR("%s: The key with the name %s does not exist!",
                         __func__, name);
         return OS_ERROR_NOT_FOUND;
     }
 
-    err = deRegisterKeyName(self, name);
+    err = map_deregisterKey(self, name);
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Failed to deregister the key name, error code %d!",
@@ -471,10 +512,10 @@ KeystoreLib_deleteKey(
         return err;
     }
 
-    err = deleteKeyFromFile(self->fsFactory, name);
+    err = fs_deleteKey(self->hFs, self->name, name);
     if (err != OS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: deleteKeyFromFile failed with error code %d!",
+        Debug_LOG_ERROR("%s: fs_deleteKey failed with error code %d!",
                         __func__, err);
         return err;
     }
@@ -491,7 +532,7 @@ KeystoreLib_copyKey(
     OS_Error_t err;
     KeystoreLib_t*  self = (KeystoreLib_t*) srcPtr;
     KeystoreLib_t*  destKeyStore = (KeystoreLib_t*) dstPtr;
-    size_t keySize = MAX_KEY_LEN;
+    size_t keySize = MAX_KEY_SIZE;
 
     if (NULL == self || NULL == name || NULL == destKeyStore)
     {
@@ -499,7 +540,7 @@ KeystoreLib_copyKey(
     }
 
     size_t nameLen = strlen(name);
-    if (nameLen >= MAX_KEY_NAME_LEN || nameLen == 0)
+    if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
@@ -539,7 +580,7 @@ KeystoreLib_moveKey(
     }
 
     size_t nameLen = strlen(name);
-    if (nameLen >= MAX_KEY_NAME_LEN || nameLen == 0)
+    if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
@@ -618,19 +659,19 @@ static const KeystoreImpl_Vtable_t KeystoreLib_vtable =
 
 OS_Error_t
 KeystoreLib_init(
-    KeystoreImpl_t*    impl,
-    FileStreamFactory* fileStreamFactory,
-    OS_Crypto_Handle_t hCrypto,
-    const char*        name)
+    KeystoreImpl_t*        impl,
+    OS_FileSystem_Handle_t hFs,
+    OS_Crypto_Handle_t     hCrypto,
+    const char*            name)
 {
     KeystoreLib_t* self;
     OS_Error_t err;
 
-    if (NULL == impl || NULL == fileStreamFactory || NULL == name)
+    if (NULL == impl || NULL == hFs || NULL == name)
     {
         return OS_ERROR_INVALID_PARAMETER;
     }
-    else if (strlen(name) > KeystoreLib_MAX_KEYSTORE_NAME_LEN)
+    else if (strlen(name) > MAX_INSTANCE_NAME_LEN)
     {
         return OS_ERROR_INVALID_PARAMETER;
     }
@@ -647,9 +688,9 @@ KeystoreLib_init(
         goto err0;
     }
 
-    strncpy(self->name, name, KeystoreLib_MAX_KEYSTORE_NAME_LEN);
-    self->fsFactory = fileStreamFactory;
-    self->hCrypto   = hCrypto;
+    strncpy(self->name, name, MAX_INSTANCE_NAME_LEN);
+    self->hFs     = hFs;
+    self->hCrypto = hCrypto;
 
     impl->vtable  = &KeystoreLib_vtable;
     impl->context = self;
@@ -671,7 +712,6 @@ KeystoreLib_free(
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    FileStreamFactory_dtor(((KeystoreLib_t*) impl->context)->fsFactory);
     free(impl->context);
 
     return OS_SUCCESS;

@@ -26,16 +26,6 @@ target_include_directories(${PROJECT_NAME}
 )
 
 
-if (KEYSTORE_CONFIG_H_FILE)
-
-    target_compile_definitions(${PROJECT_NAME}
-        INTERFACE
-            "KEYSTORE_CONFIG_H_FILE=${KEYSTORE_CONFIG_H_FILE}"
-    )
-
-endif()
-
-
 target_link_libraries(${PROJECT_NAME}
     INTERFACE
         os_core_api
@@ -55,7 +45,7 @@ if (COMMAND os_create_doxygen_target)
 
     find_file(
         OS_KEYSTORE_API_HEADER
-        SeosKeyStoreApi.h
+        OS_Keystore.h
         PATHS ${OS_CORE_API_INCLUDES}
         CMAKE_FIND_ROOT_PATH_BOTH)
 

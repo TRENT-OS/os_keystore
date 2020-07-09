@@ -63,7 +63,7 @@ KeystoreLib_KeyName_assign(
     KeyNameMap_t*       dst,
     KeyNameMap_t const* src)
 {
-    memcpy(dst, src, MAX_KEY_NAME_LEN);
+    memcpy(dst, src, MAX_KEY_NAME_LEN + 1);
     return true;
 }
 

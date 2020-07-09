@@ -12,17 +12,11 @@
 
 #include "LibUtil/MapT.h"
 
-#if !defined(KEYSTORE_CONFIG_H_FILE)
-#   error a configuration file must be provided! See KeyStore_Config.h.example
-#else
-#   define  KeyStore_XSTR(d)    KeyStore_STR(d)
-#   define  KeyStore_STR(d)     #d
-#   include KeyStore_XSTR(KEYSTORE_CONFIG_H_FILE)
-#endif
+#define MAX_KEY_NAME_LEN    16
 
 typedef struct KeystoreLib_KeyName
 {
-    char buffer[MAX_KEY_NAME_LEN];
+    char buffer[MAX_KEY_NAME_LEN + 1];
 } KeystoreLib_KeyName;
 
 // So we can use our convention

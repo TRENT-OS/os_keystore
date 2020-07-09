@@ -88,10 +88,10 @@ OS_Keystore_wipeKeystore(
 
 OS_Error_t
 OS_Keystore_init(
-    OS_Keystore_Handle_t* hKeystore,
-    FileStreamFactory*    fileStreamFactory,
-    OS_Crypto_Handle_t    hCrypto,
-    const char*           name)
+    OS_Keystore_Handle_t*  hKeystore,
+    OS_FileSystem_Handle_t hFs,
+    OS_Crypto_Handle_t     hCrypto,
+    const char*            name)
 {
     OS_Error_t err;
 
@@ -105,7 +105,7 @@ OS_Keystore_init(
         return OS_ERROR_INSUFFICIENT_SPACE;
     }
 
-    if ((err = KeystoreLib_init(&((*hKeystore)->impl), fileStreamFactory, hCrypto,
+    if ((err = KeystoreLib_init(&((*hKeystore)->impl), hFs, hCrypto,
                                 name)) != OS_SUCCESS)
     {
         free(*hKeystore);
