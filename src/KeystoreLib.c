@@ -323,6 +323,73 @@ map_deregisterKey(
     return OS_SUCCESS;
 }
 
+static inline bool
+isStoreKeyParametersOk(
+    KeystoreLib_t*  self,
+    const char*     name,
+    void const*     keyData,
+    size_t          keySize)
+{
+    if (NULL == self || NULL == keyData || NULL == name)
+    {
+        return false;
+    }
+
+    size_t nameLen = strlen(name);
+    if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
+    {
+        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
+                        __func__, nameLen, MAX_KEY_NAME_LEN);
+        return false;
+    }
+    if (keySize > MAX_KEY_SIZE || keySize == 0)
+    {
+        Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range 0 - %d!",
+                        __func__, keySize, MAX_KEY_SIZE);
+        return false;
+    }
+
+    if (map_checkKeyExists(self, name))
+    {
+        Debug_LOG_ERROR("%s: The key with the name %s already exists!",
+                        __func__, name);
+        return false;
+    }
+    return true;
+}
+
+static inline bool
+isLoadKeyParametersOk(
+    KeystoreLib_t*  self,
+    const char*     name,
+    void*           keyData,
+    size_t*         keySize)
+{
+    if (NULL == self || NULL == keySize || NULL == keyData || NULL == name)
+    {
+        return false;
+    }
+
+    size_t nameLen = strlen(name);
+    if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
+    {
+        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
+                        __func__, nameLen, MAX_KEY_NAME_LEN);
+        return false;
+    }
+
+    size_t my_keysize = *keySize;
+    if (my_keysize > MAX_KEY_SIZE)
+    {
+        Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range 0 - %d!",
+                        __func__, my_keysize, MAX_KEY_SIZE);
+        return false;
+    }
+
+    return true;
+}
+
+
 // Exported via VTABLE ---------------------------------------------------------
 
 static OS_Error_t
@@ -336,29 +403,8 @@ KeystoreLib_storeKey(
     KeystoreLib_t*  self = (KeystoreLib_t*) ptr;
     char keyDataHash[KEY_HASH_SIZE] = {0};
 
-    if (NULL == self || NULL == keyData || NULL == name)
+    if (!isStoreKeyParametersOk(ptr, name, keyData, keySize))
     {
-        return OS_ERROR_INVALID_PARAMETER;
-    }
-
-    size_t nameLen = strlen(name);
-    if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
-    {
-        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
-                        __func__, nameLen, MAX_KEY_NAME_LEN);
-        return OS_ERROR_INVALID_PARAMETER;
-    }
-    if (keySize > MAX_KEY_SIZE || keySize == 0)
-    {
-        Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range 0 - %d!",
-                        __func__, keySize, MAX_KEY_SIZE);
-        return OS_ERROR_INVALID_PARAMETER;
-    }
-
-    if (map_checkKeyExists(self, name))
-    {
-        Debug_LOG_ERROR("%s: The key with the name %s already exists!",
-                        __func__, name);
         return OS_ERROR_INVALID_PARAMETER;
     }
 
@@ -407,22 +453,8 @@ KeystoreLib_loadKey(
     unsigned char calculatedHash[KEY_HASH_SIZE];
     unsigned char readHash[KEY_HASH_SIZE];
 
-    if (NULL == self || NULL == keySize || NULL == keyData || NULL == name)
+    if (!isLoadKeyParametersOk(self, name, keyData, keySize))
     {
-        return OS_ERROR_INVALID_PARAMETER;
-    }
-
-    size_t nameLen = strlen(name);
-    if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
-    {
-        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
-                        __func__, nameLen, MAX_KEY_NAME_LEN);
-        return OS_ERROR_INVALID_PARAMETER;
-    }
-    if (*keySize > MAX_KEY_SIZE)
-    {
-        Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range 0 - %d!",
-                        __func__, *keySize, MAX_KEY_SIZE);
         return OS_ERROR_INVALID_PARAMETER;
     }
 
