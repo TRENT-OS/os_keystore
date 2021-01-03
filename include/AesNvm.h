@@ -11,7 +11,7 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include "LibMem/Nvm.h"
+#include "lib_mem/Nvm.h"
 #include "OS_Crypto.h"
 
 /* Exported macro ------------------------------------------------------------*/

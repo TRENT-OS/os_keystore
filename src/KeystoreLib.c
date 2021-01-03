@@ -9,7 +9,7 @@
 #include "KeystoreLib.h"
 #include "KeyNameMap.h"
 
-#include "LibUtil/BitConverter.h"
+#include "lib_util/BitConverter.h"
 
 #include <string.h>
 
