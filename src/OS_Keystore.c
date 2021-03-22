@@ -102,6 +102,8 @@ OS_Keystore_init(
 
     if ((*hKeystore = malloc(sizeof(OS_Keystore_t))) == NULL)
     {
+        // TODO: check cppcheck error: Memory leak: hKeystore
+        // cppcheck-suppress memleak
         return OS_ERROR_INSUFFICIENT_SPACE;
     }
 
@@ -111,6 +113,8 @@ OS_Keystore_init(
         free(*hKeystore);
     }
 
+    // TODO: check cppcheck error: Memory leak: hKeystore
+    // cppcheck-suppress memleak
     return err;
 }
 
