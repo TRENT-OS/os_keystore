@@ -259,10 +259,9 @@ map_registerKey(
     size_t         keySize)
 {
     KeyNameMap_t keyName;
-    size_t nameLen = strlen(name);
 
-    strncpy(keyName.buffer, name, nameLen);
-    keyName.buffer[nameLen] = 0;
+    strncpy(keyName.buffer, name, sizeof(keyName.buffer) - 1);
+    keyName.buffer[sizeof(keyName.buffer) - 1] = '\0';
 
     if (!KeyNameMap_insert(&self->keyNameMap, &keyName, &keySize))
     {
@@ -279,10 +278,9 @@ map_checkKeyExists(
     const char*    name)
 {
     KeyNameMap_t keyName;
-    size_t nameLen = strlen(name);
 
-    strncpy(keyName.buffer, name, nameLen);
-    keyName.buffer[nameLen] = 0;
+    strncpy(keyName.buffer, name, sizeof(keyName.buffer) - 1);
+    keyName.buffer[sizeof(keyName.buffer) - 1] = '\0';
 
     return KeyNameMap_getIndexOf(&self->keyNameMap, &keyName) >= 0 ? true : false;
 }
@@ -309,10 +307,9 @@ map_deregisterKey(
     const char*    name)
 {
     KeyNameMap_t keyName;
-    size_t nameLen = strlen(name);
 
-    strncpy(keyName.buffer, name, nameLen);
-    keyName.buffer[nameLen] = 0;
+    strncpy(keyName.buffer, name, sizeof(keyName.buffer) - 1);
+    keyName.buffer[sizeof(keyName.buffer) - 1] = '\0';
 
     if (!KeyNameMap_remove(&self->keyNameMap, &keyName))
     {
@@ -720,7 +717,9 @@ KeystoreLib_init(
         goto err0;
     }
 
-    strncpy(self->name, name, MAX_INSTANCE_NAME_LEN);
+    strncpy(self->name, name, sizeof(self->name) - 1);
+    self->name[sizeof(self->name) - 1] = '\0';
+
     self->hFs     = hFs;
     self->hCrypto = hCrypto;
 
