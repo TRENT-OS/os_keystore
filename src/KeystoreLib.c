@@ -18,7 +18,7 @@
 #define MAX_INSTANCE_NAME_LEN 16
 #define MAX_KEY_SIZE          2048
 
-#define MAX_FILE_NAME_LEN     (MAX_INSTANCE_NAME_LEN + MAX_KEY_NAME_LEN + 8)
+#define MAX_FILE_NAME_LEN     (MAX_INSTANCE_NAME_LEN + MAX_KEY_NAME_LEN + 7)
 
 typedef struct
 {
@@ -98,7 +98,7 @@ fs_writeKey(
     uint8_t keySizeBuffer[KEY_LEN_SIZE];
     OS_Error_t err = OS_SUCCESS;
     OS_FileSystemFile_Handle_t hFile;
-    char fileName[MAX_FILE_NAME_LEN];
+    char fileName[MAX_FILE_NAME_LEN + 1];
     size_t offs;
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
@@ -168,7 +168,7 @@ fs_readKey(
     uint8_t keySizeBuffer[KEY_LEN_SIZE];
     OS_Error_t err = OS_SUCCESS;
     OS_FileSystemFile_Handle_t hFile;
-    char fileName[MAX_FILE_NAME_LEN];
+    char fileName[MAX_FILE_NAME_LEN + 1];
     size_t offs, realKeySize;
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
@@ -240,7 +240,7 @@ fs_deleteKey(
     const char*            keyName)
 {
     OS_Error_t err;
-    char fileName[MAX_FILE_NAME_LEN];
+    char fileName[MAX_FILE_NAME_LEN + 1];
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
     if ((err = OS_FileSystemFile_delete(hFs, fileName)) != OS_SUCCESS)
