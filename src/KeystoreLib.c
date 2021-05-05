@@ -340,13 +340,13 @@ isStoreKeyParametersOk(
     size_t nameLen = strlen(name);
     if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
-        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
+        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
         return false;
     }
     if (keySize > MAX_KEY_SIZE || keySize == 0)
     {
-        Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range 0 - %d!",
+        Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range [1;%d]!",
                         __func__, keySize, MAX_KEY_SIZE);
         return false;
     }
@@ -375,7 +375,7 @@ isLoadKeyParametersOk(
     size_t nameLen = strlen(name);
     if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
-        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
+        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
         return false;
     }
@@ -383,7 +383,7 @@ isLoadKeyParametersOk(
     size_t my_keysize = *keySize;
     if (my_keysize > MAX_KEY_SIZE)
     {
-        Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range 0 - %d!",
+        Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range [1;%d]!",
                         __func__, my_keysize, MAX_KEY_SIZE);
         return false;
     }
@@ -526,7 +526,7 @@ KeystoreLib_deleteKey(
     size_t nameLen = strlen(name);
     if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
-        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
+        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
         return OS_ERROR_INVALID_PARAMETER;
     }
@@ -576,7 +576,7 @@ KeystoreLib_copyKey(
     size_t nameLen = strlen(name);
     if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
-        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
+        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
         return OS_ERROR_INVALID_PARAMETER;
     }
@@ -616,7 +616,7 @@ KeystoreLib_moveKey(
     size_t nameLen = strlen(name);
     if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
-        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range 0 - %d!",
+        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
                         __func__, nameLen, MAX_KEY_NAME_LEN);
         return OS_ERROR_INVALID_PARAMETER;
     }
