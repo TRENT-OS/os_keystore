@@ -18,7 +18,10 @@
 #define MAX_INSTANCE_NAME_LEN 16
 #define MAX_KEY_SIZE          2048
 
-#define MAX_FILE_NAME_LEN     (MAX_INSTANCE_NAME_LEN + MAX_KEY_NAME_LEN + 7)
+// Maximum length of a file name. A file names is a combination of instance and
+// key name in the format "<instancename>_<keyname>.key" and needs 5 more chars
+// for separator and file extension (excluding the null terminator).
+#define MAX_FILE_NAME_LEN     (MAX_INSTANCE_NAME_LEN + 1 + MAX_KEY_NAME_LEN + 4)
 
 typedef struct
 {
@@ -82,7 +85,9 @@ getFileName(
     char*        fileName)
 {
     // Todo: Eventually we would like to have each instance have its own
-    //       directory, but right now we don't support that
+    //       directory, but right now we don't support that.
+
+    // Create file name in the format "<instancename>_<keyname>.key".
     snprintf(fileName, sz, "%s_%s.key", instName, keyName);
 }
 
