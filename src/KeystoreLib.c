@@ -27,7 +27,7 @@ typedef struct
 {
     OS_FileSystem_Handle_t hFs;
     OS_Crypto_Handle_t hCrypto;
-    char name[MAX_INSTANCE_NAME_LEN + 1];
+    char name[MAX_INSTANCE_NAME_LEN + 1]; // null terminated string
     KeyNameMap keyNameMap;
     unsigned char buffer[MAX_KEY_SIZE];
 } KeystoreLib_t;
@@ -103,7 +103,7 @@ fs_writeKey(
     uint8_t keySizeBuffer[KEY_LEN_SIZE];
     OS_Error_t err = OS_SUCCESS;
     OS_FileSystemFile_Handle_t hFile;
-    char fileName[MAX_FILE_NAME_LEN + 1];
+    char fileName[MAX_FILE_NAME_LEN + 1]; // null terminated string
     size_t offs;
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
@@ -173,7 +173,7 @@ fs_readKey(
     uint8_t keySizeBuffer[KEY_LEN_SIZE];
     OS_Error_t err = OS_SUCCESS;
     OS_FileSystemFile_Handle_t hFile;
-    char fileName[MAX_FILE_NAME_LEN + 1];
+    char fileName[MAX_FILE_NAME_LEN + 1]; // null terminated string
     size_t offs, realKeySize;
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
@@ -245,7 +245,7 @@ fs_deleteKey(
     const char*            keyName)
 {
     OS_Error_t err;
-    char fileName[MAX_FILE_NAME_LEN + 1];
+    char fileName[MAX_FILE_NAME_LEN + 1]; // null terminated string
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
     if ((err = OS_FileSystemFile_delete(hFs, fileName)) != OS_SUCCESS)

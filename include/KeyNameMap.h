@@ -16,7 +16,7 @@
 
 typedef struct KeystoreLib_KeyName
 {
-    char buffer[MAX_KEY_NAME_LEN + 1];
+    char buffer[MAX_KEY_NAME_LEN + 1]; // null terminated string
 } KeystoreLib_KeyName;
 
 // So we can use our convention
