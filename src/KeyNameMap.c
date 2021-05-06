@@ -81,5 +81,5 @@ KeystoreLib_KeyName_isEqual(
     KeyNameMap_t const* a,
     KeyNameMap_t const* b)
 {
-    return !strncmp(a->buffer, b->buffer, sizeof(a->buffer) - 1);
+    return !strncmp(a->buffer, b->buffer, sizeof(a->buffer));
 }
