@@ -63,7 +63,9 @@ KeystoreLib_KeyName_assign(
     KeyNameMap_t*       dst,
     KeyNameMap_t const* src)
 {
-    memcpy(dst, src, MAX_KEY_NAME_LEN + 1);
+    strncpy(dst->buffer, src->buffer, sizeof(dst->buffer) - 1);
+    dst->buffer[sizeof(dst->buffer) - 1] = '\0';
+
     return true;
 }
 
@@ -79,5 +81,5 @@ KeystoreLib_KeyName_isEqual(
     KeyNameMap_t const* a,
     KeyNameMap_t const* b)
 {
-    return !strncmp(a->buffer, b->buffer, MAX_KEY_NAME_LEN);
+    return !strncmp(a->buffer, b->buffer, sizeof(a->buffer) - 1);
 }
