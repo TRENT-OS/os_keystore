@@ -17,7 +17,6 @@ target_sources(${PROJECT_NAME}
         "src/OS_Keystore.c"
         "src/KeystoreLib.c"
         "src/KeyNameMap.c"
-        "src/AesNvm.c"
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -29,7 +28,5 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     INTERFACE
         os_core_api
-        lib_mem
         lib_utils
-        os_crypto
 )
