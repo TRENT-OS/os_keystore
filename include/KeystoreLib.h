@@ -7,11 +7,11 @@
 #include "OS_Crypto.h"
 #include "OS_FileSystem.h"
 
-#include "KeystoreImpl.h"
+#include "Keystore.h"
 
 OS_Error_t
 KeystoreLib_init(
-    KeystoreImpl_t*    self,
+    Keystore_t*        self,
     OS_FileSystem_t*   fs,
     OS_Crypto_Handle_t hCrypto,
     const char*        name);

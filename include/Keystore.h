@@ -9,58 +9,58 @@
 #include <stddef.h>
 
 typedef OS_Error_t
-(*KeystoreImpl_StoreKey)(
+(*Keystore_Vtable_StoreKey)(
     void*       self,
     const char* name,
     void const* keyData,
     size_t      keySize);
 
 typedef OS_Error_t
-(*KeystoreImpl_LoadKey)(
+(*Keystore_Vtable_LoadKey)(
     void*       self,
     const char* name,
     void*       keyData,
     size_t*     keySize);
 
 typedef OS_Error_t
-(*KeystoreImpl_DeleteKey)(
+(*Keystore_Vtable_DeleteKey)(
     void*       self,
     const char* name);
 
 typedef OS_Error_t
-(*KeystoreImpl_CopyKey)(
+(*Keystore_Vtable_CopyKey)(
     void*       self,
     const char* name,
     void*       destKeyStore);
 
 typedef OS_Error_t
-(*KeystoreImpl_MoveKey)(
+(*Keystore_Vtable_MoveKey)(
     void*       self,
     const char* name,
     void*       destKeyStore);
 
 typedef OS_Error_t
-(*KeystoreImpl_WipeKeystore)(
+(*Keystore_Vtable_WipeKeystore)(
     void* self);
 
 typedef OS_Error_t
-(*KeystoreImpl_Free)(
+(*Keystore_Vtable_Free)(
     void* self);
 
 typedef struct
 {
-    KeystoreImpl_StoreKey       storeKey;
-    KeystoreImpl_LoadKey        loadKey;
-    KeystoreImpl_DeleteKey      deleteKey;
-    KeystoreImpl_CopyKey        copyKey;
-    KeystoreImpl_MoveKey        moveKey;
-    KeystoreImpl_WipeKeystore   wipeKeystore;
-    KeystoreImpl_Free           free;
+    Keystore_Vtable_StoreKey       storeKey;
+    Keystore_Vtable_LoadKey        loadKey;
+    Keystore_Vtable_DeleteKey      deleteKey;
+    Keystore_Vtable_CopyKey        copyKey;
+    Keystore_Vtable_MoveKey        moveKey;
+    Keystore_Vtable_WipeKeystore   wipeKeystore;
+    Keystore_Vtable_Free           free;
 }
-KeystoreImpl_Vtable_t;
+Keystore_Vtable_t;
 
 typedef struct
 {
-    const KeystoreImpl_Vtable_t* vtable;
+    const Keystore_Vtable_t* vtable;
     void* context;
-} KeystoreImpl_t;
+} Keystore_t;

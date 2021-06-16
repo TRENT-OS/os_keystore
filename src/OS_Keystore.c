@@ -5,7 +5,7 @@
 #include "OS_Keystore.h"
 #include "OS_Crypto.h"
 
-#include "KeystoreImpl.h"
+#include "Keystore.h"
 
 #include <stdlib.h>
 
@@ -13,7 +13,7 @@
 // implementations below this API level..
 struct OS_Keystore
 {
-    KeystoreImpl_t impl;
+    Keystore_t impl;
 };
 
 OS_Error_t

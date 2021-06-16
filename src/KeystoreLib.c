@@ -695,7 +695,7 @@ KeystoreLib_free(
 
 // Public functions ------------------------------------------------------------
 
-static const KeystoreImpl_Vtable_t KeystoreLib_vtable =
+static const Keystore_Vtable_t KeystoreLib_vtable =
 {
     .storeKey       = KeystoreLib_storeKey,
     .loadKey        = KeystoreLib_loadKey,
@@ -708,7 +708,7 @@ static const KeystoreImpl_Vtable_t KeystoreLib_vtable =
 
 OS_Error_t
 KeystoreLib_init(
-    KeystoreImpl_t*        impl,
+    Keystore_t*            impl,
     OS_FileSystem_Handle_t hFs,
     OS_Crypto_Handle_t     hCrypto,
     const char*            name)
@@ -763,7 +763,7 @@ err0:
 // implementations below this API level..
 struct OS_Keystore
 {
-    KeystoreImpl_t impl;
+    Keystore_t impl;
 };
 
 OS_Error_t
