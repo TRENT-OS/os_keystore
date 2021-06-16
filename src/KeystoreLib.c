@@ -679,6 +679,20 @@ KeystoreLib_wipeKeystore(
     return err;
 }
 
+static OS_Error_t
+KeystoreLib_free(
+    void* ptr)
+{
+    if (ptr == NULL)
+    {
+        return OS_ERROR_INVALID_PARAMETER;
+    }
+
+    free(ptr);
+
+    return OS_SUCCESS;
+}
+
 // Public functions ------------------------------------------------------------
 
 static const KeystoreImpl_Vtable_t KeystoreLib_vtable =
@@ -689,6 +703,7 @@ static const KeystoreImpl_Vtable_t KeystoreLib_vtable =
     .copyKey        = KeystoreLib_copyKey,
     .moveKey        = KeystoreLib_moveKey,
     .wipeKeystore   = KeystoreLib_wipeKeystore,
+    .free           = KeystoreLib_free
 };
 
 OS_Error_t
@@ -739,16 +754,43 @@ err0:
     return err;
 }
 
-OS_Error_t
-KeystoreLib_free(
-    KeystoreImpl_t* impl)
+// TODO: make a decision about OS_Keystore_init(). This function can stay here
+// only temporarily because we have (at the moment) only this implementation of
+// the Keystore.
+#include "OS_Keystore.h"
+
+// For now, we only have the LIB so lets use just that; later we may have other
+// implementations below this API level..
+struct OS_Keystore
 {
-    if (impl == NULL || impl->context == NULL)
+    KeystoreImpl_t impl;
+};
+
+OS_Error_t
+OS_Keystore_init(
+    OS_Keystore_Handle_t*  hKeystore,
+    OS_FileSystem_Handle_t hFs,
+    OS_Crypto_Handle_t     hCrypto,
+    const char*            name)
+{
+    OS_Error_t err;
+
+    if (NULL == hKeystore)
     {
-        return OS_ERROR_INVALID_PARAMETER;
+        return OS_ERROR_INVALID_HANDLE;
     }
 
-    free(impl->context);
+    *hKeystore = malloc(sizeof(OS_Keystore_t));
+    if (*hKeystore == NULL)
+    {
+        return OS_ERROR_INSUFFICIENT_SPACE;
+    }
 
-    return OS_SUCCESS;
+    if ((err = KeystoreLib_init(&((*hKeystore)->impl), hFs, hCrypto,
+                                name)) != OS_SUCCESS)
+    {
+        free(*hKeystore);
+    }
+
+    return err;
 }

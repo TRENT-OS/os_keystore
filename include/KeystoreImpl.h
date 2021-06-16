@@ -43,6 +43,10 @@ typedef OS_Error_t
 (*KeystoreImpl_wipeKeystore)(
     void* self);
 
+typedef OS_Error_t
+(*KeystoreImpl_free)(
+    void* self);
+
 typedef struct
 {
     KeystoreImpl_storeKey storeKey;
@@ -51,6 +55,7 @@ typedef struct
     KeystoreImpl_copyKey copyKey;
     KeystoreImpl_moveKey moveKey;
     KeystoreImpl_wipeKeystore wipeKeystore;
+    KeystoreImpl_free free;
 } KeystoreImpl_Vtable_t;
 
 typedef struct

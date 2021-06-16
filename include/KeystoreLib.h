@@ -15,7 +15,3 @@ KeystoreLib_init(
     OS_FileSystem_t*   fs,
     OS_Crypto_Handle_t hCrypto,
     const char*        name);
-
-OS_Error_t
-KeystoreLib_free(
-    KeystoreImpl_t* self);

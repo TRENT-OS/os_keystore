@@ -6,7 +6,6 @@
 #include "OS_Crypto.h"
 
 #include "KeystoreImpl.h"
-#include "KeystoreLib.h"
 
 #include <stdlib.h>
 
@@ -87,47 +86,10 @@ OS_Keystore_wipeKeystore(
 }
 
 OS_Error_t
-OS_Keystore_init(
-    OS_Keystore_Handle_t*  hKeystore,
-    OS_FileSystem_Handle_t hFs,
-    OS_Crypto_Handle_t     hCrypto,
-    const char*            name)
-{
-    OS_Error_t err;
-
-    if (NULL == hKeystore)
-    {
-        return OS_ERROR_INVALID_HANDLE;
-    }
-
-    *hKeystore = malloc(sizeof(OS_Keystore_t));
-    if (*hKeystore == NULL)
-    {
-        return OS_ERROR_INSUFFICIENT_SPACE;
-    }
-
-    if ((err = KeystoreLib_init(&((*hKeystore)->impl), hFs, hCrypto,
-                                name)) != OS_SUCCESS)
-    {
-        free(*hKeystore);
-    }
-
-    return err;
-}
-
-OS_Error_t
 OS_Keystore_free(
     OS_Keystore_Handle_t hKeystore)
 {
-    OS_Error_t err;
-
-    if (NULL == hKeystore)
-    {
-        return OS_ERROR_INVALID_HANDLE;
-    }
-
-    err = KeystoreLib_free(&hKeystore->impl);
-    free(hKeystore);
-
-    return err;
+    return (NULL == hKeystore) ?
+           OS_ERROR_INVALID_HANDLE :
+           hKeystore->impl.vtable->free(hKeystore->impl.context);
 }
