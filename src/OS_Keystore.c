@@ -9,13 +9,6 @@
 
 #include <stdlib.h>
 
-// For now, we only have the LIB so lets use just that; later we may have other
-// implementations below this API level..
-struct OS_Keystore
-{
-    Keystore_t impl;
-};
-
 OS_Error_t
 OS_Keystore_storeKey(
     OS_Keystore_Handle_t hKeystore,
@@ -25,8 +18,7 @@ OS_Keystore_storeKey(
 {
     return (NULL == hKeystore) ?
            OS_ERROR_INVALID_HANDLE :
-           hKeystore->impl.vtable->storeKey(hKeystore->impl.context, name,
-                                            keyData, keySize);
+           hKeystore->vtable->storeKey(hKeystore, name, keyData, keySize);
 }
 
 OS_Error_t
@@ -38,8 +30,7 @@ OS_Keystore_loadKey(
 {
     return (NULL == hKeystore) ?
            OS_ERROR_INVALID_HANDLE :
-           hKeystore->impl.vtable->loadKey(hKeystore->impl.context, name, keyData,
-                                           keySize);
+           hKeystore->vtable->loadKey(hKeystore, name, keyData, keySize);
 }
 
 OS_Error_t
@@ -49,7 +40,7 @@ OS_Keystore_deleteKey(
 {
     return (NULL == hKeystore) ?
            OS_ERROR_INVALID_HANDLE :
-           hKeystore->impl.vtable->deleteKey(hKeystore->impl.context, name);
+           hKeystore->vtable->deleteKey(hKeystore, name);
 }
 
 OS_Error_t
@@ -60,8 +51,7 @@ OS_Keystore_copyKey(
 {
     return (NULL == hKeystore || NULL == hDestKeystore) ?
            OS_ERROR_INVALID_HANDLE :
-           hKeystore->impl.vtable->copyKey(hKeystore->impl.context, name,
-                                           hDestKeystore->impl.context);
+           hKeystore->vtable->copyKey(hKeystore, name, hDestKeystore);
 }
 
 OS_Error_t
@@ -72,8 +62,7 @@ OS_Keystore_moveKey(
 {
     return (NULL == hKeystore || NULL == hDestKeystore) ?
            OS_ERROR_INVALID_HANDLE :
-           hKeystore->impl.vtable->moveKey(hKeystore->impl.context, name,
-                                           hDestKeystore->impl.context);
+           hKeystore->vtable->moveKey(hKeystore, name, hDestKeystore);
 }
 
 OS_Error_t
@@ -82,7 +71,7 @@ OS_Keystore_wipeKeystore(
 {
     return (NULL == hKeystore) ?
            OS_ERROR_INVALID_HANDLE :
-           hKeystore->impl.vtable->wipeKeystore(hKeystore->impl.context);
+           hKeystore->vtable->wipeKeystore(hKeystore);
 }
 
 OS_Error_t
@@ -91,5 +80,5 @@ OS_Keystore_free(
 {
     return (NULL == hKeystore) ?
            OS_ERROR_INVALID_HANDLE :
-           hKeystore->impl.vtable->free(hKeystore->impl.context);
+           hKeystore->vtable->free(hKeystore);
 }

@@ -8,44 +8,46 @@
 
 #include <stddef.h>
 
+typedef struct OS_Keystore Keystore_t;
+
 typedef OS_Error_t
 (*Keystore_Vtable_StoreKey)(
-    void*       self,
+    Keystore_t* self,
     const char* name,
     void const* keyData,
     size_t      keySize);
 
 typedef OS_Error_t
 (*Keystore_Vtable_LoadKey)(
-    void*       self,
+    Keystore_t* self,
     const char* name,
     void*       keyData,
     size_t*     keySize);
 
 typedef OS_Error_t
 (*Keystore_Vtable_DeleteKey)(
-    void*       self,
+    Keystore_t* self,
     const char* name);
 
 typedef OS_Error_t
 (*Keystore_Vtable_CopyKey)(
-    void*       self,
+    Keystore_t* self,
     const char* name,
-    void*       destKeyStore);
+    Keystore_t* destKeyStore);
 
 typedef OS_Error_t
 (*Keystore_Vtable_MoveKey)(
-    void*       self,
+    Keystore_t* self,
     const char* name,
-    void*       destKeyStore);
+    Keystore_t* destKeyStore);
 
 typedef OS_Error_t
 (*Keystore_Vtable_WipeKeystore)(
-    void* self);
+    Keystore_t* self);
 
 typedef OS_Error_t
 (*Keystore_Vtable_Free)(
-    void* self);
+    Keystore_t* self);
 
 typedef struct
 {
@@ -59,8 +61,7 @@ typedef struct
 }
 Keystore_Vtable_t;
 
-typedef struct
+struct OS_Keystore
 {
     const Keystore_Vtable_t* vtable;
-    void* context;
-} Keystore_t;
+};
