@@ -14,35 +14,35 @@
 
 #define MAX_KEY_NAME_LEN    16
 
-typedef struct KeystoreLib_KeyName
+typedef struct KeystoreFile_KeyName
 {
     char buffer[MAX_KEY_NAME_LEN + 1]; // null terminated string
-} KeystoreLib_KeyName;
+} KeystoreFile_KeyName;
 
 // So we can use our convention
-typedef KeystoreLib_KeyName KeyNameMap_t;
+typedef KeystoreFile_KeyName KeyNameMap_t;
 
-MapT_DECLARE(KeystoreLib_KeyName, size_t, KeyNameMap);
+MapT_DECLARE(KeystoreFile_KeyName, size_t, KeyNameMap);
 
 /* Key functions ----------------------------------------------------------*/
 bool
-KeystoreLib_KeyName_ctorCopy(
+KeystoreFile_KeyName_ctorCopy(
     KeyNameMap_t*       dst,
     KeyNameMap_t const* src);
 bool
-KeystoreLib_KeyName_ctorMove(
+KeystoreFile_KeyName_ctorMove(
     KeyNameMap_t*       dst,
     KeyNameMap_t const* src);
 bool
-KeystoreLib_KeyName_assign(
+KeystoreFile_KeyName_assign(
     KeyNameMap_t*       dst,
     KeyNameMap_t const* src);
 void
-KeystoreLib_KeyName_dtor(
+KeystoreFile_KeyName_dtor(
     KeyNameMap_t* el);
 
 bool
-KeystoreLib_KeyName_isEqual(
+KeystoreFile_KeyName_isEqual(
     KeyNameMap_t const* a,
     KeyNameMap_t const* b);
 

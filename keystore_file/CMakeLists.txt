@@ -1,4 +1,4 @@
-# OS KeyStore library
+# OS KeystoreFile library
 
 cmake_minimum_required(VERSION 3.13.0)
 
@@ -14,7 +14,7 @@ add_library(${PROJECT_NAME} INTERFACE)
 
 target_sources(${PROJECT_NAME}
     INTERFACE
-        "src/KeystoreLib.c"
+        "src/KeystoreFile.c"
         "src/KeyNameMap.c"
 )
 

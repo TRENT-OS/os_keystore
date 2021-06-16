@@ -6,7 +6,7 @@
 #include "KeyNameMap.h"
 #include <string.h>
 
-MapT_DEFINE(KeystoreLib_KeyName, size_t, KeyNameMap);
+MapT_DEFINE(KeystoreFile_KeyName, size_t, KeyNameMap);
 
 /* Key functions ----------------------------------------------------------*/
 bool
@@ -43,23 +43,23 @@ size_t_dtor(
 
 /* Value functions ----------------------------------------------------------*/
 bool
-KeystoreLib_KeyName_ctorCopy(
+KeystoreFile_KeyName_ctorCopy(
     KeyNameMap_t*       dst,
     KeyNameMap_t const* src)
 {
-    return KeystoreLib_KeyName_assign(dst, src);
+    return KeystoreFile_KeyName_assign(dst, src);
 }
 
 bool
-KeystoreLib_KeyName_ctorMove(
+KeystoreFile_KeyName_ctorMove(
     KeyNameMap_t*       dst,
     KeyNameMap_t const* src)
 {
-    return KeystoreLib_KeyName_assign(dst, src);
+    return KeystoreFile_KeyName_assign(dst, src);
 }
 
 bool
-KeystoreLib_KeyName_assign(
+KeystoreFile_KeyName_assign(
     KeyNameMap_t*       dst,
     KeyNameMap_t const* src)
 {
@@ -70,14 +70,14 @@ KeystoreLib_KeyName_assign(
 }
 
 void
-KeystoreLib_KeyName_dtor(
+KeystoreFile_KeyName_dtor(
     KeyNameMap_t* el)
 {
     return;
 }
 
 bool
-KeystoreLib_KeyName_isEqual(
+KeystoreFile_KeyName_isEqual(
     KeyNameMap_t const* a,
     KeyNameMap_t const* b)
 {
