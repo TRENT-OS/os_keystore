@@ -3,9 +3,8 @@
  */
 
 #include "OS_Keystore.h"
+#include "OS_Keystore_Vtable.h"
 #include "OS_Crypto.h"
-
-#include "Keystore.h"
 
 #include <stdlib.h>
 

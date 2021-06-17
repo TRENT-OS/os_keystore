@@ -380,10 +380,10 @@ isLoadKeyParametersOk(
 
 static OS_Error_t
 KeystoreFile_storeKey(
-    Keystore_t* ptr,
-    const char* name,
-    void const* keyData,
-    size_t      keySize)
+    OS_Keystore_t*  ptr,
+    const char*     name,
+    void const*     keyData,
+    size_t          keySize)
 {
     OS_Error_t err;
     KeystoreFile_t*  self = (KeystoreFile_t*) ptr;
@@ -429,7 +429,7 @@ err0:
 
 static OS_Error_t
 KeystoreFile_loadKey(
-    Keystore_t*     ptr,
+    OS_Keystore_t*  ptr,
     const char*     name,
     void*           keyData,
     size_t*         keySize)
@@ -496,8 +496,8 @@ KeystoreFile_loadKey(
 
 static OS_Error_t
 KeystoreFile_deleteKey(
-    Keystore_t* ptr,
-    const char* name)
+    OS_Keystore_t*  ptr,
+    const char*     name)
 {
     OS_Error_t err;
     KeystoreFile_t*  self = (KeystoreFile_t*) ptr;
@@ -543,9 +543,9 @@ KeystoreFile_deleteKey(
 
 static OS_Error_t
 KeystoreFile_copyKey(
-    Keystore_t* srcPtr,
-    const char* name,
-    Keystore_t* dstPtr)
+    OS_Keystore_t*  srcPtr,
+    const char*     name,
+    OS_Keystore_t*  dstPtr)
 {
     OS_Error_t err;
     KeystoreFile_t* self = (KeystoreFile_t*) srcPtr;
@@ -583,9 +583,9 @@ KeystoreFile_copyKey(
 
 static OS_Error_t
 KeystoreFile_moveKey(
-    Keystore_t* srcPtr,
-    const char* name,
-    Keystore_t* dstPtr)
+    OS_Keystore_t*  srcPtr,
+    const char*     name,
+    OS_Keystore_t*  dstPtr)
 {
     OS_Error_t err;
 
@@ -621,7 +621,7 @@ KeystoreFile_moveKey(
 
 static OS_Error_t
 KeystoreFile_wipeKeystore(
-    Keystore_t* ptr)
+    OS_Keystore_t*  ptr)
 {
     OS_Error_t err;
     KeystoreFile_t*  self = (KeystoreFile_t*) ptr;
@@ -662,7 +662,7 @@ KeystoreFile_wipeKeystore(
 
 static OS_Error_t
 KeystoreFile_free(
-    Keystore_t* ptr)
+    OS_Keystore_t*  ptr)
 {
     if (ptr == NULL)
     {
@@ -676,7 +676,7 @@ KeystoreFile_free(
 
 // Public functions ------------------------------------------------------------
 
-static const Keystore_Vtable_t KeystoreFile_vtable =
+static const OS_Keystore_Vtable_t KeystoreFile_vtable =
 {
     .storeKey       = KeystoreFile_storeKey,
     .loadKey        = KeystoreFile_loadKey,
@@ -722,14 +722,6 @@ KeystoreFile_init(
 // TODO: make a decision about OS_Keystore_init(). This function can stay here
 // only temporarily because we have (at the moment) only this implementation of
 // the Keystore.
-
-// For now, we only have the LIB so lets use just that; later we may have other
-// implementations below this API level..
-struct OS_Keystore
-{
-    Keystore_t impl;
-};
-
 OS_Error_t
 OS_Keystore_init(
     OS_Keystore_Handle_t*  hKeystore,
