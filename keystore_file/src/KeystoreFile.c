@@ -245,7 +245,7 @@ map_registerKey(
     const char*     name,
     size_t          keySize)
 {
-    KeyNameMap_t keyName;
+    KeyName keyName;
 
     strncpy(keyName.buffer, name, sizeof(keyName.buffer) - 1);
     keyName.buffer[sizeof(keyName.buffer) - 1] = '\0';
@@ -264,7 +264,7 @@ map_checkKeyExists(
     KeystoreFile_t* self,
     const char*     name)
 {
-    KeyNameMap_t keyName;
+    KeyName keyName;
 
     strncpy(keyName.buffer, name, sizeof(keyName.buffer) - 1);
     keyName.buffer[sizeof(keyName.buffer) - 1] = '\0';
@@ -279,7 +279,7 @@ map_getKeySize(
 {
     int keyIndex;
 
-    keyIndex = KeyNameMap_getIndexOf(&self->keyNameMap, (KeyNameMap_t*)name);
+    keyIndex = KeyNameMap_getIndexOf(&self->keyNameMap, (KeyName*)name);
     if (keyIndex < 0)
     {
         return 0;
@@ -293,7 +293,7 @@ map_deregisterKey(
     KeystoreFile_t* self,
     const char*     name)
 {
-    KeyNameMap_t keyName;
+    KeyName keyName;
 
     strncpy(keyName.buffer, name, sizeof(keyName.buffer) - 1);
     keyName.buffer[sizeof(keyName.buffer) - 1] = '\0';
@@ -647,8 +647,8 @@ KeystoreFile_wipeKeystore(
 
     for (int i = registerSize - 1; i >= 0; i--)
     {
-        KeyNameMap_t* keyName = (KeyNameMap_t*)KeyNameMap_getKeyAt(
-                                    &self->keyNameMap, i);
+        KeyName* keyName = (KeyName*)KeyNameMap_getKeyAt(
+                               &self->keyNameMap, i);
         err = KeystoreFile_deleteKey(ptr, keyName->buffer);
         if (err != OS_SUCCESS)
         {

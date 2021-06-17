@@ -6,7 +6,7 @@
 #include "KeyNameMap.h"
 #include <string.h>
 
-MapT_DEFINE(KeystoreFile_KeyName, size_t, KeyNameMap);
+MapT_DEFINE(KeyName, size_t, KeyNameMap);
 
 /* Key functions ----------------------------------------------------------*/
 bool
@@ -43,25 +43,25 @@ size_t_dtor(
 
 /* Value functions ----------------------------------------------------------*/
 bool
-KeystoreFile_KeyName_ctorCopy(
-    KeyNameMap_t*       dst,
-    KeyNameMap_t const* src)
+KeyName_ctorCopy(
+    KeyName*       dst,
+    KeyName const* src)
 {
-    return KeystoreFile_KeyName_assign(dst, src);
+    return KeyName_assign(dst, src);
 }
 
 bool
-KeystoreFile_KeyName_ctorMove(
-    KeyNameMap_t*       dst,
-    KeyNameMap_t const* src)
+KeyName_ctorMove(
+    KeyName*       dst,
+    KeyName const* src)
 {
-    return KeystoreFile_KeyName_assign(dst, src);
+    return KeyName_assign(dst, src);
 }
 
 bool
-KeystoreFile_KeyName_assign(
-    KeyNameMap_t*       dst,
-    KeyNameMap_t const* src)
+KeyName_assign(
+    KeyName*       dst,
+    KeyName const* src)
 {
     strncpy(dst->buffer, src->buffer, sizeof(dst->buffer) - 1);
     dst->buffer[sizeof(dst->buffer) - 1] = '\0';
@@ -70,16 +70,16 @@ KeystoreFile_KeyName_assign(
 }
 
 void
-KeystoreFile_KeyName_dtor(
-    KeyNameMap_t* el)
+KeyName_dtor(
+    KeyName* el)
 {
     return;
 }
 
 bool
-KeystoreFile_KeyName_isEqual(
-    KeyNameMap_t const* a,
-    KeyNameMap_t const* b)
+KeyName_isEqual(
+    KeyName const* a,
+    KeyName const* b)
 {
     return !strncmp(a->buffer, b->buffer, sizeof(a->buffer));
 }
