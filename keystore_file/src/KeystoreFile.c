@@ -426,11 +426,78 @@ isLoadKeyParametersOk(
     return true;
 }
 
-
-// Exported via VTABLE ---------------------------------------------------------
-
 static OS_Error_t
-KeystoreFile_free(
+KeystoreFile_init(
+    KeystoreFile_t*        self,
+    OS_FileSystem_Handle_t hFs,
+    OS_Crypto_Handle_t     hCrypto,
+    const char*            name)
+{
+    if (NULL == self || NULL == hFs || NULL == name)
+    {
+        return OS_ERROR_INVALID_PARAMETER;
+    }
+    else if (strlen(name) > KeystoreFile_MAX_INSTANCE_NAME_LEN)
+    {
+        return OS_ERROR_INVALID_PARAMETER;
+    }
+
+    memset(self, 0, sizeof(KeystoreFile_t));
+
+    if (!KeyNameMap_ctor(&self->keyNameMap, 1))
+    {
+        return OS_ERROR_ABORTED;
+    }
+
+    strncpy(self->name, name, sizeof(self->name) - 1);
+    self->name[sizeof(self->name) - 1] = '\0';
+
+    self->hFs     = hFs;
+    self->hCrypto = hCrypto;
+
+    return OS_SUCCESS;
+}
+
+
+// Public functions ------------------------------------------------------------
+
+// TODO: make a decision about OS_Keystore_init(). This function can stay here
+// only temporarily because we have (at the moment) only this implementation of
+// the Keystore.
+OS_Error_t
+OS_Keystore_init(
+    OS_Keystore_Handle_t*  hKeystore,
+    OS_FileSystem_Handle_t hFs,
+    OS_Crypto_Handle_t     hCrypto,
+    const char*            name)
+{
+    OS_Error_t err;
+
+    if (NULL == hKeystore)
+    {
+        return OS_ERROR_INVALID_HANDLE;
+    }
+
+    *hKeystore = malloc(sizeof(KeystoreFile_t));
+
+    if (*hKeystore == NULL)
+    {
+        return OS_ERROR_INSUFFICIENT_SPACE;
+    }
+
+    if ((err = KeystoreFile_init((KeystoreFile_t*) *hKeystore,
+                                 hFs,
+                                 hCrypto,
+                                 name)) != OS_SUCCESS)
+    {
+        free(*hKeystore);
+    }
+
+    return err;
+}
+
+OS_Error_t
+OS_Keystore_free(
     OS_Keystore_t*  ptr)
 {
     if (ptr == NULL)
@@ -443,8 +510,8 @@ KeystoreFile_free(
     return OS_SUCCESS;
 }
 
-static OS_Error_t
-KeystoreFile_storeKey(
+OS_Error_t
+OS_Keystore_storeKey(
     OS_Keystore_t*  ptr,
     const char*     name,
     void const*     keyData,
@@ -503,8 +570,8 @@ err0:
     return err;
 }
 
-static OS_Error_t
-KeystoreFile_loadKey(
+OS_Error_t
+OS_Keystore_loadKey(
     OS_Keystore_t*  ptr,
     const char*     name,
     void*           keyData,
@@ -580,8 +647,8 @@ KeystoreFile_loadKey(
     return err;
 }
 
-static OS_Error_t
-KeystoreFile_deleteKey(
+OS_Error_t
+OS_Keystore_deleteKey(
     OS_Keystore_t*  ptr,
     const char*     name)
 {
@@ -630,8 +697,8 @@ KeystoreFile_deleteKey(
     return err;
 }
 
-static OS_Error_t
-KeystoreFile_copyKey(
+OS_Error_t
+OS_Keystore_copyKey(
     OS_Keystore_t*  srcPtr,
     const char*     name,
     OS_Keystore_t*  dstPtr)
@@ -654,7 +721,7 @@ KeystoreFile_copyKey(
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    err = KeystoreFile_loadKey(srcPtr, name, self->buffer, &keySize);
+    err = OS_Keystore_loadKey(srcPtr, name, self->buffer, &keySize);
 
     if (err != OS_SUCCESS)
     {
@@ -662,7 +729,7 @@ KeystoreFile_copyKey(
         return err;
     }
 
-    err = KeystoreFile_storeKey(dstPtr, name, self->buffer, keySize);
+    err = OS_Keystore_storeKey(dstPtr, name, self->buffer, keySize);
 
     if (err != OS_SUCCESS)
     {
@@ -673,8 +740,8 @@ KeystoreFile_copyKey(
     return err;
 }
 
-static OS_Error_t
-KeystoreFile_moveKey(
+OS_Error_t
+OS_Keystore_moveKey(
     OS_Keystore_t*  srcPtr,
     const char*     name,
     OS_Keystore_t*  dstPtr)
@@ -695,7 +762,7 @@ KeystoreFile_moveKey(
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    err = KeystoreFile_copyKey(srcPtr, name, dstPtr);
+    err = OS_Keystore_copyKey(srcPtr, name, dstPtr);
 
     if (err != OS_SUCCESS)
     {
@@ -703,7 +770,7 @@ KeystoreFile_moveKey(
         return err;
     }
 
-    err = KeystoreFile_deleteKey(srcPtr, name);
+    err = OS_Keystore_deleteKey(srcPtr, name);
 
     if (err != OS_SUCCESS)
     {
@@ -714,8 +781,8 @@ KeystoreFile_moveKey(
     return err;
 }
 
-static OS_Error_t
-KeystoreFile_wipeKeystore(
+OS_Error_t
+OS_Keystore_wipeKeystore(
     OS_Keystore_t*  ptr)
 {
     OS_Error_t err;
@@ -746,7 +813,7 @@ KeystoreFile_wipeKeystore(
     {
         KeyName* keyName = (KeyName*)KeyNameMap_getKeyAt(
                                &self->keyNameMap, i);
-        err = KeystoreFile_deleteKey(ptr, keyName->buffer);
+        err = OS_Keystore_deleteKey(ptr, keyName->buffer);
 
         if (err != OS_SUCCESS)
         {
@@ -754,89 +821,6 @@ KeystoreFile_wipeKeystore(
                             __func__, keyName->buffer);
             return err;
         }
-    }
-
-    return err;
-}
-
-
-// Public functions ------------------------------------------------------------
-
-static const OS_Keystore_Vtable_t KeystoreFile_vtable =
-{
-    .free           = KeystoreFile_free,
-    .storeKey       = KeystoreFile_storeKey,
-    .loadKey        = KeystoreFile_loadKey,
-    .deleteKey      = KeystoreFile_deleteKey,
-    .copyKey        = KeystoreFile_copyKey,
-    .moveKey        = KeystoreFile_moveKey,
-    .wipeKeystore   = KeystoreFile_wipeKeystore
-};
-
-OS_Error_t
-KeystoreFile_init(
-    KeystoreFile_t*        self,
-    OS_FileSystem_Handle_t hFs,
-    OS_Crypto_Handle_t     hCrypto,
-    const char*            name)
-{
-    if (NULL == self || NULL == hFs || NULL == name)
-    {
-        return OS_ERROR_INVALID_PARAMETER;
-    }
-    else if (strlen(name) > KeystoreFile_MAX_INSTANCE_NAME_LEN)
-    {
-        return OS_ERROR_INVALID_PARAMETER;
-    }
-
-    memset(self, 0, sizeof(KeystoreFile_t));
-
-    if (!KeyNameMap_ctor(&self->keyNameMap, 1))
-    {
-        return OS_ERROR_ABORTED;
-    }
-
-    strncpy(self->name, name, sizeof(self->name) - 1);
-    self->name[sizeof(self->name) - 1] = '\0';
-
-    self->hFs     = hFs;
-    self->hCrypto = hCrypto;
-
-    self->parent.vtable = &KeystoreFile_vtable;
-
-    return OS_SUCCESS;
-}
-
-// TODO: make a decision about OS_Keystore_init(). This function can stay here
-// only temporarily because we have (at the moment) only this implementation of
-// the Keystore.
-OS_Error_t
-OS_Keystore_init(
-    OS_Keystore_Handle_t*  hKeystore,
-    OS_FileSystem_Handle_t hFs,
-    OS_Crypto_Handle_t     hCrypto,
-    const char*            name)
-{
-    OS_Error_t err;
-
-    if (NULL == hKeystore)
-    {
-        return OS_ERROR_INVALID_HANDLE;
-    }
-
-    *hKeystore = malloc(sizeof(KeystoreFile_t));
-
-    if (*hKeystore == NULL)
-    {
-        return OS_ERROR_INSUFFICIENT_SPACE;
-    }
-
-    if ((err = KeystoreFile_init((KeystoreFile_t*) *hKeystore,
-                                 hFs,
-                                 hCrypto,
-                                 name)) != OS_SUCCESS)
-    {
-        free(*hKeystore);
     }
 
     return err;
