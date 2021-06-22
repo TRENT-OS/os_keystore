@@ -1,12 +1,5 @@
-/**
- * @addtogroup UTIL
- * @{
- *
- * @file KeyNameMap.h
- *
- * @brief key store key name map definition
- *
- * Copyright (C) 2019, Hensoldt Cyber GmbH
+/*
+ * Copyright (C) 2019-2021, HENSOLDT Cyber GmbH
  */
 #pragma once
 
@@ -63,4 +56,3 @@ void
 size_t_dtor(
     size_t* el);
 
-///@}
