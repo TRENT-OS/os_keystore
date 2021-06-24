@@ -9,6 +9,15 @@
 #include <stdlib.h>
 
 OS_Error_t
+OS_Keystore_free(
+    OS_Keystore_Handle_t hKeystore)
+{
+    return (NULL == hKeystore) ?
+           OS_ERROR_INVALID_HANDLE :
+           hKeystore->vtable->free(hKeystore);
+}
+
+OS_Error_t
 OS_Keystore_storeKey(
     OS_Keystore_Handle_t hKeystore,
     const char*          name,
@@ -71,13 +80,4 @@ OS_Keystore_wipeKeystore(
     return (NULL == hKeystore) ?
            OS_ERROR_INVALID_HANDLE :
            hKeystore->vtable->wipeKeystore(hKeystore);
-}
-
-OS_Error_t
-OS_Keystore_free(
-    OS_Keystore_Handle_t hKeystore)
-{
-    return (NULL == hKeystore) ?
-           OS_ERROR_INVALID_HANDLE :
-           hKeystore->vtable->free(hKeystore);
 }

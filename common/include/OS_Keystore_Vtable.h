@@ -8,6 +8,9 @@
 
 #include <stddef.h>
 
+typedef OS_Error_t
+(*OS_Keystore_Vtable_Free)(
+    OS_Keystore_t*  self);
 
 typedef OS_Error_t
 (*OS_Keystore_Vtable_StoreKey)(
@@ -44,19 +47,15 @@ typedef OS_Error_t
 (*OS_Keystore_Vtable_WipeKeystore)(
     OS_Keystore_t*  self);
 
-typedef OS_Error_t
-(*OS_Keystore_Vtable_Free)(
-    OS_Keystore_t*  self);
-
 typedef struct
 {
+    OS_Keystore_Vtable_Free           free;
     OS_Keystore_Vtable_StoreKey       storeKey;
     OS_Keystore_Vtable_LoadKey        loadKey;
     OS_Keystore_Vtable_DeleteKey      deleteKey;
     OS_Keystore_Vtable_CopyKey        copyKey;
     OS_Keystore_Vtable_MoveKey        moveKey;
     OS_Keystore_Vtable_WipeKeystore   wipeKeystore;
-    OS_Keystore_Vtable_Free           free;
 }
 OS_Keystore_Vtable_t;
 

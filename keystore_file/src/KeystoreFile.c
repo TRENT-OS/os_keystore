@@ -430,6 +430,20 @@ isLoadKeyParametersOk(
 // Exported via VTABLE ---------------------------------------------------------
 
 static OS_Error_t
+KeystoreFile_free(
+    OS_Keystore_t*  ptr)
+{
+    if (ptr == NULL)
+    {
+        return OS_ERROR_INVALID_PARAMETER;
+    }
+
+    free(ptr);
+
+    return OS_SUCCESS;
+}
+
+static OS_Error_t
 KeystoreFile_storeKey(
     OS_Keystore_t*  ptr,
     const char*     name,
@@ -745,31 +759,18 @@ KeystoreFile_wipeKeystore(
     return err;
 }
 
-static OS_Error_t
-KeystoreFile_free(
-    OS_Keystore_t*  ptr)
-{
-    if (ptr == NULL)
-    {
-        return OS_ERROR_INVALID_PARAMETER;
-    }
-
-    free(ptr);
-
-    return OS_SUCCESS;
-}
 
 // Public functions ------------------------------------------------------------
 
 static const OS_Keystore_Vtable_t KeystoreFile_vtable =
 {
+    .free           = KeystoreFile_free,
     .storeKey       = KeystoreFile_storeKey,
     .loadKey        = KeystoreFile_loadKey,
     .deleteKey      = KeystoreFile_deleteKey,
     .copyKey        = KeystoreFile_copyKey,
     .moveKey        = KeystoreFile_moveKey,
-    .wipeKeystore   = KeystoreFile_wipeKeystore,
-    .free           = KeystoreFile_free
+    .wipeKeystore   = KeystoreFile_wipeKeystore
 };
 
 OS_Error_t
