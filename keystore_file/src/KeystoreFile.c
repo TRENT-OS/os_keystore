@@ -26,8 +26,11 @@ createKeyHash(
     OS_Error_t err = OS_SUCCESS;
     OS_CryptoDigest_Handle_t hDigest;
 
-    err = OS_CryptoDigest_init(&hDigest, hCrypto,
-                               OS_CryptoDigest_ALG_SHA256);
+    err = OS_CryptoDigest_init(
+              &hDigest,
+              hCrypto,
+              OS_CryptoDigest_ALG_SHA256);
+
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: OS_CryptoDigest_init() failed with error code %d!",
@@ -36,6 +39,7 @@ createKeyHash(
     }
 
     err = OS_CryptoDigest_process(hDigest, keyData, keyDataSize);
+
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: OS_CryptoDigest_process() failed with error code %d!",
@@ -45,6 +49,7 @@ createKeyHash(
 
     size_t digestSize = KEY_HASH_SIZE;
     err = OS_CryptoDigest_finalize(hDigest, output, &digestSize);
+
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: OS_CryptoDigest_finalize() failed with error code %d!",
@@ -89,9 +94,15 @@ fs_writeKey(
     size_t offs;
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
-    if ((err = OS_FileSystemFile_open(hFs, &hFile, fileName,
-                                      OS_FileSystem_OpenMode_RDWR,
-                                      OS_FileSystem_OpenFlags_CREATE)) != OS_SUCCESS)
+
+    err = OS_FileSystemFile_open(
+              hFs,
+              &hFile,
+              fileName,
+              OS_FileSystem_OpenMode_RDWR,
+              OS_FileSystem_OpenFlags_CREATE);
+
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_FileSystemFile_open() failed on '%s' with %d",
                         fileName, err);
@@ -101,9 +112,14 @@ fs_writeKey(
     err  = OS_ERROR_OPERATION_DENIED;
     offs = 0;
 
-    if ((err = OS_FileSystemFile_write(hFs, hFile, offs,
-                                       KEY_HASH_SIZE,
-                                       keyDataHash)) != OS_SUCCESS)
+    err = OS_FileSystemFile_write(
+              hFs,
+              hFile,
+              offs,
+              KEY_HASH_SIZE,
+              keyDataHash);
+
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_FileSystemFile_write() failed on '%s' with %d",
                         fileName, err);
@@ -113,9 +129,15 @@ fs_writeKey(
     offs += KEY_HASH_SIZE;
 
     BitConverter_putUint32BE((uint32_t) keySize, keySizeBuffer);
-    if ((err = OS_FileSystemFile_write(hFs, hFile, offs,
-                                       KEY_LEN_SIZE,
-                                       keySizeBuffer)) != OS_SUCCESS)
+
+    err = OS_FileSystemFile_write(
+              hFs,
+              hFile,
+              offs,
+              KEY_LEN_SIZE,
+              keySizeBuffer);
+
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_FileSystemFile_write() failed on '%s' with %d",
                         fileName, err);
@@ -159,9 +181,15 @@ fs_readKey(
     size_t offs, realKeySize;
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
-    if ((err = OS_FileSystemFile_open(hFs, &hFile, fileName,
-                                      OS_FileSystem_OpenMode_RDONLY,
-                                      OS_FileSystem_OpenFlags_NONE)) != OS_SUCCESS)
+
+    err = OS_FileSystemFile_open(
+              hFs,
+              &hFile,
+              fileName,
+              OS_FileSystem_OpenMode_RDONLY,
+              OS_FileSystem_OpenFlags_NONE);
+
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_FileSystemFile_open() failed on '%s' with %d",
                         fileName, err);
@@ -171,9 +199,14 @@ fs_readKey(
     err  = OS_ERROR_OPERATION_DENIED;
     offs = 0;
 
-    if ((err = OS_FileSystemFile_read(hFs, hFile, offs,
-                                      KEY_HASH_SIZE,
-                                      keyDataHash)) != OS_SUCCESS)
+    err = OS_FileSystemFile_read(
+              hFs,
+              hFile,
+              offs,
+              KEY_HASH_SIZE,
+              keyDataHash);
+
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_FileSystemFile_read() failed on '%s' with %d",
                         fileName, err);
@@ -182,15 +215,22 @@ fs_readKey(
 
     offs += KEY_HASH_SIZE;
 
-    if ((err = OS_FileSystemFile_read(hFs, hFile, offs,
-                                      KEY_LEN_SIZE,
-                                      keySizeBuffer)) != OS_SUCCESS)
+    err = OS_FileSystemFile_read(
+              hFs,
+              hFile,
+              offs,
+              KEY_LEN_SIZE,
+              keySizeBuffer);
+
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_FileSystemFile_read() failed on '%s' with %d",
                         fileName, err);
         goto err0;
     }
+
     realKeySize = BitConverter_getUint32BE(keySizeBuffer);
+
     if (realKeySize != keySize)
     {
         Debug_LOG_ERROR("Key size in map (%zu bytes) does not match the size of "
@@ -201,9 +241,14 @@ fs_readKey(
 
     offs += KEY_LEN_SIZE;
 
-    if ((err = OS_FileSystemFile_read(hFs, hFile, offs,
-                                      keySize,
-                                      keyData)) != OS_SUCCESS)
+    err = OS_FileSystemFile_read(
+              hFs,
+              hFile,
+              offs,
+              keySize,
+              keyData);
+
+    if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_FileSystemFile_read() failed on '%s' with %d",
                         fileName, err);
@@ -230,6 +275,7 @@ fs_deleteKey(
     char fileName[KeystoreFile_MAX_FILE_NAME_LEN + 1]; // null terminated string
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
+
     if ((err = OS_FileSystemFile_delete(hFs, fileName)) != OS_SUCCESS)
     {
         Debug_LOG_ERROR("OS_FileSystemFile_delete() failed on '%s' with %d",
@@ -269,7 +315,8 @@ map_checkKeyExists(
     strncpy(keyName.buffer, name, sizeof(keyName.buffer) - 1);
     keyName.buffer[sizeof(keyName.buffer) - 1] = '\0';
 
-    return KeyNameMap_getIndexOf(&self->keyNameMap, &keyName) >= 0 ? true : false;
+    return KeyNameMap_getIndexOf(&self->keyNameMap, &keyName)
+           >= 0 ? true : false;
 }
 
 static size_t
@@ -280,6 +327,7 @@ map_getKeySize(
     int keyIndex;
 
     keyIndex = KeyNameMap_getIndexOf(&self->keyNameMap, (KeyName*)name);
+
     if (keyIndex < 0)
     {
         return 0;
@@ -320,6 +368,7 @@ isStoreKeyParametersOk(
     }
 
     size_t nameLen = strlen(name);
+
     if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
@@ -340,6 +389,7 @@ isStoreKeyParametersOk(
                         __func__, name);
         return false;
     }
+
     return true;
 }
 
@@ -356,6 +406,7 @@ isLoadKeyParametersOk(
     }
 
     size_t nameLen = strlen(name);
+
     if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
@@ -394,17 +445,27 @@ KeystoreFile_storeKey(
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    err = createKeyHash(self->hCrypto,
-                        keyData,
-                        keySize,
-                        keyDataHash);
+    err = createKeyHash(
+              self->hCrypto,
+              keyData,
+              keySize,
+              keyDataHash);
+
     if (err != OS_SUCCESS)
     {
-        Debug_LOG_ERROR("%s: Could not hash the key data, err %d!", __func__, err);
+        Debug_LOG_ERROR("%s: Could not hash the key data, err %d!",
+                        __func__, err);
         return err;
     }
 
-    err = fs_writeKey(self->hFs, keyData, keyDataHash, keySize, self->name, name);
+    err = fs_writeKey(
+              self->hFs,
+              keyData,
+              keyDataHash,
+              keySize,
+              self->name,
+              name);
+
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not write the key data to the file, err %d!",
@@ -413,6 +474,7 @@ KeystoreFile_storeKey(
     }
 
     err = map_registerKey(self, name, keySize);
+
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Failed to register the key name, error code %d!",
@@ -451,9 +513,10 @@ KeystoreFile_loadKey(
         return OS_ERROR_NOT_FOUND;
     }
 
-    // Get the size of the written key data from the map and check that the provided
-    // buffer is large enough
+    // Get the size of the written key data from the map and check that the
+    // provided buffer is large enough
     size_t savedKeySize = map_getKeySize(self, name);
+
     if (savedKeySize > *keySize)
     {
         Debug_LOG_ERROR("%s: The actual amount of key data (%zu bytes) is bigger "
@@ -462,7 +525,14 @@ KeystoreFile_loadKey(
         return OS_ERROR_BUFFER_TOO_SMALL;
     }
 
-    err = fs_readKey(self->hFs, keyData, readHash, savedKeySize, self->name, name);
+    err = fs_readKey(
+              self->hFs,
+              keyData,
+              readHash,
+              savedKeySize,
+              self->name,
+              name);
+
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not read the key data from the file, err %d!",
@@ -470,10 +540,12 @@ KeystoreFile_loadKey(
         return err;
     }
 
-    err = createKeyHash(self->hCrypto,
-                        keyData,
-                        savedKeySize,
-                        calculatedHash);
+    err = createKeyHash(
+              self->hCrypto,
+              keyData,
+              savedKeySize,
+              calculatedHash);
+
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Could not hash the key data, err %d!",
@@ -508,6 +580,7 @@ KeystoreFile_deleteKey(
     }
 
     size_t nameLen = strlen(name);
+
     if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
@@ -523,6 +596,7 @@ KeystoreFile_deleteKey(
     }
 
     err = map_deregisterKey(self, name);
+
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: Failed to deregister the key name, error code %d!",
@@ -531,6 +605,7 @@ KeystoreFile_deleteKey(
     }
 
     err = fs_deleteKey(self->hFs, self->name, name);
+
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: fs_deleteKey failed with error code %d!",
@@ -557,6 +632,7 @@ KeystoreFile_copyKey(
     }
 
     size_t nameLen = strlen(name);
+
     if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
@@ -565,6 +641,7 @@ KeystoreFile_copyKey(
     }
 
     err = KeystoreFile_loadKey(srcPtr, name, self->buffer, &keySize);
+
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: loadKey failed with err %d!", __func__, err);
@@ -572,6 +649,7 @@ KeystoreFile_copyKey(
     }
 
     err = KeystoreFile_storeKey(dstPtr, name, self->buffer, keySize);
+
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: storeKey failed with err %d!", __func__, err);
@@ -595,6 +673,7 @@ KeystoreFile_moveKey(
     }
 
     size_t nameLen = strlen(name);
+
     if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
@@ -603,6 +682,7 @@ KeystoreFile_moveKey(
     }
 
     err = KeystoreFile_copyKey(srcPtr, name, dstPtr);
+
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: copyKey failed with err %d!", __func__, err);
@@ -610,6 +690,7 @@ KeystoreFile_moveKey(
     }
 
     err = KeystoreFile_deleteKey(srcPtr, name);
+
     if (err != OS_SUCCESS)
     {
         Debug_LOG_ERROR("%s: deleteKey failed with err %d!", __func__, err);
@@ -632,9 +713,11 @@ KeystoreFile_wipeKeystore(
     }
 
     int registerSize = KeyNameMap_getSize(&self->keyNameMap);
+
     if (registerSize < 0)
     {
-        Debug_LOG_ERROR("%s: Failed to read the key name register size!", __func__);
+        Debug_LOG_ERROR("%s: Failed to read the key name register size!",
+                        __func__);
         return OS_ERROR_ABORTED;
     }
 
@@ -650,9 +733,11 @@ KeystoreFile_wipeKeystore(
         KeyName* keyName = (KeyName*)KeyNameMap_getKeyAt(
                                &self->keyNameMap, i);
         err = KeystoreFile_deleteKey(ptr, keyName->buffer);
+
         if (err != OS_SUCCESS)
         {
-            Debug_LOG_ERROR("%s: Failed to delete the key %s!", __func__, keyName->buffer);
+            Debug_LOG_ERROR("%s: Failed to delete the key %s!",
+                            __func__, keyName->buffer);
             return err;
         }
     }
@@ -702,7 +787,9 @@ KeystoreFile_init(
     {
         return OS_ERROR_INVALID_PARAMETER;
     }
+
     memset(self, 0, sizeof(KeystoreFile_t));
+
     if (!KeyNameMap_ctor(&self->keyNameMap, 1))
     {
         return OS_ERROR_ABORTED;
@@ -737,6 +824,7 @@ OS_Keystore_init(
     }
 
     *hKeystore = malloc(sizeof(KeystoreFile_t));
+
     if (*hKeystore == NULL)
     {
         return OS_ERROR_INSUFFICIENT_SPACE;
