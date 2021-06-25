@@ -1,18 +1,21 @@
 /*
  * Copyright (C) 2019-2021, HENSOLDT Cyber GmbH
  */
+
 #pragma once
 
 #include "lib_utils/MapT.h"
 
 #define MAX_KEY_NAME_LEN    16
 
+typedef size_t KeySize;
+
 typedef struct KeyName
 {
     char buffer[MAX_KEY_NAME_LEN + 1]; // null terminated string
 } KeyName;
 
-MapT_DECLARE(KeyName, size_t, KeyNameMap);
+MapT_DECLARE(KeyName, KeySize, KeyNameMap);
 
 /* Key functions ----------------------------------------------------------*/
 bool
@@ -38,21 +41,20 @@ KeyName_isEqual(
 
 /* Value functions ----------------------------------------------------------*/
 bool
-size_t_ctorCopy(
-    size_t*       dst,
-    size_t const* src);
+KeySize_ctorCopy(
+    KeySize*       dst,
+    KeySize const* src);
 
 bool
-size_t_ctorMove(
-    size_t*       dst,
-    size_t const* src);
+KeySize_ctorMove(
+    KeySize*       dst,
+    KeySize const* src);
 
 bool
-size_t_assign(
-    size_t*       dst,
-    size_t const* src);
+KeySize_assign(
+    KeySize*       dst,
+    KeySize const* src);
 
 void
-size_t_dtor(
-    size_t* el);
-
+KeySize_dtor(
+    KeySize* el);

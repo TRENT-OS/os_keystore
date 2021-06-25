@@ -5,37 +5,37 @@
 #include "KeyNameMap.h"
 #include <string.h>
 
-MapT_DEFINE(KeyName, size_t, KeyNameMap);
+MapT_DEFINE(KeyName, KeySize, KeyNameMap);
 
 /* Key functions ----------------------------------------------------------*/
 bool
-size_t_ctorCopy(
-    size_t*       dst,
-    size_t const* src)
+KeySize_ctorCopy(
+    KeySize*       dst,
+    KeySize const* src)
 {
-    return size_t_assign(dst, src);
+    return KeySize_assign(dst, src);
 }
 
 bool
-size_t_ctorMove(
-    size_t*       dst,
-    size_t const* src)
+KeySize_ctorMove(
+    KeySize*       dst,
+    KeySize const* src)
 {
-    return size_t_assign(dst, src);
+    return KeySize_assign(dst, src);
 }
 
 bool
-size_t_assign(
-    size_t*       dst,
-    size_t const* src)
+KeySize_assign(
+    KeySize*       dst,
+    KeySize const* src)
 {
     *dst = *src;
     return true;
 }
 
 void
-size_t_dtor(
-    size_t* el)
+KeySize_dtor(
+    KeySize* el)
 {
     return;
 }
