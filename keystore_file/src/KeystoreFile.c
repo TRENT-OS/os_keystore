@@ -438,7 +438,8 @@ KeystoreFile_free(
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    free(ptr);
+    KeystoreFile_t* self = (KeystoreFile_t*) ptr;
+    KeyNameMap_dtor(&self->keyNameMap);
 
     return OS_SUCCESS;
 }
