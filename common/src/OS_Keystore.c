@@ -8,6 +8,13 @@
 
 #include <stdlib.h>
 
+
+struct OS_Keystore
+{
+    const OS_Keystore_Vtable_t* vtable;
+};
+
+
 OS_Error_t
 OS_Keystore_free(
     OS_Keystore_Handle_t hKeystore)

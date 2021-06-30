@@ -20,13 +20,13 @@
 
 typedef struct
 {
-    OS_Keystore_t           parent;
-    OS_FileSystem_Handle_t  hFs;
-    OS_Crypto_Handle_t      hCrypto;
-    char                    name[KeystoreFile_MAX_INSTANCE_NAME_LEN +
-                                                                    1]; // null terminated string
-    KeyNameMap              keyNameMap;
-    unsigned char           buffer[KeystoreFile_MAX_KEY_SIZE];
+    const OS_Keystore_Vtable_t* vtable;
+    OS_FileSystem_Handle_t      hFs;
+    OS_Crypto_Handle_t          hCrypto;
+    char                        name[KeystoreFile_MAX_INSTANCE_NAME_LEN +
+                                                                        1]; // null terminated string
+    KeyNameMap                  keyNameMap;
+    unsigned char               buffer[KeystoreFile_MAX_KEY_SIZE];
 }
 KeystoreFile_t;
 

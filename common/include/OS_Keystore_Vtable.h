@@ -58,8 +58,3 @@ typedef struct
     OS_Keystore_Vtable_WipeKeystore   wipeKeystore;
 }
 OS_Keystore_Vtable_t;
-
-struct OS_Keystore
-{
-    const OS_Keystore_Vtable_t* vtable;
-};

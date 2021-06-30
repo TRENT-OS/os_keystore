@@ -802,7 +802,7 @@ KeystoreFile_init(
     self->hFs     = hFs;
     self->hCrypto = hCrypto;
 
-    self->parent.vtable = &KeystoreFile_vtable;
+    self->vtable = &KeystoreFile_vtable;
 
     return OS_SUCCESS;
 }
