@@ -18,6 +18,8 @@
 #define KeystoreFile_MAX_FILE_NAME_LEN \
     (KeystoreFile_MAX_INSTANCE_NAME_LEN + 1 + MAX_KEY_NAME_LEN + 4)
 
+#define KeystoreFile_TO_OS_KEYSTORE(self) ((OS_Keystore_t*) (self))
+
 typedef struct
 {
     const OS_Keystore_Vtable_t* vtable;
