@@ -807,38 +807,3 @@ KeystoreFile_init(
 
     return OS_SUCCESS;
 }
-
-// TODO: make a decision about OS_Keystore_init(). This function can stay here
-// only temporarily because we have (at the moment) only this implementation of
-// the Keystore.
-OS_Error_t
-OS_Keystore_init(
-    OS_Keystore_Handle_t*  hKeystore,
-    OS_FileSystem_Handle_t hFs,
-    OS_Crypto_Handle_t     hCrypto,
-    const char*            name)
-{
-    OS_Error_t err;
-
-    if (NULL == hKeystore)
-    {
-        return OS_ERROR_INVALID_HANDLE;
-    }
-
-    *hKeystore = malloc(sizeof(KeystoreFile_t));
-
-    if (*hKeystore == NULL)
-    {
-        return OS_ERROR_INSUFFICIENT_SPACE;
-    }
-
-    if ((err = KeystoreFile_init((KeystoreFile_t*) *hKeystore,
-                                 hFs,
-                                 hCrypto,
-                                 name)) != OS_SUCCESS)
-    {
-        free(*hKeystore);
-    }
-
-    return err;
-}
