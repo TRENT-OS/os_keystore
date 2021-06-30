@@ -2,10 +2,8 @@
  * Copyright (C) 2019-2021, HENSOLDT Cyber GmbH
  */
 
-#include "KeystoreFile.h"
-
+#include "OS_KeystoreFile.h"
 #include "OS_Keystore.h"
-
 #include "lib_utils/BitConverter.h"
 
 #include <string.h>
@@ -90,7 +88,7 @@ fs_writeKey(
     uint8_t keySizeBuffer[KEY_LEN_SIZE];
     OS_Error_t err = OS_SUCCESS;
     OS_FileSystemFile_Handle_t hFile;
-    char fileName[KeystoreFile_MAX_FILE_NAME_LEN + 1]; // null terminated string
+    char fileName[OS_KeystoreFile_MAX_FILE_NAME_LEN + 1]; // null terminated string
     size_t offs;
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
@@ -177,7 +175,7 @@ fs_readKey(
     uint8_t keySizeBuffer[KEY_LEN_SIZE];
     OS_Error_t err = OS_SUCCESS;
     OS_FileSystemFile_Handle_t hFile;
-    char fileName[KeystoreFile_MAX_FILE_NAME_LEN + 1]; // null terminated string
+    char fileName[OS_KeystoreFile_MAX_FILE_NAME_LEN + 1]; // null terminated string
     size_t offs, realKeySize;
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
@@ -272,7 +270,7 @@ fs_deleteKey(
     const char*            keyName)
 {
     OS_Error_t err;
-    char fileName[KeystoreFile_MAX_FILE_NAME_LEN + 1]; // null terminated string
+    char fileName[OS_KeystoreFile_MAX_FILE_NAME_LEN + 1]; // null terminated string
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
 
@@ -287,9 +285,9 @@ fs_deleteKey(
 
 static OS_Error_t
 map_registerKey(
-    KeystoreFile_t* self,
-    const char*     name,
-    size_t          keySize)
+    OS_KeystoreFile_t*  self,
+    const char*         name,
+    size_t              keySize)
 {
     KeyName keyName;
 
@@ -307,8 +305,8 @@ map_registerKey(
 
 static bool
 map_checkKeyExists(
-    KeystoreFile_t* self,
-    const char*     name)
+    OS_KeystoreFile_t*  self,
+    const char*         name)
 {
     KeyName keyName;
 
@@ -321,8 +319,8 @@ map_checkKeyExists(
 
 static size_t
 map_getKeySize(
-    KeystoreFile_t* self,
-    const char*     name)
+    OS_KeystoreFile_t*  self,
+    const char*         name)
 {
     int keyIndex;
 
@@ -338,8 +336,8 @@ map_getKeySize(
 
 static OS_Error_t
 map_deregisterKey(
-    KeystoreFile_t* self,
-    const char*     name)
+    OS_KeystoreFile_t*  self,
+    const char*         name)
 {
     KeyName keyName;
 
@@ -357,10 +355,10 @@ map_deregisterKey(
 
 static inline bool
 isStoreKeyParametersOk(
-    KeystoreFile_t* self,
-    const char*     name,
-    void const*     keyData,
-    size_t          keySize)
+    OS_KeystoreFile_t*  self,
+    const char*         name,
+    void const*         keyData,
+    size_t              keySize)
 {
     if (NULL == self || NULL == keyData || NULL == name)
     {
@@ -376,10 +374,10 @@ isStoreKeyParametersOk(
         return false;
     }
 
-    if (keySize > KeystoreFile_MAX_KEY_SIZE || keySize == 0)
+    if (keySize > OS_KeystoreFile_MAX_KEY_SIZE || keySize == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range [1;%d]!",
-                        __func__, keySize, KeystoreFile_MAX_KEY_SIZE);
+                        __func__, keySize, OS_KeystoreFile_MAX_KEY_SIZE);
         return false;
     }
 
@@ -395,10 +393,10 @@ isStoreKeyParametersOk(
 
 static inline bool
 isLoadKeyParametersOk(
-    KeystoreFile_t* self,
-    const char*     name,
-    void*           keyData,
-    size_t*         keySize)
+    OS_KeystoreFile_t*  self,
+    const char*         name,
+    void*               keyData,
+    size_t*             keySize)
 {
     if (NULL == self || NULL == keySize || NULL == keyData || NULL == name)
     {
@@ -416,10 +414,10 @@ isLoadKeyParametersOk(
 
     size_t my_keysize = *keySize;
 
-    if (my_keysize > KeystoreFile_MAX_KEY_SIZE)
+    if (my_keysize > OS_KeystoreFile_MAX_KEY_SIZE)
     {
         Debug_LOG_ERROR("%s: The length of the passed key data %zu is invalid, must be in the range [1;%d]!",
-                        __func__, my_keysize, KeystoreFile_MAX_KEY_SIZE);
+                        __func__, my_keysize, OS_KeystoreFile_MAX_KEY_SIZE);
         return false;
     }
 
@@ -430,7 +428,7 @@ isLoadKeyParametersOk(
 // Exported via VTABLE ---------------------------------------------------------
 
 static OS_Error_t
-KeystoreFile_free(
+OS_KeystoreFile_free(
     OS_Keystore_t*  ptr)
 {
     if (ptr == NULL)
@@ -438,21 +436,21 @@ KeystoreFile_free(
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    KeystoreFile_t* self = (KeystoreFile_t*) ptr;
+    OS_KeystoreFile_t* self = (OS_KeystoreFile_t*) ptr;
     KeyNameMap_dtor(&self->keyNameMap);
 
     return OS_SUCCESS;
 }
 
 static OS_Error_t
-KeystoreFile_storeKey(
+OS_KeystoreFile_storeKey(
     OS_Keystore_t*  ptr,
     const char*     name,
     void const*     keyData,
     size_t          keySize)
 {
     OS_Error_t err;
-    KeystoreFile_t*  self = (KeystoreFile_t*) ptr;
+    OS_KeystoreFile_t*  self = (OS_KeystoreFile_t*) ptr;
     char keyDataHash[KEY_HASH_SIZE] = {0};
 
     if (!isStoreKeyParametersOk(self, name, keyData, keySize))
@@ -505,14 +503,14 @@ err0:
 }
 
 static OS_Error_t
-KeystoreFile_loadKey(
+OS_KeystoreFile_loadKey(
     OS_Keystore_t*  ptr,
     const char*     name,
     void*           keyData,
     size_t*         keySize)
 {
     OS_Error_t err;
-    KeystoreFile_t*  self = (KeystoreFile_t*) ptr;
+    OS_KeystoreFile_t*  self = (OS_KeystoreFile_t*) ptr;
     unsigned char calculatedHash[KEY_HASH_SIZE];
     unsigned char readHash[KEY_HASH_SIZE];
 
@@ -582,12 +580,12 @@ KeystoreFile_loadKey(
 }
 
 static OS_Error_t
-KeystoreFile_deleteKey(
+OS_KeystoreFile_deleteKey(
     OS_Keystore_t*  ptr,
     const char*     name)
 {
     OS_Error_t err;
-    KeystoreFile_t*  self = (KeystoreFile_t*) ptr;
+    OS_KeystoreFile_t*  self = (OS_KeystoreFile_t*) ptr;
 
     if (NULL == self || NULL == name)
     {
@@ -632,14 +630,14 @@ KeystoreFile_deleteKey(
 }
 
 static OS_Error_t
-KeystoreFile_copyKey(
+OS_KeystoreFile_copyKey(
     OS_Keystore_t*  srcPtr,
     const char*     name,
     OS_Keystore_t*  dstPtr)
 {
     OS_Error_t err;
-    KeystoreFile_t* self = (KeystoreFile_t*) srcPtr;
-    size_t keySize = KeystoreFile_MAX_KEY_SIZE;
+    OS_KeystoreFile_t* self = (OS_KeystoreFile_t*) srcPtr;
+    size_t keySize = OS_KeystoreFile_MAX_KEY_SIZE;
 
     if (NULL == self || NULL == name || NULL == dstPtr)
     {
@@ -655,7 +653,7 @@ KeystoreFile_copyKey(
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    err = KeystoreFile_loadKey(srcPtr, name, self->buffer, &keySize);
+    err = OS_KeystoreFile_loadKey(srcPtr, name, self->buffer, &keySize);
 
     if (err != OS_SUCCESS)
     {
@@ -663,7 +661,7 @@ KeystoreFile_copyKey(
         return err;
     }
 
-    err = KeystoreFile_storeKey(dstPtr, name, self->buffer, keySize);
+    err = OS_KeystoreFile_storeKey(dstPtr, name, self->buffer, keySize);
 
     if (err != OS_SUCCESS)
     {
@@ -675,7 +673,7 @@ KeystoreFile_copyKey(
 }
 
 static OS_Error_t
-KeystoreFile_moveKey(
+OS_KeystoreFile_moveKey(
     OS_Keystore_t*  srcPtr,
     const char*     name,
     OS_Keystore_t*  dstPtr)
@@ -696,7 +694,7 @@ KeystoreFile_moveKey(
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    err = KeystoreFile_copyKey(srcPtr, name, dstPtr);
+    err = OS_KeystoreFile_copyKey(srcPtr, name, dstPtr);
 
     if (err != OS_SUCCESS)
     {
@@ -704,7 +702,7 @@ KeystoreFile_moveKey(
         return err;
     }
 
-    err = KeystoreFile_deleteKey(srcPtr, name);
+    err = OS_KeystoreFile_deleteKey(srcPtr, name);
 
     if (err != OS_SUCCESS)
     {
@@ -716,11 +714,11 @@ KeystoreFile_moveKey(
 }
 
 static OS_Error_t
-KeystoreFile_wipeKeystore(
+OS_KeystoreFile_wipeKeystore(
     OS_Keystore_t*  ptr)
 {
     OS_Error_t err;
-    KeystoreFile_t*  self = (KeystoreFile_t*) ptr;
+    OS_KeystoreFile_t*  self = (OS_KeystoreFile_t*) ptr;
 
     if (NULL == self)
     {
@@ -747,7 +745,7 @@ KeystoreFile_wipeKeystore(
     {
         KeyName* keyName = (KeyName*)KeyNameMap_getKeyAt(
                                &self->keyNameMap, i);
-        err = KeystoreFile_deleteKey(ptr, keyName->buffer);
+        err = OS_KeystoreFile_deleteKey(ptr, keyName->buffer);
 
         if (err != OS_SUCCESS)
         {
@@ -763,20 +761,20 @@ KeystoreFile_wipeKeystore(
 
 // Public functions ------------------------------------------------------------
 
-static const OS_Keystore_Vtable_t KeystoreFile_vtable =
+static const OS_Keystore_Vtable_t OS_KeystoreFile_vtable =
 {
-    .free           = KeystoreFile_free,
-    .storeKey       = KeystoreFile_storeKey,
-    .loadKey        = KeystoreFile_loadKey,
-    .deleteKey      = KeystoreFile_deleteKey,
-    .copyKey        = KeystoreFile_copyKey,
-    .moveKey        = KeystoreFile_moveKey,
-    .wipeKeystore   = KeystoreFile_wipeKeystore
+    .free           = OS_KeystoreFile_free,
+    .storeKey       = OS_KeystoreFile_storeKey,
+    .loadKey        = OS_KeystoreFile_loadKey,
+    .deleteKey      = OS_KeystoreFile_deleteKey,
+    .copyKey        = OS_KeystoreFile_copyKey,
+    .moveKey        = OS_KeystoreFile_moveKey,
+    .wipeKeystore   = OS_KeystoreFile_wipeKeystore
 };
 
 OS_Error_t
-KeystoreFile_init(
-    KeystoreFile_t*        self,
+OS_KeystoreFile_init(
+    OS_KeystoreFile_t*     self,
     OS_FileSystem_Handle_t hFs,
     OS_Crypto_Handle_t     hCrypto,
     const char*            name)
@@ -785,12 +783,12 @@ KeystoreFile_init(
     {
         return OS_ERROR_INVALID_PARAMETER;
     }
-    else if (strlen(name) > KeystoreFile_MAX_INSTANCE_NAME_LEN)
+    else if (strlen(name) > OS_KeystoreFile_MAX_INSTANCE_NAME_LEN)
     {
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    memset(self, 0, sizeof(KeystoreFile_t));
+    memset(self, 0, sizeof(OS_KeystoreFile_t));
 
     if (!KeyNameMap_ctor(&self->keyNameMap, 1))
     {
@@ -803,27 +801,27 @@ KeystoreFile_init(
     self->hFs     = hFs;
     self->hCrypto = hCrypto;
 
-    self->vtable = &KeystoreFile_vtable;
+    self->vtable = &OS_KeystoreFile_vtable;
 
     return OS_SUCCESS;
 }
 
 OS_Error_t
-KeystoreFile_new(
-    KeystoreFile_t**       pSelf,
+OS_KeystoreFile_new(
+    OS_KeystoreFile_t**    pSelf,
     OS_FileSystem_Handle_t hFs,
     OS_Crypto_Handle_t     hCrypto,
     const char*            name)
 {
     OS_Error_t err      = OS_ERROR_GENERIC;
-    *pSelf              = malloc(sizeof(KeystoreFile_t));
+    *pSelf              = malloc(sizeof(OS_KeystoreFile_t));
 
     if (NULL == *pSelf)
     {
         return OS_ERROR_INSUFFICIENT_SPACE;
     }
 
-    err = KeystoreFile_init(
+    err = OS_KeystoreFile_init(
               *pSelf,
               hFs,
               hCrypto,
@@ -837,10 +835,10 @@ KeystoreFile_new(
 }
 
 OS_Error_t
-KeystoreFile_del(
-    KeystoreFile_t* self)
+OS_KeystoreFile_del(
+    OS_KeystoreFile_t* self)
 {
-    OS_Error_t err = Keystore_free(KeystoreFile_TO_OS_KEYSTORE(self));
+    OS_Error_t err = OS_Keystore_free(OS_KeystoreFile_TO_OS_KEYSTORE(self));
     if (OS_SUCCESS == err)
     {
         free(self);

@@ -17,7 +17,7 @@ target_sources(${PROJECT_NAME}
         "src/KeySize.c"
         "src/KeyName.c"
         "src/KeyNameMap.c"
-        "src/KeystoreFile.c"
+        "src/OS_KeystoreFile.c"
 )
 
 target_include_directories(${PROJECT_NAME}
