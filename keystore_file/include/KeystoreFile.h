@@ -6,7 +6,6 @@
 
 #include "OS_Crypto.h"
 #include "OS_FileSystem.h"
-#include "OS_Keystore.h"
 #include "OS_Keystore_Vtable.h"
 #include "KeyNameMap.h"
 
