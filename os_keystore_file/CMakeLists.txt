@@ -14,9 +14,9 @@ add_library(${PROJECT_NAME} INTERFACE)
 
 target_sources(${PROJECT_NAME}
     INTERFACE
-        "src/KeySize.c"
-        "src/KeyName.c"
-        "src/KeyNameMap.c"
+        "src/OS_KeystoreFile_KeySize.c"
+        "src/OS_KeystoreFile_KeyName.c"
+        "src/OS_KeystoreFile_KeyNameMap.c"
         "src/OS_KeystoreFile.c"
 )
 

@@ -289,12 +289,15 @@ map_registerKey(
     const char*         name,
     size_t              keySize)
 {
-    KeyName keyName;
+    OS_KeystoreFile_KeyName keyName;
 
     strncpy(keyName.buffer, name, sizeof(keyName.buffer) - 1);
     keyName.buffer[sizeof(keyName.buffer) - 1] = '\0';
 
-    if (!KeyNameMap_insert(&self->keyNameMap, &keyName, &keySize))
+    if (!OS_KeystoreFile_KeyNameMap_insert(
+            &self->keyNameMap,
+            &keyName,
+            &keySize))
     {
         Debug_LOG_ERROR("%s: Failed to save the key name!", __func__);
         return OS_ERROR_INSUFFICIENT_SPACE;
@@ -308,12 +311,12 @@ map_checkKeyExists(
     OS_KeystoreFile_t*  self,
     const char*         name)
 {
-    KeyName keyName;
+    OS_KeystoreFile_KeyName keyName;
 
     strncpy(keyName.buffer, name, sizeof(keyName.buffer) - 1);
     keyName.buffer[sizeof(keyName.buffer) - 1] = '\0';
 
-    return KeyNameMap_getIndexOf(&self->keyNameMap, &keyName)
+    return OS_KeystoreFile_KeyNameMap_getIndexOf(&self->keyNameMap, &keyName)
            >= 0 ? true : false;
 }
 
@@ -324,14 +327,16 @@ map_getKeySize(
 {
     int keyIndex;
 
-    keyIndex = KeyNameMap_getIndexOf(&self->keyNameMap, (KeyName*)name);
+    keyIndex = OS_KeystoreFile_KeyNameMap_getIndexOf(
+                   &self->keyNameMap,
+                   (OS_KeystoreFile_KeyName*) name);
 
     if (keyIndex < 0)
     {
         return 0;
     }
 
-    return *KeyNameMap_getValueAt(&self->keyNameMap, keyIndex);
+    return *OS_KeystoreFile_KeyNameMap_getValueAt(&self->keyNameMap, keyIndex);
 }
 
 static OS_Error_t
@@ -339,12 +344,12 @@ map_deregisterKey(
     OS_KeystoreFile_t*  self,
     const char*         name)
 {
-    KeyName keyName;
+    OS_KeystoreFile_KeyName keyName;
 
     strncpy(keyName.buffer, name, sizeof(keyName.buffer) - 1);
     keyName.buffer[sizeof(keyName.buffer) - 1] = '\0';
 
-    if (!KeyNameMap_remove(&self->keyNameMap, &keyName))
+    if (!OS_KeystoreFile_KeyNameMap_remove(&self->keyNameMap, &keyName))
     {
         Debug_LOG_ERROR("%s: Failed to remove the key name!", __func__);
         return OS_ERROR_ABORTED;
@@ -367,10 +372,12 @@ isStoreKeyParametersOk(
 
     size_t nameLen = strlen(name);
 
-    if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
+    if (nameLen > OS_KeystoreFile_KeyName_MAX_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
-                        __func__, nameLen, MAX_KEY_NAME_LEN);
+                        __func__,
+                        nameLen,
+                        OS_KeystoreFile_KeyName_MAX_NAME_LEN);
         return false;
     }
 
@@ -405,10 +412,10 @@ isLoadKeyParametersOk(
 
     size_t nameLen = strlen(name);
 
-    if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
+    if (nameLen > OS_KeystoreFile_KeyName_MAX_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
-                        __func__, nameLen, MAX_KEY_NAME_LEN);
+                        __func__, nameLen, OS_KeystoreFile_KeyName_MAX_NAME_LEN);
         return false;
     }
 
@@ -437,7 +444,7 @@ OS_KeystoreFile_free(
     }
 
     OS_KeystoreFile_t* self = (OS_KeystoreFile_t*) ptr;
-    KeyNameMap_dtor(&self->keyNameMap);
+    OS_KeystoreFile_KeyNameMap_dtor(&self->keyNameMap);
 
     return OS_SUCCESS;
 }
@@ -594,10 +601,12 @@ OS_KeystoreFile_deleteKey(
 
     size_t nameLen = strlen(name);
 
-    if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
+    if (nameLen > OS_KeystoreFile_KeyName_MAX_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
-                        __func__, nameLen, MAX_KEY_NAME_LEN);
+                        __func__,
+                        nameLen,
+                        OS_KeystoreFile_KeyName_MAX_NAME_LEN);
         return OS_ERROR_INVALID_PARAMETER;
     }
 
@@ -646,10 +655,12 @@ OS_KeystoreFile_copyKey(
 
     size_t nameLen = strlen(name);
 
-    if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
+    if (nameLen > OS_KeystoreFile_KeyName_MAX_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
-                        __func__, nameLen, MAX_KEY_NAME_LEN);
+                        __func__,
+                        nameLen,
+                        OS_KeystoreFile_KeyName_MAX_NAME_LEN);
         return OS_ERROR_INVALID_PARAMETER;
     }
 
@@ -687,10 +698,12 @@ OS_KeystoreFile_moveKey(
 
     size_t nameLen = strlen(name);
 
-    if (nameLen > MAX_KEY_NAME_LEN || nameLen == 0)
+    if (nameLen > OS_KeystoreFile_KeyName_MAX_NAME_LEN || nameLen == 0)
     {
         Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
-                        __func__, nameLen, MAX_KEY_NAME_LEN);
+                        __func__,
+                        nameLen,
+                        OS_KeystoreFile_KeyName_MAX_NAME_LEN);
         return OS_ERROR_INVALID_PARAMETER;
     }
 
@@ -725,7 +738,7 @@ OS_KeystoreFile_wipeKeystore(
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    int registerSize = KeyNameMap_getSize(&self->keyNameMap);
+    int registerSize = OS_KeystoreFile_KeyNameMap_getSize(&self->keyNameMap);
 
     if (registerSize < 0)
     {
@@ -743,8 +756,8 @@ OS_KeystoreFile_wipeKeystore(
 
     for (int i = registerSize - 1; i >= 0; i--)
     {
-        KeyName* keyName = (KeyName*)KeyNameMap_getKeyAt(
-                               &self->keyNameMap, i);
+        OS_KeystoreFile_KeyName const* keyName =
+            OS_KeystoreFile_KeyNameMap_getKeyAt(&self->keyNameMap, i);
         err = OS_KeystoreFile_deleteKey(ptr, keyName->buffer);
 
         if (err != OS_SUCCESS)
@@ -790,7 +803,7 @@ OS_KeystoreFile_init(
 
     memset(self, 0, sizeof(OS_KeystoreFile_t));
 
-    if (!KeyNameMap_ctor(&self->keyNameMap, 1))
+    if (!OS_KeystoreFile_KeyNameMap_ctor(&self->keyNameMap, 1))
     {
         return OS_ERROR_ABORTED;
     }

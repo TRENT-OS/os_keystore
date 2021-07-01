@@ -7,7 +7,7 @@
 #include "OS_Crypto.h"
 #include "OS_FileSystem.h"
 #include "OS_Keystore_Vtable.h"
-#include "KeyNameMap.h"
+#include "OS_KeystoreFile_KeyNameMap.h"
 
 #define OS_KeystoreFile_MAX_INSTANCE_NAME_LEN   16
 #define OS_KeystoreFile_MAX_KEY_SIZE            2048
@@ -15,7 +15,8 @@
 // key name in the format "<instancename>_<keyname>.key" and needs 5 more chars
 // for separator and file extension (excluding the null terminator).
 #define OS_KeystoreFile_MAX_FILE_NAME_LEN \
-    (OS_KeystoreFile_MAX_INSTANCE_NAME_LEN + 1 + MAX_KEY_NAME_LEN + 4)
+    (OS_KeystoreFile_MAX_INSTANCE_NAME_LEN + 1 + \
+    OS_KeystoreFile_KeyName_MAX_NAME_LEN + 4)
 
 #define OS_KeystoreFile_TO_OS_KEYSTORE(self)    ((OS_Keystore_t*) (self))
 #define OS_KeystoreFile_TO_HANDLE(self)         ((OS_Keystore_Handle_t) (self))
@@ -28,7 +29,7 @@ typedef struct
     OS_Crypto_Handle_t          hCrypto;
     char                        name[OS_KeystoreFile_MAX_INSTANCE_NAME_LEN +
                                                                            1]; // null terminated string
-    KeyNameMap                  keyNameMap;
+    OS_KeystoreFile_KeyNameMap  keyNameMap;
     unsigned char               buffer[OS_KeystoreFile_MAX_KEY_SIZE];
 }
 OS_KeystoreFile_t;
