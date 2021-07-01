@@ -807,3 +807,44 @@ KeystoreFile_init(
 
     return OS_SUCCESS;
 }
+
+OS_Error_t
+KeystoreFile_new(
+    KeystoreFile_t**       pSelf,
+    OS_FileSystem_Handle_t hFs,
+    OS_Crypto_Handle_t     hCrypto,
+    const char*            name)
+{
+    OS_Error_t err      = OS_ERROR_GENERIC;
+    *pSelf              = malloc(sizeof(KeystoreFile_t));
+
+    if (NULL == *pSelf)
+    {
+        return OS_ERROR_INSUFFICIENT_SPACE;
+    }
+
+    err = KeystoreFile_init(
+              *pSelf,
+              hFs,
+              hCrypto,
+              name);
+    if (err != OS_SUCCESS)
+    {
+        free(*pSelf);
+    }
+
+    return err;
+}
+
+OS_Error_t
+KeystoreFile_del(
+    KeystoreFile_t* self)
+{
+    OS_Error_t err = Keystore_free(KeystoreFile_TO_OS_KEYSTORE(self));
+    if (OS_SUCCESS == err)
+    {
+        free(self);
+    }
+
+    return err;
+}

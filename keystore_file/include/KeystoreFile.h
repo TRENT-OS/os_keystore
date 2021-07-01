@@ -17,7 +17,8 @@
 #define KeystoreFile_MAX_FILE_NAME_LEN \
     (KeystoreFile_MAX_INSTANCE_NAME_LEN + 1 + MAX_KEY_NAME_LEN + 4)
 
-#define KeystoreFile_TO_OS_KEYSTORE(self) ((OS_Keystore_t*) (self))
+#define KeystoreFile_TO_OS_KEYSTORE(self)    ((OS_Keystore_t*) (self))
+#define KeystoreFile_TO_HANDLE(self)         ((OS_Keystore_Handle_t) (self))
 
 typedef struct
 {
@@ -37,3 +38,14 @@ KeystoreFile_init(
     OS_FileSystem_t*   fs,
     OS_Crypto_Handle_t hCrypto,
     const char*        name);
+
+OS_Error_t
+KeystoreFile_new(
+    KeystoreFile_t**    pSelf,
+    OS_FileSystem_t*    fs,
+    OS_Crypto_Handle_t  hCrypto,
+    const char*         name);
+
+OS_Error_t
+KeystoreFile_del(
+    KeystoreFile_t* pSelf);
