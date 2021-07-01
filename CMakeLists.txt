@@ -6,3 +6,4 @@ cmake_policy(SET CMP0076 NEW)
 
 add_subdirectory(os_keystore_common)
 add_subdirectory(os_keystore_file)
+add_subdirectory(os_keystore_ram_fv)
