@@ -6,7 +6,7 @@
 
 #include "OS_Crypto.h"
 #include "OS_FileSystem.h"
-#include "OS_Keystore_Vtable.h"
+#include "OS_Keystore.int.h"
 #include "OS_KeystoreFile_KeyNameMap.h"
 
 #define OS_KeystoreFile_MAX_INSTANCE_NAME_LEN   16
@@ -18,13 +18,12 @@
     (OS_KeystoreFile_MAX_INSTANCE_NAME_LEN + 1 + \
     OS_KeystoreFile_KeyName_MAX_NAME_LEN + 4)
 
-#define OS_KeystoreFile_TO_OS_KEYSTORE(self)    ((OS_Keystore_t*) (self))
-#define OS_KeystoreFile_TO_HANDLE(self)         ((OS_Keystore_Handle_t) (self))
+#define OS_KeystoreFile_TO_OS_KEYSTORE(self)    (&((self)->parent))
 
 
 typedef struct
 {
-    const OS_Keystore_Vtable_t* vtable;
+    OS_Keystore_t               parent;
     OS_FileSystem_Handle_t      hFs;
     OS_Crypto_Handle_t          hCrypto;
     char                        name[OS_KeystoreFile_MAX_INSTANCE_NAME_LEN +

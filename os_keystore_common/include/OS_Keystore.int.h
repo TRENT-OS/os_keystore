@@ -6,8 +6,6 @@
 
 #include "OS_Keystore.h"
 
-#include <stddef.h>
-
 typedef OS_Error_t
 (*OS_Keystore_Vtable_Free)(
     OS_Keystore_t*  self);
@@ -58,3 +56,8 @@ typedef struct
     OS_Keystore_Vtable_WipeKeystore   wipeKeystore;
 }
 OS_Keystore_Vtable_t;
+
+struct OS_Keystore
+{
+    const OS_Keystore_Vtable_t* vtable;
+};

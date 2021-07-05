@@ -3,7 +3,6 @@
  */
 
 #include "OS_KeystoreFile.h"
-#include "OS_Keystore.h"
 #include "lib_utils/BitConverter.h"
 
 #include <string.h>
@@ -814,7 +813,7 @@ OS_KeystoreFile_init(
     self->hFs     = hFs;
     self->hCrypto = hCrypto;
 
-    self->vtable = &OS_KeystoreFile_vtable;
+    OS_KeystoreFile_TO_OS_KEYSTORE(self)->vtable = &OS_KeystoreFile_vtable;
 
     return OS_SUCCESS;
 }

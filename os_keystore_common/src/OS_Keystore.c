@@ -2,16 +2,7 @@
  * Copyright (C) 2019-2021, HENSOLDT Cyber GmbH
  */
 
-#include "OS_Keystore.h"
-#include "OS_Keystore_Vtable.h"
-
-#include <stdlib.h>
-
-
-struct OS_Keystore
-{
-    const OS_Keystore_Vtable_t* vtable;
-};
+#include "OS_Keystore.int.h"
 
 
 OS_Error_t
