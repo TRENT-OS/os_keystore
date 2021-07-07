@@ -11,6 +11,59 @@
 #define KEY_HASH_SIZE         32
 
 
+// Vtable definition -----------------------------------------------------------
+
+static OS_Error_t
+OS_KeystoreFile_free(
+    OS_Keystore_t* ptr);
+
+static OS_Error_t
+OS_KeystoreFile_storeKey(
+    OS_Keystore_t*  ptr,
+    const char*     name,
+    void const*     keyData,
+    size_t          keySize);
+
+static OS_Error_t
+OS_KeystoreFile_loadKey(
+    OS_Keystore_t*  ptr,
+    const char*     name,
+    void*           keyData,
+    size_t*         keySize);
+
+static OS_Error_t
+OS_KeystoreFile_deleteKey(
+    OS_Keystore_t*  ptr,
+    const char*     name);
+
+static OS_Error_t
+OS_KeystoreFile_copyKey(
+    OS_Keystore_t*  srcPtr,
+    const char*     name,
+    OS_Keystore_t*  dstPtr);
+
+static OS_Error_t
+OS_KeystoreFile_moveKey(
+    OS_Keystore_t*  srcPtr,
+    const char*     name,
+    OS_Keystore_t*  dstPtr);
+
+static OS_Error_t
+OS_KeystoreFile_wipeKeystore(
+    OS_Keystore_t*  ptr);
+
+static const OS_Keystore_Vtable_t OS_KeystoreFile_vtable =
+{
+    .free           = OS_KeystoreFile_free,
+    .storeKey       = OS_KeystoreFile_storeKey,
+    .loadKey        = OS_KeystoreFile_loadKey,
+    .deleteKey      = OS_KeystoreFile_deleteKey,
+    .copyKey        = OS_KeystoreFile_copyKey,
+    .moveKey        = OS_KeystoreFile_moveKey,
+    .wipeKeystore   = OS_KeystoreFile_wipeKeystore
+};
+
+
 // Private functions -----------------------------------------------------------
 
 static OS_Error_t
@@ -430,22 +483,70 @@ isLoadKeyParametersOk(
     return true;
 }
 
+static OS_Error_t
+ctor(
+    OS_KeystoreFile_t*     self,
+    OS_FileSystem_Handle_t hFs,
+    OS_Crypto_Handle_t     hCrypto,
+    const char*            name)
+{
+    if (NULL == self || NULL == hFs || NULL == name)
+    {
+        return OS_ERROR_INVALID_PARAMETER;
+    }
+    else if (strlen(name) > OS_KeystoreFile_MAX_INSTANCE_NAME_LEN)
+    {
+        return OS_ERROR_INVALID_PARAMETER;
+    }
+
+    memset(self, 0, sizeof(OS_KeystoreFile_t));
+
+    if (!OS_KeystoreFile_KeyNameMap_ctor(&self->keyNameMap, 1))
+    {
+        return OS_ERROR_ABORTED;
+    }
+
+    strncpy(self->name, name, sizeof(self->name) - 1);
+    self->name[sizeof(self->name) - 1] = '\0';
+
+    self->hFs     = hFs;
+    self->hCrypto = hCrypto;
+
+    OS_KeystoreFile_TO_OS_KEYSTORE(self)->vtable = &OS_KeystoreFile_vtable;
+
+    return OS_SUCCESS;
+}
+
+static OS_Error_t
+dtor(
+    OS_KeystoreFile_t*  self)
+{
+    if (self == NULL)
+    {
+        return OS_ERROR_INVALID_PARAMETER;
+    }
+
+    OS_KeystoreFile_KeyNameMap_dtor(&self->keyNameMap);
+
+    return OS_SUCCESS;
+}
+
 
 // Exported via VTABLE ---------------------------------------------------------
 
 static OS_Error_t
 OS_KeystoreFile_free(
-    OS_Keystore_t*  ptr)
+    OS_Keystore_t* ptr)
 {
-    if (ptr == NULL)
+    OS_KeystoreFile_t* self = (OS_KeystoreFile_t*) ptr;
+
+    OS_Error_t err = dtor(self);
+    if (OS_SUCCESS == err)
     {
-        return OS_ERROR_INVALID_PARAMETER;
+        free(self);
     }
 
-    OS_KeystoreFile_t* self = (OS_KeystoreFile_t*) ptr;
-    OS_KeystoreFile_KeyNameMap_dtor(&self->keyNameMap);
-
-    return OS_SUCCESS;
+    return err;
 }
 
 static OS_Error_t
@@ -773,87 +874,30 @@ OS_KeystoreFile_wipeKeystore(
 
 // Public functions ------------------------------------------------------------
 
-static const OS_Keystore_Vtable_t OS_KeystoreFile_vtable =
-{
-    .free           = OS_KeystoreFile_free,
-    .storeKey       = OS_KeystoreFile_storeKey,
-    .loadKey        = OS_KeystoreFile_loadKey,
-    .deleteKey      = OS_KeystoreFile_deleteKey,
-    .copyKey        = OS_KeystoreFile_copyKey,
-    .moveKey        = OS_KeystoreFile_moveKey,
-    .wipeKeystore   = OS_KeystoreFile_wipeKeystore
-};
-
 OS_Error_t
 OS_KeystoreFile_init(
-    OS_KeystoreFile_t*     self,
+    OS_Keystore_Handle_t*  pHandle,
     OS_FileSystem_Handle_t hFs,
     OS_Crypto_Handle_t     hCrypto,
     const char*            name)
 {
-    if (NULL == self || NULL == hFs || NULL == name)
-    {
-        return OS_ERROR_INVALID_PARAMETER;
-    }
-    else if (strlen(name) > OS_KeystoreFile_MAX_INSTANCE_NAME_LEN)
-    {
-        return OS_ERROR_INVALID_PARAMETER;
-    }
+    OS_Error_t err              = OS_ERROR_GENERIC;
+    OS_KeystoreFile_t* self     = malloc(sizeof(OS_KeystoreFile_t));
 
-    memset(self, 0, sizeof(OS_KeystoreFile_t));
-
-    if (!OS_KeystoreFile_KeyNameMap_ctor(&self->keyNameMap, 1))
-    {
-        return OS_ERROR_ABORTED;
-    }
-
-    strncpy(self->name, name, sizeof(self->name) - 1);
-    self->name[sizeof(self->name) - 1] = '\0';
-
-    self->hFs     = hFs;
-    self->hCrypto = hCrypto;
-
-    OS_KeystoreFile_TO_OS_KEYSTORE(self)->vtable = &OS_KeystoreFile_vtable;
-
-    return OS_SUCCESS;
-}
-
-OS_Error_t
-OS_KeystoreFile_new(
-    OS_KeystoreFile_t**    pSelf,
-    OS_FileSystem_Handle_t hFs,
-    OS_Crypto_Handle_t     hCrypto,
-    const char*            name)
-{
-    OS_Error_t err      = OS_ERROR_GENERIC;
-    *pSelf              = malloc(sizeof(OS_KeystoreFile_t));
-
-    if (NULL == *pSelf)
+    if (NULL == self)
     {
         return OS_ERROR_INSUFFICIENT_SPACE;
     }
 
-    err = OS_KeystoreFile_init(
-              *pSelf,
-              hFs,
-              hCrypto,
-              name);
+    err = ctor(self, hFs, hCrypto, name);
+
     if (err != OS_SUCCESS)
     {
-        free(*pSelf);
-    }
-
-    return err;
-}
-
-OS_Error_t
-OS_KeystoreFile_del(
-    OS_KeystoreFile_t* self)
-{
-    OS_Error_t err = OS_Keystore_free(OS_KeystoreFile_TO_OS_KEYSTORE(self));
-    if (OS_SUCCESS == err)
-    {
         free(self);
+    }
+    else
+    {
+        *pHandle = OS_KeystoreFile_TO_OS_KEYSTORE(self);
     }
 
     return err;

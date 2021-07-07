@@ -36,18 +36,7 @@ OS_KeystoreFile_t;
 
 OS_Error_t
 OS_KeystoreFile_init(
-    OS_KeystoreFile_t* self,
-    OS_FileSystem_t*   fs,
-    OS_Crypto_Handle_t hCrypto,
-    const char*        name);
-
-OS_Error_t
-OS_KeystoreFile_new(
-    OS_KeystoreFile_t** pSelf,
-    OS_FileSystem_t*    fs,
-    OS_Crypto_Handle_t  hCrypto,
-    const char*         name);
-
-OS_Error_t
-OS_KeystoreFile_del(
-    OS_KeystoreFile_t* pSelf);
+    OS_Keystore_Handle_t*   pHandle,
+    OS_FileSystem_Handle_t  hFs,
+    OS_Crypto_Handle_t      hCrypto,
+    const char*             name);
