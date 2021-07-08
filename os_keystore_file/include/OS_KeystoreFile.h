@@ -26,8 +26,8 @@ typedef struct
     OS_Keystore_t               parent;
     OS_FileSystem_Handle_t      hFs;
     OS_Crypto_Handle_t          hCrypto;
-    char                        name[OS_KeystoreFile_MAX_INSTANCE_NAME_LEN +
-                                                                           1]; // null terminated string
+    // null terminated string
+    char                        name[OS_KeystoreFile_MAX_INSTANCE_NAME_LEN + 1];
     OS_KeystoreFile_KeyNameMap  keyNameMap;
     unsigned char               buffer[OS_KeystoreFile_MAX_KEY_SIZE];
 }

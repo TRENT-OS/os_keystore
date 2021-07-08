@@ -11,7 +11,8 @@
 
 typedef struct OS_KeystoreFile_KeyName
 {
-    char buffer[OS_KeystoreFile_KeyName_MAX_NAME_LEN + 1]; // null terminated string
+    // null terminated string
+    char buffer[OS_KeystoreFile_KeyName_MAX_NAME_LEN + 1];
 }
 OS_KeystoreFile_KeyName;
 

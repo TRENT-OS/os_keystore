@@ -140,7 +140,7 @@ fs_writeKey(
     uint8_t keySizeBuffer[KEY_LEN_SIZE];
     OS_Error_t err = OS_SUCCESS;
     OS_FileSystemFile_Handle_t hFile;
-    char fileName[OS_KeystoreFile_MAX_FILE_NAME_LEN + 1]; // null terminated string
+    char fileName[OS_KeystoreFile_MAX_FILE_NAME_LEN + 1]; // null terminated
     size_t offs;
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
@@ -227,7 +227,7 @@ fs_readKey(
     uint8_t keySizeBuffer[KEY_LEN_SIZE];
     OS_Error_t err = OS_SUCCESS;
     OS_FileSystemFile_Handle_t hFile;
-    char fileName[OS_KeystoreFile_MAX_FILE_NAME_LEN + 1]; // null terminated string
+    char fileName[OS_KeystoreFile_MAX_FILE_NAME_LEN + 1]; // null terminated
     size_t offs, realKeySize;
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
@@ -322,7 +322,7 @@ fs_deleteKey(
     const char*            keyName)
 {
     OS_Error_t err;
-    char fileName[OS_KeystoreFile_MAX_FILE_NAME_LEN + 1]; // null terminated string
+    char fileName[OS_KeystoreFile_MAX_FILE_NAME_LEN + 1]; // null terminated
 
     getFileName(instName, keyName, sizeof(fileName), fileName);
 
@@ -519,7 +519,7 @@ ctor(
 
 static OS_Error_t
 dtor(
-    OS_KeystoreFile_t*  self)
+    OS_KeystoreFile_t* self)
 {
     if (self == NULL)
     {
@@ -532,7 +532,7 @@ dtor(
 }
 
 
-// Exported via VTABLE ---------------------------------------------------------
+// Exported via Vtable ---------------------------------------------------------
 
 static OS_Error_t
 OS_KeystoreFile_free(
@@ -881,8 +881,8 @@ OS_KeystoreFile_init(
     OS_Crypto_Handle_t     hCrypto,
     const char*            name)
 {
-    OS_Error_t err              = OS_ERROR_GENERIC;
-    OS_KeystoreFile_t* self     = malloc(sizeof(OS_KeystoreFile_t));
+    OS_Error_t err          = OS_ERROR_GENERIC;
+    OS_KeystoreFile_t* self = malloc(sizeof(OS_KeystoreFile_t));
 
     if (NULL == self)
     {
