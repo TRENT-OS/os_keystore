@@ -61,3 +61,20 @@ struct OS_Keystore
 {
     const OS_Keystore_Vtable_t* vtable;
 };
+
+
+// Non virtual functions -------------------------------------------------------
+
+OS_Error_t
+OS_Keystore_copyKeyImpl(
+    OS_Keystore_t*  srcPtr,
+    const char*     name,
+    OS_Keystore_t*  dstPtr,
+    void*           keyBuffer,
+    size_t          keyBufferSize);
+
+OS_Error_t
+OS_Keystore_moveKeyImpl(
+    OS_Keystore_t*  srcPtr,
+    const char*     name,
+    OS_Keystore_t*  dstPtr);

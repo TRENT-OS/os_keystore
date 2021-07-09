@@ -43,12 +43,6 @@ OS_KeystoreFile_copyKey(
     OS_Keystore_t*  dstPtr);
 
 static OS_Error_t
-OS_KeystoreFile_moveKey(
-    OS_Keystore_t*  srcPtr,
-    const char*     name,
-    OS_Keystore_t*  dstPtr);
-
-static OS_Error_t
 OS_KeystoreFile_wipeKeystore(
     OS_Keystore_t*  ptr);
 
@@ -59,7 +53,7 @@ static const OS_Keystore_Vtable_t OS_KeystoreFile_vtable =
     .loadKey        = OS_KeystoreFile_loadKey,
     .deleteKey      = OS_KeystoreFile_deleteKey,
     .copyKey        = OS_KeystoreFile_copyKey,
-    .moveKey        = OS_KeystoreFile_moveKey,
+    .moveKey        = OS_Keystore_moveKeyImpl,
     .wipeKeystore   = OS_KeystoreFile_wipeKeystore
 };
 
@@ -744,86 +738,14 @@ OS_KeystoreFile_copyKey(
     const char*     name,
     OS_Keystore_t*  dstPtr)
 {
-    OS_Error_t err;
     OS_KeystoreFile_t* self = (OS_KeystoreFile_t*) srcPtr;
-    size_t keySize = OS_KeystoreFile_MAX_KEY_SIZE;
 
-    if (NULL == self || NULL == name || NULL == dstPtr)
-    {
-        return OS_ERROR_INVALID_PARAMETER;
-    }
-
-    size_t nameLen = strlen(name);
-
-    if (nameLen > OS_KeystoreFile_KeyName_MAX_NAME_LEN || nameLen == 0)
-    {
-        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
-                        __func__,
-                        nameLen,
-                        OS_KeystoreFile_KeyName_MAX_NAME_LEN);
-        return OS_ERROR_INVALID_PARAMETER;
-    }
-
-    err = OS_Keystore_loadKey(srcPtr, name, self->buffer, &keySize);
-
-    if (err != OS_SUCCESS)
-    {
-        Debug_LOG_ERROR("%s: loadKey failed with err %d!", __func__, err);
-        return err;
-    }
-
-    err = OS_Keystore_storeKey(dstPtr, name, self->buffer, keySize);
-
-    if (err != OS_SUCCESS)
-    {
-        Debug_LOG_ERROR("%s: storeKey failed with err %d!", __func__, err);
-        return err;
-    }
-
-    return err;
-}
-
-static OS_Error_t
-OS_KeystoreFile_moveKey(
-    OS_Keystore_t*  srcPtr,
-    const char*     name,
-    OS_Keystore_t*  dstPtr)
-{
-    OS_Error_t err;
-
-    if (NULL == srcPtr || NULL  == name || NULL == dstPtr)
-    {
-        return OS_ERROR_INVALID_PARAMETER;
-    }
-
-    size_t nameLen = strlen(name);
-
-    if (nameLen > OS_KeystoreFile_KeyName_MAX_NAME_LEN || nameLen == 0)
-    {
-        Debug_LOG_ERROR("%s: The length of the passed key name %zu is invalid, must be in the range [1;%d]!",
-                        __func__,
-                        nameLen,
-                        OS_KeystoreFile_KeyName_MAX_NAME_LEN);
-        return OS_ERROR_INVALID_PARAMETER;
-    }
-
-    err = OS_Keystore_copyKey(srcPtr, name, dstPtr);
-
-    if (err != OS_SUCCESS)
-    {
-        Debug_LOG_ERROR("%s: copyKey failed with err %d!", __func__, err);
-        return err;
-    }
-
-    err = OS_Keystore_deleteKey(srcPtr, name);
-
-    if (err != OS_SUCCESS)
-    {
-        Debug_LOG_ERROR("%s: deleteKey failed with err %d!", __func__, err);
-        return err;
-    }
-
-    return err;
+    return OS_Keystore_copyKeyImpl(
+               srcPtr,
+               name,
+               dstPtr,
+               self->buffer,
+               sizeof(self->buffer));
 }
 
 static OS_Error_t
