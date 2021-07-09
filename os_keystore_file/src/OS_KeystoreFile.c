@@ -764,7 +764,7 @@ OS_KeystoreFile_copyKey(
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    err = OS_KeystoreFile_loadKey(srcPtr, name, self->buffer, &keySize);
+    err = OS_Keystore_loadKey(srcPtr, name, self->buffer, &keySize);
 
     if (err != OS_SUCCESS)
     {
@@ -772,7 +772,7 @@ OS_KeystoreFile_copyKey(
         return err;
     }
 
-    err = OS_KeystoreFile_storeKey(dstPtr, name, self->buffer, keySize);
+    err = OS_Keystore_storeKey(dstPtr, name, self->buffer, keySize);
 
     if (err != OS_SUCCESS)
     {
@@ -807,7 +807,7 @@ OS_KeystoreFile_moveKey(
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    err = OS_KeystoreFile_copyKey(srcPtr, name, dstPtr);
+    err = OS_Keystore_copyKey(srcPtr, name, dstPtr);
 
     if (err != OS_SUCCESS)
     {
@@ -815,7 +815,7 @@ OS_KeystoreFile_moveKey(
         return err;
     }
 
-    err = OS_KeystoreFile_deleteKey(srcPtr, name);
+    err = OS_Keystore_deleteKey(srcPtr, name);
 
     if (err != OS_SUCCESS)
     {
