@@ -194,15 +194,15 @@ OS_KeystoreRamFV_storeKey(
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    key_record_t keyRecord = { 0 };
+    memset(&self->keyRecord, 0, sizeof(self->keyRecord));
 
-    strncpy(keyRecord.name, name, sizeof(keyRecord.name) - 1);
-    memcpy(keyRecord.data, keyData, keySize);
+    strncpy(self->keyRecord.name, name, sizeof(self->keyRecord.name) - 1);
+    memcpy(self->keyRecord.data, keyData, keySize);
 
     KeystoreRamFV_Result_t result = KeystoreRamFV_add(
                                         &self->fvKeystore,
                                         APP_ID,
-                                        &keyRecord);
+                                        &self->keyRecord);
     if (result.error)
     {
         Debug_LOG_ERROR("%s: key_store_add() failed, err %d!",
@@ -229,8 +229,6 @@ OS_KeystoreRamFV_loadKey(
         return OS_ERROR_INVALID_PARAMETER;
     }
 
-    key_record_t keyRecord = { 0 };
-
     // NOTE: The formally verified keystore does not support null-terminated
     // strings but always compares the whole char-array. For adaption a char
     // array of max size needs to be filled with 0 after the name.
@@ -241,7 +239,7 @@ OS_KeystoreRamFV_loadKey(
                                         &self->fvKeystore,
                                         APP_ID,
                                         cleanName,
-                                        &keyRecord);
+                                        &self->keyRecord);
     if (result.error)
     {
         *keySize = 0;
@@ -258,8 +256,13 @@ OS_KeystoreRamFV_loadKey(
     }
 
     *keySize =
-        *keySize < sizeof(keyRecord.data) ? *keySize : sizeof(keyRecord.data);
-    memcpy(keyData, keyRecord.data, *keySize);
+        *keySize < sizeof(self->keyRecord.data) ?
+        *keySize : sizeof(self->keyRecord.data);
+
+    if (keyData != self->keyRecord.data)
+    {
+        memcpy(keyData, self->keyRecord.data, *keySize);
+    }
 
     return OS_SUCCESS;
 }
@@ -317,8 +320,8 @@ OS_KeystoreRamFV_copyKey(
                srcPtr,
                name,
                dstPtr,
-               self->buffer,
-               sizeof(self->buffer));
+               self->keyRecord.data,
+               sizeof(self->keyRecord.data));
 }
 
 static OS_Error_t

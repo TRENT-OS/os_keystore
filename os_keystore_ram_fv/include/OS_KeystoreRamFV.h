@@ -26,7 +26,7 @@ typedef struct
 {
     OS_Keystore_t               parent;
     KeystoreRamFV_t             fvKeystore;
-    unsigned char           buffer[OS_KeystoreRamFV_MAX_KEY_SIZE];
+    KeystoreRamFV_KeyRecord_t   keyRecord;
 }
 OS_KeystoreRamFV_t;
 
