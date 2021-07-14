@@ -6,6 +6,7 @@
 #include "lib_utils/BitConverter.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 #define KEY_LEN_SIZE          (sizeof(uint32_t))
 #define KEY_HASH_SIZE         32
