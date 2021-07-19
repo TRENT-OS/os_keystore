@@ -7,7 +7,7 @@
 #include <stdbool.h>
 
 
-#define OS_KeystoreFile_KeyName_MAX_NAME_LEN    16
+#define OS_KeystoreFile_KeyName_MAX_NAME_LEN    15
 
 typedef struct OS_KeystoreFile_KeyName
 {

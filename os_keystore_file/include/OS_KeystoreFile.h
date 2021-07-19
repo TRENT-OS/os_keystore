@@ -9,7 +9,7 @@
 #include "OS_Keystore.int.h"
 #include "OS_KeystoreFile_KeyNameMap.h"
 
-#define OS_KeystoreFile_MAX_INSTANCE_NAME_LEN   16
+#define OS_KeystoreFile_MAX_INSTANCE_NAME_LEN   15
 #define OS_KeystoreFile_MAX_KEY_SIZE            2048
 // Maximum length of a file name. A file names is a combination of instance and
 // key name in the format "<instancename>_<keyname>.key" and needs 5 more chars
