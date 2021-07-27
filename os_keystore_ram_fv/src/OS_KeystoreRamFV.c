@@ -135,7 +135,7 @@ static OS_Error_t
 ctor(
     OS_KeystoreRamFV_t* self,
     void*               buf,
-    unsigned            numElements)
+    size_t              bufSize)
 {
     if (NULL == self)
     {
@@ -143,7 +143,11 @@ ctor(
     }
 
     memset(self, 0, sizeof(OS_KeystoreRamFV_t));
-    KeystoreRamFV_init(&self->fvKeystore, numElements, buf);
+
+    KeystoreRamFV_init(
+        &self->fvKeystore,
+        OS_KeystoreRamFV_NUM_ELEMENTS_BUFFER(bufSize),
+        buf);
 
     OS_KeystoreRamFV_TO_OS_KEYSTORE(self)->vtable = &OS_KeystoreRamFV_vtable;
 
@@ -347,7 +351,7 @@ OS_Error_t
 OS_KeystoreRamFV_init(
     OS_Keystore_Handle_t*   pHandle,
     void*                   buf,
-    unsigned                numElements)
+    unsigned                bufSize)
 {
     OS_Error_t err = OS_ERROR_GENERIC;
     OS_KeystoreRamFV_t* self = malloc(sizeof(OS_KeystoreRamFV_t));
@@ -357,7 +361,7 @@ OS_KeystoreRamFV_init(
         return OS_ERROR_INSUFFICIENT_SPACE;
     }
 
-    err = ctor(self, buf, numElements);
+    err = ctor(self, buf, bufSize);
 
     if (err != OS_SUCCESS)
     {

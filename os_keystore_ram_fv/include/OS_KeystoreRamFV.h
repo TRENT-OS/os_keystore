@@ -35,4 +35,4 @@ OS_Error_t
 OS_KeystoreRamFV_init(
     OS_Keystore_Handle_t*   pHandle,
     void*                   buf,
-    unsigned                numElements);
+    size_t                  bufSize);
