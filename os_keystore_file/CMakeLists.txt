@@ -1,15 +1,18 @@
+#
 # OS KeystoreFile library
+#
+# Copyright (C) 2021, HENSOLDT Cyber GmbH
+# SPDX-License-Identifier: BSD-3-Clause
+#
 
-cmake_minimum_required(VERSION 3.13.0)
-
-# enable new behavior introduced in CMake 3.13, where relative paths will be
-# converted into absolute paths in target_sources(INTERFACE ....)
-cmake_policy(SET CMP0076 NEW)
-
+cmake_minimum_required(VERSION 3.17)
 
 #-------------------------------------------------------------------------------
 project(os_keystore_file C)
 
+#-------------------------------------------------------------------------------
+# LIBRARY
+#-------------------------------------------------------------------------------
 add_library(${PROJECT_NAME} INTERFACE)
 
 target_sources(${PROJECT_NAME}
@@ -24,7 +27,6 @@ target_include_directories(${PROJECT_NAME}
     INTERFACE
         "include"
 )
-
 
 target_link_libraries(${PROJECT_NAME}
     INTERFACE
