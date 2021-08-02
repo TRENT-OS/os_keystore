@@ -2,6 +2,17 @@
  * Copyright (C) 2019-2021, HENSOLDT Cyber GmbH
  */
 
+/**
+ * @file
+ *
+ * This is not any real implementation of the OS_Keystore API but the common
+ * part whose aim is to:
+ *
+ *  - dereference the Vtable when calling the functions of the API,
+ *  - define the 'default' implementations of those functions (when provided).
+ *
+ */
+
 #include "OS_Keystore.int.h"
 #include "lib_debug/Debug.h"
 
