@@ -247,7 +247,7 @@ OS_KeystoreRamFV_loadKey(
     if (result.error)
     {
         *keySize = 0;
-        Debug_LOG_ERROR("%s: key_store_add() failed, err %d!",
+        Debug_LOG_ERROR("%s: key_store_get() failed, err %d!",
                         __func__,
                         result.error);
         return result.error == KeystoreRamFV_ERR_NOT_FOUND ?
