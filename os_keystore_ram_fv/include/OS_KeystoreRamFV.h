@@ -25,6 +25,28 @@
 #pragma once
 
 #include "OS_Keystore.int.h"
+
+#include <stdint.h>
+
+/**
+ * Maximum size of a key.
+ */
+#define OS_KeystoreRamFV_MAX_KEY_SIZE 2048
+
+typedef struct
+{
+    uint16_t    size;
+    uint8_t     data[];
+}
+OS_KeystoreRamFV_DataSubRecord;
+
+#define KeystoreRamFV_KEY_DATA_SIZE \
+    OS_KeystoreRamFV_MAX_KEY_SIZE + \
+    offsetof(OS_KeystoreRamFV_DataSubRecord, data)
+
+// Including the core module here after the definition of
+// KeystoreRamFV_KEY_DATA_SIZE makes possible to override its default definition
+// in KeystoreRamFV.h
 #include "KeystoreRamFV.h"
 
 /**
@@ -32,11 +54,6 @@
  */
 #define OS_KeystoreRamFV_MAX_NAME_LEN \
     (KeystoreRamFV_KEY_NAME_SIZE - 1)
-/**
- * Maximum size of a key.
- */
-#define OS_KeystoreRamFV_MAX_KEY_SIZE \
-    (KeystoreRamFV_KEY_DATA_SIZE)
 /**
  * Macro to translate an amount of key elements into needed bytes in memory to
  * store that amount.
