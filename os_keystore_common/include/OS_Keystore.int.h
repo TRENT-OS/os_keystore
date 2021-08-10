@@ -5,15 +5,15 @@
 /**
  * @file
  *
- * Internal part of OS_Keystore.h
+ * Internal part of OS_Keystore API.
  *
- * This file provides the definition of the type OS_Keystore_t and the Vtable
- * types (function pointers and Vtable struct) needed for the TRENTOS-M
- * internal interface implementation mechanism.
+ * This file provides the definition of the struct OS_Keystore and the Vtable
+ * types (function pointers and Vtable struct) needed for the TRENTOS-M internal
+ * interface implementation mechanism.
  *
  * Moreover the file offers some interface function implementation as well as a
- * 'default' implementation that can be (or not) used by the modules that
- * will implement OS_Keystore.
+ * 'default' implementation that can be (or not) used by the modules that will
+ * implement OS_Keystore.
  */
 
 #pragma once
@@ -88,7 +88,6 @@ struct OS_Keystore
  * (putting it in its Vtable).
  *
  * See OS_Keystore_copyKey().
- *
  */
 OS_Error_t
 OS_Keystore_copyKeyImpl(
@@ -107,7 +106,6 @@ OS_Keystore_copyKeyImpl(
  * (putting it in its Vtable).
  *
  * See OS_Keystore_moveKey().
- *
  */
 OS_Error_t
 OS_Keystore_moveKeyImpl(
