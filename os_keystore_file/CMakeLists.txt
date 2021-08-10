@@ -1,7 +1,7 @@
 #
 # OS KeystoreFile library
 #
-# Copyright (C) 2021, HENSOLDT Cyber GmbH
+# Copyright (C) 2019-2021, HENSOLDT Cyber GmbH
 #
 
 cmake_minimum_required(VERSION 3.18)
