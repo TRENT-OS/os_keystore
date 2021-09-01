@@ -335,7 +335,7 @@ OS_KeystoreRamFV_copyKey(
                name,
                dstPtr,
                subRecord->data,
-               OS_KeystoreRamFV_MAX_KEY_SIZE);
+               sizeof(subRecord->data));
 }
 
 static OS_Error_t
