@@ -1,5 +1,5 @@
 #
-# OS KeystoreRamFV library
+# OS KeystoreRamFV
 #
 # Copyright (C) 2021, HENSOLDT Cyber GmbH
 #

@@ -1,5 +1,5 @@
 #
-# OS Keystore common library
+# OS Keystore Common
 #
 # Copyright (C) 2021, HENSOLDT Cyber GmbH
 #

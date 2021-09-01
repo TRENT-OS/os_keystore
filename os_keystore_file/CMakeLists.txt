@@ -1,5 +1,5 @@
 #
-# OS KeystoreFile library
+# OS KeystoreFile
 #
 # Copyright (C) 2019-2021, HENSOLDT Cyber GmbH
 #

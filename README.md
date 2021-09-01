@@ -1,6 +1,3 @@
-# OS Key Store
+# OS Keystore
 
-## Dependencies
-
-The Key Store uses the crypto library. Furthermore it uses the file system
-and a storage backend.
+OS Keystore allows to store and load keys identified by memorable names.
