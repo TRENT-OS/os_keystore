@@ -257,23 +257,23 @@ OS_KeystoreRamFV_loadKey(
                OS_ERROR_NOT_FOUND : OS_ERROR_INVALID_PARAMETER;
     }
 
-    if (*keySize == 0)
-    {
-        return OS_ERROR_BUFFER_TOO_SMALL;
-    }
-
     OS_KeystoreRamFV_DataSubRecord* subRecord =
         (OS_KeystoreRamFV_DataSubRecord*) self->keyRecord.data;
 
-    if (*keySize > subRecord->size)
+    if (subRecord->keySize > *keySize)
     {
-        *keySize = subRecord->size;
+        Debug_LOG_ERROR("%s: The actual amount of key data (%zu bytes) is bigger "
+                        "than the expected size (%zu byes)",
+                        __func__, subRecord->keySize, *keySize);
+        *keySize = 0;
+        return OS_ERROR_BUFFER_TOO_SMALL;
     }
 
     if (keyData != subRecord->data)
     {
-        memcpy(keyData, subRecord->data, *keySize);
+        memcpy(keyData, subRecord->data, subRecord->size);
     }
+    *keySize = subRecord->size;
 
     return OS_SUCCESS;
 }
