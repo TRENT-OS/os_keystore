@@ -31,7 +31,7 @@
 //! Maximum size of a key.
 #define OS_KeystoreRamFV_MAX_KEY_SIZE 2048
 
-typedef struct
+typedef struct __attribute__((packed))
 {
     uint16_t    size;
     uint8_t     data[];
