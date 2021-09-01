@@ -33,7 +33,7 @@
 
 typedef struct __attribute__((packed))
 {
-    uint16_t    size;
+    uint32_t    size;
     uint8_t     data[];
 }
 OS_KeystoreRamFV_DataSubRecord;
