@@ -203,8 +203,8 @@ OS_KeystoreRamFV_storeKey(
     strncpy(self->keyRecord.name, name, sizeof(self->keyRecord.name) - 1);
     OS_KeystoreRamFV_DataSubRecord* subRecord =
         (OS_KeystoreRamFV_DataSubRecord*) self->keyRecord.data;
-    subRecord->size = keySize;
-    memcpy(subRecord->data, keyData, keySize);
+    subRecord->keySize = keySize;
+    memcpy(subRecord->keyData, keyData, keySize);
 
     KeystoreRamFV_Result_t result = KeystoreRamFV_add(
                                         &self->fvKeystore,
@@ -269,11 +269,11 @@ OS_KeystoreRamFV_loadKey(
         return OS_ERROR_BUFFER_TOO_SMALL;
     }
 
-    if (keyData != subRecord->data)
+    if (keyData != subRecord->keyData)
     {
-        memcpy(keyData, subRecord->data, subRecord->size);
+        memcpy(keyData, subRecord->keyData, subRecord->keySize);
     }
-    *keySize = subRecord->size;
+    *keySize = subRecord->keySize;
 
     return OS_SUCCESS;
 }
@@ -334,8 +334,8 @@ OS_KeystoreRamFV_copyKey(
                srcPtr,
                name,
                dstPtr,
-               subRecord->data,
-               sizeof(subRecord->data));
+               subRecord->keyData,
+               sizeof(subRecord->keyData));
 }
 
 static OS_Error_t

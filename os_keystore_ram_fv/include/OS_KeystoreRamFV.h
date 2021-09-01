@@ -33,8 +33,8 @@
 
 typedef struct __attribute__((packed))
 {
-    uint32_t    size;
-    uint8_t     data[OS_KeystoreRamFV_MAX_KEY_SIZE];
+    uint32_t    keySize;
+    uint8_t     keyData[OS_KeystoreRamFV_MAX_KEY_SIZE];
 }
 OS_KeystoreRamFV_DataSubRecord;
 
@@ -42,7 +42,7 @@ OS_KeystoreRamFV_DataSubRecord;
 //! required to store key size and key data.
 #define KeystoreRamFV_KEY_DATA_SIZE \
     OS_KeystoreRamFV_MAX_KEY_SIZE + \
-    offsetof(OS_KeystoreRamFV_DataSubRecord, data)
+    offsetof(OS_KeystoreRamFV_DataSubRecord, keyData)
 
 // Including the module after the definition of KeystoreRamFV_KEY_DATA_SIZE in
 // order to override its default definition.
