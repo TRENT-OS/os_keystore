@@ -34,7 +34,7 @@
 typedef struct __attribute__((packed))
 {
     uint32_t    size;
-    uint8_t     data[];
+    uint8_t     data[OS_KeystoreRamFV_MAX_KEY_SIZE];
 }
 OS_KeystoreRamFV_DataSubRecord;
 
