@@ -31,10 +31,16 @@
 //! Maximum size of a key.
 #define OS_KeystoreRamFV_MAX_KEY_SIZE 2048
 
+/**
+ * This struct defines the memory layout of a key record.
+ * It is used as payload for KeystoreRamFV_KeyRecord_t in order to store the key
+ * data together with the used size, as it needs to be returned by the loadKey()
+ * function.
+ */
 typedef struct __attribute__((packed))
 {
-    uint32_t    keySize;
-    uint8_t     keyData[OS_KeystoreRamFV_MAX_KEY_SIZE];
+    uint32_t    keySize; //!< Size of the used key data.
+    uint8_t     keyData[OS_KeystoreRamFV_MAX_KEY_SIZE]; //!< Key data.
 }
 OS_KeystoreRamFV_DataSubRecord;
 
@@ -66,10 +72,16 @@ OS_KeystoreRamFV_DataSubRecord;
 #define OS_KeystoreRamFV_TO_OS_KEYSTORE(self)   (&((self)->parent))
 
 
+/**
+ * OS_KeystoreRamFV context.
+ */
 typedef struct
 {
+    //! Parent struct which holds the vTable immplemented by this module.
     OS_Keystore_t               parent;
+    //! KeystoreRamFV_t context which implements the kernel functions.
     KeystoreRamFV_t             fvKeystore;
+    //! Temporary support record for operations.
     KeystoreRamFV_KeyRecord_t   keyRecord;
 }
 OS_KeystoreRamFV_t;
