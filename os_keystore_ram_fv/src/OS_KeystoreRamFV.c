@@ -361,7 +361,7 @@ OS_Error_t
 OS_KeystoreRamFV_init(
     OS_Keystore_Handle_t*   pHandle,
     void*                   buf,
-    unsigned                bufSize)
+    size_t                  bufSize)
 {
     OS_Error_t err = OS_ERROR_GENERIC;
     OS_KeystoreRamFV_t* self = malloc(sizeof(OS_KeystoreRamFV_t));
