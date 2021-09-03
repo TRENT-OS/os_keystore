@@ -249,7 +249,6 @@ OS_KeystoreRamFV_loadKey(
                                         &self->keyRecord);
     if (result.error)
     {
-        *keySize = 0;
         Debug_LOG_ERROR("%s: key_store_get() failed, err %d!",
                         __func__,
                         result.error);
@@ -265,7 +264,6 @@ OS_KeystoreRamFV_loadKey(
         Debug_LOG_ERROR("%s: The actual amount of key data (%zu bytes) is bigger "
                         "than the expected size (%zu byes)",
                         __func__, subRecord->keySize, *keySize);
-        *keySize = 0;
         return OS_ERROR_BUFFER_TOO_SMALL;
     }
 
