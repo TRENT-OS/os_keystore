@@ -212,7 +212,7 @@ OS_KeystoreRamFV_storeKey(
                                         &self->keyRecord);
     if (result.error)
     {
-        Debug_LOG_ERROR("%s: key_store_add() failed, err %d!",
+        Debug_LOG_ERROR("%s: KeystoreRamFV_add() failed, err %d!",
                         __func__,
                         result.error);
         return result.error == KeystoreRamFV_ERR_OUT_OF_SPACE ?
@@ -249,7 +249,7 @@ OS_KeystoreRamFV_loadKey(
                                         &self->keyRecord);
     if (result.error)
     {
-        Debug_LOG_ERROR("%s: key_store_get() failed, err %d!",
+        Debug_LOG_ERROR("%s: KeystoreRamFV_get() failed, err %d!",
                         __func__,
                         result.error);
         return result.error == KeystoreRamFV_ERR_NOT_FOUND ?
