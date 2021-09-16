@@ -261,7 +261,7 @@ OS_KeystoreRamFV_loadKey(
 
     if (subRecord->keySize > *keySize)
     {
-        Debug_LOG_ERROR("%s: The actual amount of key data (%zu bytes) is bigger "
+        Debug_LOG_ERROR("%s: The actual amount of key data (%u bytes) is bigger "
                         "than the expected size (%zu byes)",
                         __func__, subRecord->keySize, *keySize);
         return OS_ERROR_BUFFER_TOO_SMALL;
