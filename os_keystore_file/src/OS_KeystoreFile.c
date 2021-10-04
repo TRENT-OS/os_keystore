@@ -635,7 +635,7 @@ OS_KeystoreFile_loadKey(
     if (savedKeySize > *keySize)
     {
         Debug_LOG_ERROR("%s: The actual amount of key data (%zu bytes) is bigger "
-                        "than the expected size (%zu byes)",
+                        "than the expected size (%zu bytes)",
                         __func__, savedKeySize, *keySize);
         return OS_ERROR_BUFFER_TOO_SMALL;
     }
