@@ -1,3 +1,3 @@
 [submodule "os_keystore_ram_fv/keystore_ram_fv"]
 	path = os_keystore_ram_fv/keystore_ram_fv
-	url = ../../fv/key-store.git
+	url = ../../gruv/key-store.git
