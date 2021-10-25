@@ -8,7 +8,7 @@
  * Internal part of OS_Keystore API.
  *
  * This file provides the definition of the struct OS_Keystore and the Vtable
- * types (function pointers and Vtable struct) needed for the TRENTOS-M internal
+ * types (function pointers and Vtable struct) needed for the TRENTOS internal
  * interface implementation mechanism.
  *
  * Moreover the file offers some interface function implementation as well as a

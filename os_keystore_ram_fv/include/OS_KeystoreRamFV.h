@@ -12,7 +12,7 @@
  * buffer size. The macro OS_KeystoreRamFV_SIZE_OF_BUFFER(num_elements) helps to
  * convert the desired number of keys to the appropriate buffer size.
  *
- * NOTE: This module is a wrapper of KeystoreRamFV to adapt it to the TRENTOS-M
+ * NOTE: This module is a wrapper of KeystoreRamFV to adapt it to the TRENTOS
  * API architecture. KeystoreRamFV is the formally verified module which
  * contains all the real business logic.
  *

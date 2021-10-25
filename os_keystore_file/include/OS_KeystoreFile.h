@@ -6,11 +6,11 @@
  * @file
  *
  * OS_KeystoreFile is an implementation of the OS_Keystore API that performs
- * storage of keys by using an instance of the TRENTOS-M FileSystem API to write
+ * storage of keys by using an instance of the TRENTOS FileSystem API to write
  * in files.
  *
  * OS_KeystoreFile writes opaque buffers of cryptographic material (keys, as
- * exported from the TRENTOS-M Crypto API) into a file, for which the
+ * exported from the TRENTOS Crypto API) into a file, for which the
  * KeystoreFile needs a handle to a mounted file system. Conversely, it can also
  * load keys back into memory.
  * Every OS_KeystoreFile instance has an "instance name" (set during the
