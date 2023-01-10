@@ -27,3 +27,8 @@ target_include_directories(${PROJECT_NAME}
         "keystore_ram_fv/stdlib_fv"
         "include"
 )
+
+target_link_libraries(${PROJECT_NAME}
+    INTERFACE
+        os_keystore_common
+)
