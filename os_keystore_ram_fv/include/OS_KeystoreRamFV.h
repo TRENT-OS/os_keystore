@@ -32,8 +32,18 @@
 #include <stdint.h>
 
 
-//! Maximum size of a key.
-#define OS_KeystoreRamFV_MAX_KEY_SIZE 2048
+/**
+ * This defines the maximum size of struct OS_CryptoKey_Data_t, which consists of
+ *  - an element of type struct OS_CryptoKey_Type_t (size 4 bytes)
+ *  - an element of type struct OS_CryptoKey_Attrib_t (size 8 bytes)
+ *  - a struct that holds respective key information (size depends on the selected encryption algorithm)
+ *
+ * The maximum value is therefore defined by the size of the largest struct that holds
+ * respective key information. Currently, this is given by the struct OS_CryptoKey_RsaRrv_t (size 2068 bytes).
+ *
+ * In a total, this results in a value of 2080 bytes.
+ */
+#define OS_KeystoreRamFV_MAX_KEY_SIZE 2080
 
 /**
  * This struct defines the memory layout of a key record.
